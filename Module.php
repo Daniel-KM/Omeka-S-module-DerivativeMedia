@@ -119,6 +119,17 @@ class Module extends AbstractModule
         );
 
         $sharedEventManager->attach(
+            'Omeka\Controller\Admin\Media',
+            'view.details',
+            [$this, 'viewDetailsMedia']
+        );
+        $sharedEventManager->attach(
+            'Omeka\Controller\Admin\Media',
+            'view.show.sidebar',
+            [$this, 'viewDetailsMedia']
+        );
+
+        $sharedEventManager->attach(
             \Omeka\Form\SettingForm::class,
             'form.add_elements',
             [$this, 'handleMainSettings']
@@ -192,6 +203,55 @@ class Module extends AbstractModule
         $message->setEscapeHtml(false);
         $controller->messenger()->addSuccess($message);
         return true;
+    }
+
+    public function viewDetailsMedia(Event $event)
+    {
+        $view = $event->getTarget();
+        $media = $view->resource;
+        /* @var \Omeka\Api\Representation\MediaRepresentation $media */
+        $data = $media->mediaData();
+        if (empty($data) || empty($data['derivative'])) {
+            return;
+        }
+
+        $hyperlink = $view->plugin('hyperlink');
+        $basePath = $view->serverUrl($view->basePath('/files'));
+
+        $links = '';
+        foreach ($data['derivative'] as $folder => $derivative) {
+            $links .= '<li>' . $hyperlink($folder, $basePath . '/' . $folder . '/' . $derivative['filename']) . "</li>\n";
+        }
+        echo <<<HTML
+<style>
+@media screen {
+    .browse .derivative-media h4 {
+        display: inline-block;
+    }
+    .browse .derivative-media ul {
+        display: inline-block;
+        padding-left: 6px;
+    }
+    .browse .sidebar .derivative-media ul,
+    .show .derivative-media ul {
+        padding-left: 0;
+    }
+    .derivative-media ul li {
+        list-style: none;
+        display: inline-block;
+    }
+    .derivative-media ul li:not(:last-child):after {
+        content: ' · ';
+    }
+}
+</style>
+<div class="meta-group derivative-media">
+    <h4>{$view->escapeHtml('Derivative medias')}</h4>
+    <ul>
+        $links
+    </ul>
+</div>
+HTML;
     }
 
     public function afterSaveItem(Event $event)
