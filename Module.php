@@ -38,7 +38,7 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $config = $services->get('Config');
         $basePath = $config['file_store']['local']['base_path'] ?: (OMEKA_PATH . '/files');
-        if (!$this->checkDir($basePath . '/media')) {
+        if (!is_dir($basePath) || !is_readable($basePath) || !is_writable($basePath)) {
             $message = new PsrMessage(
                 'The directory "{path}" is not writeable.', // @translate
                 ['path' => $basePath]
@@ -52,15 +52,6 @@ class Module extends AbstractModule
             $services->get('Omeka\Logger')->err('Command "ffmpeg" not found.'); // @translate
             $t = $services->get('MvcTranslator');
             throw new ModuleCannotInstallException($t->translate('The command-line utility "ffmpeg" must be installed first and must be available in the cli path.')); // @translate
-        }
-    }
-
-    protected function preUninstall()
-    {
-        if (!empty($_POST['remove-derivative-media'])) {
-            $config = $this->getServiceLocator()->get('Config');
-            $basePath = $config['file_store']['local']['base_path'] ?: (OMEKA_PATH . '/files');
-            $this->rmDir($basePath . '/media');
         }
     }
 
@@ -84,15 +75,12 @@ class Module extends AbstractModule
         $html .= '</p>';
 
         $html .= '<p>';
-        $html .= sprintf(
-            $t->translate('All derivative files will be removed (folder "{folder}").'), // @translate
-            $basePath . '/media'
+        // TODO Remove all files one by one, because the base path of files may have been changed.
+        $html .= new PsrMessage(
+            'All derivative files will be kept in the folders specified in the config inside {path}.', // @translate
+            ['path' => $basePath]
         );
         $html .= '</p>';
-
-        $html .= '<label><input name="remove-derivative-media" type="checkbox" form="confirmform">';
-        $html .= $t->translate('Remove derivative media directory'); // @translate
-        $html .= '</label>';
 
         echo $html;
     }
@@ -111,58 +99,5 @@ class Module extends AbstractModule
             'view.details',
             [$this, 'warnUninstall']
         );
-    }
-
-    /**
-     * Check or create the destination folder.
-     *
-     * @param string $dirPath Absolute path.
-     * @return string|null
-     */
-    protected function checkDir($dirPath)
-    {
-        if (file_exists($dirPath)) {
-            if (!is_dir($dirPath) || !is_readable($dirPath) || !is_writable($dirPath)) {
-                $this->getServiceLocator()->get('Omeka\Logger')->err(
-                    'The directory "{path}" is not writeable.', // @translate
-                    ['path' => $dirPath]
-                );
-                return null;
-            }
-            return $dirPath;
-        }
-
-        $result = @mkdir($dirPath, 0775, true);
-        if (!$result) {
-            $this->getServiceLocator()->get('Omeka\Logger')->err(
-                'The directory "{path}" is not writeable: {error}.', // @translate
-                ['path' => $dirPath, 'error' => error_get_last()['message']]
-            );
-            return null;
-        }
-        return $dirPath;
-    }
-
-    /**
-     * Remove a dir from filesystem.
-     *
-     * @param string $dirpath Absolute path.
-     * @return bool
-     */
-    private function rmDir($dirPath)
-    {
-        if (!file_exists($dirPath)) {
-            return true;
-        }
-        $files = array_diff(scandir($dirPath), ['.', '..']);
-        foreach ($files as $file) {
-            $path = $dirPath . '/' . $file;
-            if (is_dir($path)) {
-                $this->rmDir($path);
-            } else {
-                unlink($path);
-            }
-        }
-        return rmdir($dirPath);
     }
 }
