@@ -3,6 +3,12 @@
 namespace DerivativeMedia;
 
 return [
+    'file_renderers' => [
+        'invokables' => [
+            'audio' => Media\FileRenderer\AudioRenderer::class,
+            'video' => Media\FileRenderer\VideoRenderer::class,
+        ],
+    ],
     'form_elements' => [
         'invokables' => [
             Form\Element\ArrayTextarea::class => Form\Element\ArrayTextarea::class,
