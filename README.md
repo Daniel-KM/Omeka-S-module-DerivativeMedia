@@ -50,8 +50,8 @@ Apple Safari, improved parameters for modern browsers (vp9/webm), and different
 qualities for low speed networks (128kB), and high speed networks (fiber).
 
 Then in the site item pages or in the admin media pages, all files will be
-appended together in the html5 <audio> and <video> element, so the browser will
-choose the best one.
+appended together in the html5 `<audio>` and `<video>` elements, so the browser
+will choose the best one.
 
 You can convert existing files via the config form. This job is available in the
 module [Bulk Check] too.
@@ -91,7 +91,7 @@ See online issues on the [module issues] page.
 License
 -------
 
-This module is published under the [CeCILL v2.1] licence, compatible with
+This module is published under the [CeCILL v2.1] license, compatible with
 [GNU/GPL] and approved by [FSF] and [OSI].
 
 This software is governed by the CeCILL license under French law and abiding by
@@ -130,11 +130,12 @@ Copyright
 [Generic]: https://gitlab.com/Daniel-KM/Omeka-S-module-Generic
 [Log]: https://gitlab.com/Daniel-KM/Omeka-S-module-Log
 [Bulk Check]: https://gitlab.com/Daniel-KM/Omeka-S-module-BulkCheck
+[ffmpeg]: https://ffmpeg.org
 [ffmpeg wiki]: https://trac.ffmpeg.org/wiki/Encode/H.264
 [ffmpeg wiki too]: https://trac.ffmpeg.org/wiki/Encode/VP9
 [browser support table]: https://en.wikipedia.org/wiki/HTML5_video#Browser_support
 [this one]: https://forum.omeka.org/t/mov-videos-not-playing-on-item-page-only-audio/11775/12
-[module issues]: https://github.com/Daniel-KM/Omeka-S-module-DerivativeMedia/-/issues
+[module issues]: https://gitlab.com/Daniel-KM/Omeka-S-module-DerivativeMedia/-/issues
 [CeCILL v2.1]: https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html
 [GNU/GPL]: https://www.gnu.org/licenses/gpl-3.0.html
 [FSF]: https://www.fsf.org
