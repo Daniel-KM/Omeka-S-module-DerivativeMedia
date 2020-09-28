@@ -13,16 +13,30 @@ class SettingsFieldset extends Fieldset
     {
         $this
             ->add([
-                'name' => 'derivativemedia_converters',
+                'name' => 'derivativemedia_converters_audio',
                 'type' => ArrayTextarea::class,
                 'options' => [
-                    'label' => 'Converters', // @translate
-                    'info' => 'Each converter is one row with a unique extension (may be double), then "=", and the ffmpeg command (without file).', // @translate
+                    'label' => 'Audio converters', // @translate
+                    'info' => 'Each converter is one row with a filepath pattern, a "=", and the ffmpeg command (without file).', // @translate
                     'documentation' => 'https://gitlab.com/Daniel-KM/Omeka-S-module-DerivativeMedia',
                     'as_key_value' => true,
                 ],
                 'attributes' => [
-                    'id' => 'derivativemedia_converters',
+                    'id' => 'derivativemedia_converters_audio',
+                    'rows' => 5,
+                ],
+            ])
+            ->add([
+                'name' => 'derivativemedia_converters_video',
+                'type' => ArrayTextarea::class,
+                'options' => [
+                    'label' => 'Video converters', // @translate
+                    'info' => 'Each converter is one row with a filepath pattern, a "=", and the ffmpeg command (without file).', // @translate
+                    'documentation' => 'https://gitlab.com/Daniel-KM/Omeka-S-module-DerivativeMedia',
+                    'as_key_value' => true,
+                ],
+                'attributes' => [
+                    'id' => 'derivativemedia_converters_video',
                     'rows' => 5,
                 ],
             ])

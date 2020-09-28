@@ -158,8 +158,16 @@ class Module extends AbstractModule
 
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
-        $converters = $settings->get('derivativemedia_converters');
-        if (!$converters) {
+        $convertersAudio = $settings->get('derivativemedia_converters_audio');
+        $convertersVideo = $settings->get('derivativemedia_converters_video');
+        if (!$convertersAudio && !$convertersVideo) {
+            return;
+        }
+        $mainMediaType = strtok($media->getMediaType(), '/');
+        if ($mainMediaType === 'audio' && !$convertersAudio) {
+            return;
+        }
+        if ($mainMediaType === 'video' && !$convertersVideo) {
             return;
         }
 

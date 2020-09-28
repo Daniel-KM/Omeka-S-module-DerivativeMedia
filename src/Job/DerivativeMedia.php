@@ -54,11 +54,9 @@ class DerivativeMedia extends AbstractJob
         $referenceIdProcessor->setReferenceId('derivative/media/job_' . $this->job->getId());
 
         $settings = $services->get('Omeka\Settings');
-        $this->converters = $settings->get('derivativemedia_converters', []);
-        if (empty($this->converters)) {
-            $this->logger->warn(
-                'No converters: no derivative media to create.' // @translate
-            );
+        $this->converters['audio'] = $settings->get('derivativemedia_converters_audio', []);
+        $this->converters['video'] = $settings->get('derivativemedia_converters_video', []);
+        if (empty(array_filter($this->converters))) {
             return;
         }
 
@@ -101,6 +99,11 @@ class DerivativeMedia extends AbstractJob
 
     protected function derivateMedia(Media $media)
     {
+        $mainMediaType = strtok($media->getMediaType(), '/');
+        if (empty($this->converters[$mainMediaType])) {
+            return;
+        }
+
         $filename = $media->getFilename();
         $sourcePath = $this->basePath . '/original/' . $filename;
 
@@ -131,7 +134,7 @@ class DerivativeMedia extends AbstractJob
         $realpath = new RealPath(false);
 
         $storageId = $media->getStorageId();
-        foreach ($this->converters as $pattern => $command) {
+        foreach ($this->converters[$mainMediaType] as $pattern => $command) {
             if ($this->shouldStop()) {
                 $this->logger->warn(
                     'Media #{media_id}: Process stopped.', // @translate
