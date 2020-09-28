@@ -36,19 +36,25 @@ Set settings in the main settings page. Each row is the text area is one format.
 The filepath is the left part of the row (`mp4/{filename}.mp4`) and the ffmpeg
 arguments are the right part.
 
-The default params allows to create four derivative files, matching two
-compatibilities parameters, one for old browsers, and Safari, one for modern
-browsers (vp9/webm), and two qualities, one for low speed network (128kb), and
-one for high network (quality of the original file). You can modify params as
-you want and remove or add new ones, for example if you want to support more low
-speed network connections.
+The default params allows to create four derivative files, two for audio and
+two for video. They are designed to keep the same quality than the original
+file, and to maximize compatibility with old browsers and Apple Safari. The webm
+one is commented (a "#" is prepended), because it is slow.
+
+You can modify params as you want and remove or add new ones. They are adapted
+for a recent Linux distribution with a recent version of ffmpeg. You may need to
+change names of arguments and codecs on older versions.
+
+Ideally, the params should mix compatibilities parameters for old browsers and
+Apple Safari, improved parameters for modern browsers (vp9/webm), and different
+qualities for low speed networks (128kB), and high speed networks (fiber).
 
 Then in the site item pages or in the admin media pages, all files will be
 appended together in the html5 <audio> and <video> element, so the browser will
 choose the best one.
 
-You can convert existing files with the query and the button "Process". This job
-is available in the module [Bulk Check] too.
+You can convert existing files via the config form. This job is available in the
+module [Bulk Check] too.
 
 Note that the creation of derivative files is a slow and cpu-intensive process:
 until two or three hours for a one hour video. You can use arguments `-preset veryslow`
@@ -59,6 +65,12 @@ and the [browser support table].
 
 In all cases, it is better to have original files that follow common standards.
 Check if a simple fix like [this one] is enough before uploading files.
+
+
+TODO
+----
+
+- [ ] Adapt for any store, not only local one.
 
 
 Warning
