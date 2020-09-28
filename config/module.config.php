@@ -35,8 +35,10 @@ return [
                 'ogg/{filename}.ogg' => '-c copy -vn -c:a libopus',
             ],
             'derivativemedia_converters_video' => [
+                '# The webm converter is designed for modern browsers. It is disabled by default, because conversion is slow. Keep it first if used.' => '',
+                '#webm/{filename}.webm' => '-c copy -c:v libvpx-vp9 -crf 30 -b:v 0 -deadline good -pix_fmt yuv420p -c:a libopus',
+                '# This format keeps the original quality and is compatible with almost all browsers.' => '',
                 'mp4/{filename}.mp4' => "-c copy -c:v libx264 -movflags +faststart -filter:v crop='floor(in_w/2)*2:floor(in_h/2)*2' -crf 22 -level 3 -preset medium -tune film -pix_fmt yuv420p -c:a libmp3lame -qscale:a 2",
-                'webm/{filename}.webm' => '-c copy -c:v libvpx-vp9 -crf 30 -b:v 0 -deadline good -pix_fmt yuv420p -c:a libopus',
             ],
             'derivativemedia_append_original_audio' => false,
             'derivativemedia_append_original_video' => false,

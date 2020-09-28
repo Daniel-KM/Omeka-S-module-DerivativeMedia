@@ -222,9 +222,13 @@ class Module extends AbstractModule
         }
 
         $services = $this->getServiceLocator();
+
+        $removeCommented = function ($v, $k) {
+            return !empty($v) && mb_strlen(trim($k)) && mb_substr(trim($k), 0, 1) !== '#';
+        };
         $settings = $services->get('Omeka\Settings');
-        $convertersAudio = $settings->get('derivativemedia_converters_audio');
-        $convertersVideo = $settings->get('derivativemedia_converters_video');
+        $convertersAudio = array_filter($settings->get('derivativemedia_converters_audio', []), $removeCommented, ARRAY_FILTER_USE_BOTH);
+        $convertersVideo = array_filter($settings->get('derivativemedia_converters_video', []), $removeCommented, ARRAY_FILTER_USE_BOTH);
         if (!$convertersAudio && !$convertersVideo) {
             return;
         }

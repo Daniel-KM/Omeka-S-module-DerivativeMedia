@@ -51,9 +51,12 @@ trait DerivativeMediaTrait
         $referenceIdProcessor = new \Zend\Log\Processor\ReferenceId();
         $referenceIdProcessor->setReferenceId('derivative/media/job_' . $this->job->getId());
 
+        $removeCommented = function ($v, $k) {
+            return !empty($v) && mb_strlen(trim($k)) && mb_substr(trim($k), 0, 1) !== '#';
+        };
         $settings = $services->get('Omeka\Settings');
-        $this->converters['audio'] = $settings->get('derivativemedia_converters_audio', []);
-        $this->converters['video'] = $settings->get('derivativemedia_converters_video', []);
+        $this->converters['audio'] = array_filter($settings->get('derivativemedia_converters_audio', []), $removeCommented, ARRAY_FILTER_USE_BOTH);
+        $this->converters['video'] = array_filter($settings->get('derivativemedia_converters_video', []), $removeCommented, ARRAY_FILTER_USE_BOTH);
         if (empty(array_filter($this->converters))) {
             return false;
         }
