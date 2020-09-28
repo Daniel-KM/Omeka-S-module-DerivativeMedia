@@ -38,9 +38,11 @@ class AudioRenderer implements RendererInterface
                     . (empty($derivative['type']) ? '' : ' type="' . $derivative['type'] . '"')
                     . "/>\n";
             }
-            // Append the original file.
             $format = "<audio%s>\n%s\n</audio>";
-            $sources .= '<source src="' . $escapeAttr($originalUrl) . '" type="' . $media->mediaType() . '"/>' . "\n";
+            // Append the original file if wanted.
+            if ($view->setting('derivativemedia_append_original_audio', false)) {
+                $sources .= '<source src="' . $escapeAttr($originalUrl) . '" type="' . $media->mediaType() . '"/>' . "\n";
+            }
         } else {
             $format = '<audio%s>%s</audio>';
             $attrs .= sprintf(' src="%s"', $escapeAttr($originalUrl));

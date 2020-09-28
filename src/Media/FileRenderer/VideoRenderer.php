@@ -38,9 +38,11 @@ class VideoRenderer implements RendererInterface
                     . (empty($derivative['type']) ? '' : ' type="' . $derivative['type'] . '"')
                     . "/>\n";
             }
-            // Append the original file.
             $format = "<video%s>\n%s\n</video>";
-            $sources .= '<source src="' . $escapeAttr($originalUrl) . '" type="' . $media->mediaType() . '"/>' . "\n";
+            // Append the original file if wanted.
+            if ($view->setting('derivativemedia_append_original_video', false)) {
+                $sources .= '<source src="' . $escapeAttr($originalUrl) . '" type="' . $media->mediaType() . '"/>' . "\n";
+            }
         } else {
             $format = '<video%s>%s</video>';
             $attrs .= sprintf(' src="%s"', $escapeAttr($originalUrl));

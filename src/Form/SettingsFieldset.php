@@ -3,6 +3,7 @@
 namespace DerivativeMedia\Form;
 
 use DerivativeMedia\Form\Element\ArrayTextarea;
+use Zend\Form\Element;
 use Zend\Form\Fieldset;
 
 class SettingsFieldset extends Fieldset
@@ -27,6 +28,16 @@ class SettingsFieldset extends Fieldset
                 ],
             ])
             ->add([
+                'name' => 'derivativemedia_append_original_audio',
+                'type' => Element\Checkbox::class,
+                'options' => [
+                    'label' => 'Append original audio', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'derivativemedia_append_original_audio',
+                ],
+            ])
+            ->add([
                 'name' => 'derivativemedia_converters_video',
                 'type' => ArrayTextarea::class,
                 'options' => [
@@ -38,6 +49,16 @@ class SettingsFieldset extends Fieldset
                 'attributes' => [
                     'id' => 'derivativemedia_converters_video',
                     'rows' => 5,
+                ],
+            ])
+            ->add([
+                'name' => 'derivativemedia_append_original_video',
+                'type' => Element\Checkbox::class,
+                'options' => [
+                    'label' => 'Append original video', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'derivativemedia_append_original_video',
                 ],
             ])
         ;
