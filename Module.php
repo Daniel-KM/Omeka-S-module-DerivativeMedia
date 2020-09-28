@@ -10,6 +10,7 @@ if (!class_exists(\Generic\AbstractModule::class)) {
 
 use Generic\AbstractModule;
 use Log\Stdlib\PsrMessage;
+use Omeka\Entity\Media;
 use Omeka\Module\Exception\ModuleCannotInstallException;
 use Zend\EventManager\Event;
 use Zend\EventManager\SharedEventManagerInterface;
@@ -87,6 +88,33 @@ class Module extends AbstractModule
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager)
     {
+        // Note: When an item is saved manually, no event is triggered for media.
+        $sharedEventManager->attach(
+            \Omeka\Api\Adapter\ItemAdapter::class,
+            'api.create.post',
+            [$this, 'afterSaveItem']
+        );
+        $sharedEventManager->attach(
+            \Omeka\Api\Adapter\ItemAdapter::class,
+            'api.update.post',
+            [$this, 'afterSaveItem']
+        );
+
+        // TODO "api.create.post" seems never to occur for media. Remove event?
+        $sharedEventManager->attach(
+            \Omeka\Api\Adapter\MediaAdapter::class,
+            'api.create.post',
+            [$this, 'afterSaveMedia']
+        );
+
+        $sharedEventManager->attach(
+            \Omeka\Entity\Media::class,
+            'entity.remove.post',
+            [$this, 'afterDeleteMedia'],
+            // Before the deletion of the media via the core method.
+            10
+        );
+
         $sharedEventManager->attach(
             \Omeka\Form\SettingForm::class,
             'form.add_elements',
@@ -99,5 +127,84 @@ class Module extends AbstractModule
             'view.details',
             [$this, 'warnUninstall']
         );
+    }
+
+    public function afterSaveItem(Event $event)
+    {
+        $item = $event->getParam('response')->getContent();
+        foreach ($item->getMedia() as $media) {
+            $this->processMedia($media);
+        }
+    }
+
+    public function afterSaveMedia(Event $event)
+    {
+        $media = $event->getParam('response')->getContent();
+        $this->processMedia($media);
+    }
+
+    protected function processMedia(Media $media)
+    {
+        if (!$this->isManaged($media)) {
+            return;
+        }
+
+        $data = $media->getData();
+
+        // Don't reprocess derivative.
+        if (!empty($data['derivative'])) {
+            return;
+        }
+
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+        $converters = $settings->get('derivativemedia_converters');
+        if (!$converters) {
+            return;
+        }
+
+        /** @var \Omeka\File\Store\StoreInterface $store */
+        $store = $services->get('Omeka\File\Store');
+        if (!($store instanceof \Omeka\File\Store\Local)) {
+            $services->get('Omeka\Logger')->err(
+                '[Derivative Media] This module requires a local store currently.' // @translate
+            );
+            return;
+        }
+
+        $args = [];
+        $args['mediaId'] = $media->getId();
+        $dispatcher = $services->get('ControllerPluginManager')->get('jobDispatcher');
+        $dispatcher()->dispatch(\DerivativeMedia\Job\DerivativeMedia::class, $args);
+    }
+
+    public function afterDeleteMedia(Event $event)
+    {
+        /** @var \Omeka\Entity\Media $media */
+        $media = $event->getTarget();
+        if (!$this->isManaged($media)) {
+            return;
+        }
+
+        $data = $media->getData();
+        if (empty($data['derivative'])) {
+            return;
+        }
+
+        $services = $this->getServiceLocator();
+
+        /** @var \Omeka\File\Store\StoreInterface $store */
+        $store = $services->get('Omeka\File\Store');
+        foreach ($data['derivative'] as $folder => $derivative) {
+            $storagePath = $folder . '/' . $derivative['filename'];
+            $store->delete($storagePath);
+        }
+    }
+
+    protected function isManaged(Media $media)
+    {
+        return $media->hasOriginal()
+            && $media->getRenderer() === 'file'
+            && in_array(strtok($media->getMediaType(), '/'), ['audio', 'video']);
     }
 }
