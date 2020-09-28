@@ -14,6 +14,9 @@ return [
             Form\Element\ArrayTextarea::class => Form\Element\ArrayTextarea::class,
             Form\SettingsFieldset::class => Form\SettingsFieldset::class,
         ],
+        'factories' => [
+            Form\ConfigForm::class => Service\Form\ConfigFormFactory::class,
+        ],
     ],
     'translator' => [
         'translation_file_patterns' => [

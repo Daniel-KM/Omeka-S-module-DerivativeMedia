@@ -9,11 +9,14 @@ if (!class_exists(\Generic\AbstractModule::class)) {
 }
 
 use Generic\AbstractModule;
+use DerivativeMedia\Form\ConfigForm;
 use Log\Stdlib\PsrMessage;
 use Omeka\Entity\Media;
 use Omeka\Module\Exception\ModuleCannotInstallException;
 use Zend\EventManager\Event;
 use Zend\EventManager\SharedEventManagerInterface;
+use Zend\Mvc\Controller\AbstractController;
+use Zend\View\Renderer\PhpRenderer;
 
 /**
  * Derivative Media
@@ -127,6 +130,68 @@ class Module extends AbstractModule
             'view.details',
             [$this, 'warnUninstall']
         );
+    }
+
+    public function getConfigForm(PhpRenderer $renderer)
+    {
+        $services = $this->getServiceLocator();
+        $form = $services->get('FormElementManager')->get(ConfigForm::class);
+        $form->init();
+        $html = '<p>'
+            . $renderer->translate('Set your parameters in main settings to recreate derivative medias.') // @translate
+            . '</p>';
+        $html .= '<p>'
+            . $renderer->translate('This processor is available in module Bulk Check too.') // @translate
+            . '</p>';
+        $html .= $renderer->formCollection($form);
+        return $html;
+    }
+
+    public function handleConfigForm(AbstractController $controller)
+    {
+        $services = $this->getServiceLocator();
+        $form = $services->get('FormElementManager')->get(ConfigForm::class);
+
+        $params = $controller->getRequest()->getPost();
+
+        $form->init();
+        $form->setData($params);
+        if (!$form->isValid()) {
+            $controller->messenger()->addErrors($form->getMessages());
+            return false;
+        }
+
+        $params = $form->getData();
+
+        if (empty($params['process']) || $params['process'] !== $controller->translate('Process')) {
+            $message = 'No job launched.'; // @translate
+            $controller->messenger()->addWarning($message);
+            return true;
+        }
+
+        unset($params['csrf']);
+        unset($params['process']);
+        $params['item_sets'] = $params['item_sets'] ?: [];
+        $params['ingesters'] = $params['ingesters'] ?: [];
+        $params['renderers'] = $params['renderers'] ?: [];
+        $params['media_types'] = $params['media_types'] ?: [];
+
+        $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
+        $job = $dispatcher->dispatch(\DerivativeMedia\Job\FileDerivativeMedia::class, $params);
+        $message = new PsrMessage(
+            'Creating derivative media in background ({link}job #{job_id}{link_end}, {link_log}logs{link_end})', // @translate
+            [
+                'link' => sprintf('<a href="%s">',
+                    htmlspecialchars($controller->url()->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))
+                ),
+                'job_id' => $job->getId(),
+                'link_end' => '</a>',
+                'link_log' => sprintf('<a href="%1$s">', $this->isModuleActive('Log') ? $controller->url()->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]]) :  $controller->url()->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()])),
+            ]
+        );
+        $message->setEscapeHtml(false);
+        $controller->messenger()->addSuccess($message);
+        return true;
     }
 
     public function afterSaveItem(Event $event)
