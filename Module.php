@@ -222,6 +222,7 @@ class Module extends AbstractModule
         foreach ($data['derivative'] as $folder => $derivative) {
             $links .= '<li>' . $hyperlink($folder, $basePath . '/' . $folder . '/' . $derivative['filename']) . "</li>\n";
         }
+        $title = $view->escapeHtml($view->translate('Derivative medias')); // @translate
         echo <<<HTML
 <style>
 @media screen {
@@ -246,7 +247,7 @@ class Module extends AbstractModule
 }
 </style>
 <div class="meta-group derivative-media">
-    <h4>{$view->escapeHtml('Derivative medias')}</h4>
+    <h4>$title</h4>
     <ul>
         $links
     </ul>
