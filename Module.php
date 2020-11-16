@@ -47,7 +47,7 @@ class Module extends AbstractModule
                 'The directory "{path}" is not writeable.', // @translate
                 ['path' => $basePath]
             );
-            throw new ModuleCannotInstallException($message);
+            throw new ModuleCannotInstallException((string) $message);
         }
 
         // TODO Use Omeka cli.
