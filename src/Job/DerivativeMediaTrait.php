@@ -3,12 +3,12 @@
 namespace DerivativeMedia\Job;
 
 use Omeka\Entity\Media;
-use Zend\Filter\RealPath;
+use Laminas\Filter\RealPath;
 
 trait DerivativeMediaTrait
 {
     /**
-     * @var \Zend\Log\Logger
+     * @var \Laminas\Log\Logger
      */
     protected $logger;
 
@@ -48,7 +48,7 @@ trait DerivativeMediaTrait
         $this->logger = $services->get('Omeka\Logger');
 
         // The reference id is the job id for now.
-        $referenceIdProcessor = new \Zend\Log\Processor\ReferenceId();
+        $referenceIdProcessor = new \Laminas\Log\Processor\ReferenceId();
         $referenceIdProcessor->setReferenceId('derivative/media/job_' . $this->job->getId());
 
         $removeCommented = function ($v, $k) {

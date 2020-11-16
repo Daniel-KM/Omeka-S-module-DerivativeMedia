@@ -2,8 +2,8 @@
 
 namespace DerivativeMedia\Form\Element;
 
-use Zend\Form\Element\Textarea;
-use Zend\InputFilter\InputProviderInterface;
+use Laminas\Form\Element\Textarea;
+use Laminas\InputFilter\InputProviderInterface;
 
 class ArrayTextarea extends Textarea implements InputProviderInterface
 {
@@ -46,7 +46,7 @@ class ArrayTextarea extends Textarea implements InputProviderInterface
             'allow_empty' => true,
             'filters' => [
                 [
-                    'name' => \Zend\Filter\Callback::class,
+                    'name' => \Laminas\Filter\Callback::class,
                     'options' => [
                         'callback' => [$this, 'stringToArray'],
                     ],

@@ -3,8 +3,8 @@
 namespace DerivativeMedia\Form;
 
 use DerivativeMedia\Form\Element\ArrayTextarea;
-use Zend\Form\Element;
-use Zend\Form\Fieldset;
+use Laminas\Form\Element;
+use Laminas\Form\Fieldset;
 
 class SettingsFieldset extends Fieldset
 {

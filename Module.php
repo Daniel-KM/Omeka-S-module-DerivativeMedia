@@ -13,10 +13,10 @@ use DerivativeMedia\Form\ConfigForm;
 use Log\Stdlib\PsrMessage;
 use Omeka\Entity\Media;
 use Omeka\Module\Exception\ModuleCannotInstallException;
-use Zend\EventManager\Event;
-use Zend\EventManager\SharedEventManagerInterface;
-use Zend\Mvc\Controller\AbstractController;
-use Zend\View\Renderer\PhpRenderer;
+use Laminas\EventManager\Event;
+use Laminas\EventManager\SharedEventManagerInterface;
+use Laminas\Mvc\Controller\AbstractController;
+use Laminas\View\Renderer\PhpRenderer;
 
 /**
  * Derivative Media

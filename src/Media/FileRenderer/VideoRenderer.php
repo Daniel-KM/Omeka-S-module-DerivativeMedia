@@ -4,7 +4,7 @@ namespace DerivativeMedia\Media\FileRenderer;
 
 use Omeka\Api\Representation\MediaRepresentation;
 use Omeka\Media\FileRenderer\RendererInterface;
-use Zend\View\Renderer\PhpRenderer;
+use Laminas\View\Renderer\PhpRenderer;
 
 /**
  * @see \Omeka\Media\FileRenderer\VideoRenderer

@@ -30,7 +30,7 @@ class FileDerivativeMedia extends AbstractJob
         $api = $services->get('Omeka\ApiManager');
 
         // The reference id is the job id for now.
-        $referenceIdProcessor = new \Zend\Log\Processor\ReferenceId();
+        $referenceIdProcessor = new \Laminas\Log\Processor\ReferenceId();
         $referenceIdProcessor->setReferenceId('derivative/media/job_' . $this->job->getId());
 
         // Prepare the list of medias.
