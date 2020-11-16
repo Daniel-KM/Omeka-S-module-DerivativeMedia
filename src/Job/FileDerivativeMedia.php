@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace DerivativeMedia\Job;
 
@@ -16,7 +16,7 @@ class FileDerivativeMedia extends AbstractJob
      */
     const SQL_LIMIT = 25;
 
-    public function perform()
+    public function perform(): void
     {
         $result = $this->initialize();
         if (!$result) {

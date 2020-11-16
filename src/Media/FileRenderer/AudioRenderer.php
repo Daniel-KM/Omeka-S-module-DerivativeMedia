@@ -1,10 +1,10 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace DerivativeMedia\Media\FileRenderer;
 
+use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Api\Representation\MediaRepresentation;
 use Omeka\Media\FileRenderer\RendererInterface;
-use Laminas\View\Renderer\PhpRenderer;
 
 /**
  * @see \Omeka\Media\FileRenderer\AudioRenderer

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace DerivativeMedia;
 
@@ -8,15 +8,15 @@ if (!class_exists(\Generic\AbstractModule::class)) {
         : __DIR__ . '/src/Generic/AbstractModule.php';
 }
 
-use Generic\AbstractModule;
 use DerivativeMedia\Form\ConfigForm;
-use Log\Stdlib\PsrMessage;
-use Omeka\Entity\Media;
-use Omeka\Module\Exception\ModuleCannotInstallException;
+use Generic\AbstractModule;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Mvc\Controller\AbstractController;
 use Laminas\View\Renderer\PhpRenderer;
+use Log\Stdlib\PsrMessage;
+use Omeka\Entity\Media;
+use Omeka\Module\Exception\ModuleCannotInstallException;
 
 /**
  * Derivative Media
@@ -37,12 +37,12 @@ class Module extends AbstractModule
         return include __DIR__ . '/config/module.config.php';
     }
 
-    protected function preInstall()
+    protected function preInstall(): void
     {
         $services = $this->getServiceLocator();
         $config = $services->get('Config');
         $basePath = $config['file_store']['local']['base_path'] ?: (OMEKA_PATH . '/files');
-        if (!is_dir($basePath) || !is_readable($basePath) || !is_writable($basePath)) {
+        if (!is_dir($basePath) || !is_readable($basePath) || !is_writeable($basePath)) {
             $message = new PsrMessage(
                 'The directory "{path}" is not writeable.', // @translate
                 ['path' => $basePath]
@@ -59,7 +59,7 @@ class Module extends AbstractModule
         }
     }
 
-    public function warnUninstall(Event $event)
+    public function warnUninstall(Event $event): void
     {
         $view = $event->getTarget();
         $module = $view->vars()->module;
@@ -89,7 +89,7 @@ class Module extends AbstractModule
         echo $html;
     }
 
-    public function attachListeners(SharedEventManagerInterface $sharedEventManager)
+    public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
     {
         // Note: When an item is saved manually, no event is triggered for media.
         $sharedEventManager->attach(
@@ -205,7 +205,7 @@ class Module extends AbstractModule
         return true;
     }
 
-    public function viewDetailsMedia(Event $event)
+    public function viewDetailsMedia(Event $event): void
     {
         $view = $event->getTarget();
         $media = $view->resource;
@@ -255,7 +255,7 @@ class Module extends AbstractModule
 HTML;
     }
 
-    public function afterSaveItem(Event $event)
+    public function afterSaveItem(Event $event): void
     {
         $item = $event->getParam('response')->getContent();
         foreach ($item->getMedia() as $media) {
@@ -263,13 +263,13 @@ HTML;
         }
     }
 
-    public function afterSaveMedia(Event $event)
+    public function afterSaveMedia(Event $event): void
     {
         $media = $event->getParam('response')->getContent();
         $this->processMedia($media);
     }
 
-    protected function processMedia(Media $media)
+    protected function processMedia(Media $media): void
     {
         if (!$this->isManaged($media)) {
             return;
@@ -316,7 +316,7 @@ HTML;
         $dispatcher()->dispatch(\DerivativeMedia\Job\DerivativeMedia::class, $args);
     }
 
-    public function afterDeleteMedia(Event $event)
+    public function afterDeleteMedia(Event $event): void
     {
         /** @var \Omeka\Entity\Media $media */
         $media = $event->getTarget();

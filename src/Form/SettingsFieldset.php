@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace DerivativeMedia\Form;
 
@@ -10,7 +10,7 @@ class SettingsFieldset extends Fieldset
 {
     protected $label = 'Derivative Media'; // @translate
 
-    public function init()
+    public function init(): void
     {
         $this
             ->add([

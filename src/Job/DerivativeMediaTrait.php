@@ -1,9 +1,9 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace DerivativeMedia\Job;
 
-use Omeka\Entity\Media;
 use Laminas\Filter\RealPath;
+use Omeka\Entity\Media;
 
 trait DerivativeMediaTrait
 {

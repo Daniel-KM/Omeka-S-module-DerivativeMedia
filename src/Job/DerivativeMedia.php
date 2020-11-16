@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace DerivativeMedia\Job;
 
@@ -9,7 +9,7 @@ class DerivativeMedia extends AbstractJob
 {
     use DerivativeMediaTrait;
 
-    public function perform()
+    public function perform(): void
     {
         $result = $this->initialize();
         if (!$result) {

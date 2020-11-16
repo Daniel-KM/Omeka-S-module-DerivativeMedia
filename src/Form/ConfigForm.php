@@ -1,11 +1,11 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace DerivativeMedia\Form;
 
 use Doctrine\DBAL\Connection;
-use Omeka\Form\Element\ItemSetSelect;
 use Laminas\Form\Element;
 use Laminas\Form\Form;
+use Omeka\Form\Element\ItemSetSelect;
 
 class ConfigForm extends Form
 {
@@ -14,7 +14,7 @@ class ConfigForm extends Form
      */
     protected $connection;
 
-    public function init()
+    public function init(): void
     {
         $this
             ->add([
