@@ -1,6 +1,9 @@
 Derivative Media (module for Omeka S)
 ==================================
 
+> __New versions of this module and support for Omeka S version 3.0 and above
+> are available on [GitLab], which seems to respect users and privacy better.__
+
 [Derivative Media] is a module for [Omeka S] that creates cross-browser audio and
 video derivative files via [ffmpeg].
 
@@ -140,4 +143,5 @@ Copyright
 [GNU/GPL]: https://www.gnu.org/licenses/gpl-3.0.html
 [FSF]: https://www.fsf.org
 [OSI]: http://opensource.org
+[GitLab]: https://gitlab.com/Daniel-KM
 [Daniel-KM]: https://gitlab.com/Daniel-KM "Daniel Berthereau"
