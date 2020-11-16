@@ -121,7 +121,7 @@ trait DerivativeMediaTrait
 
     protected function derivateMedia(Media $media)
     {
-        $mainMediaType = strtok($media->getMediaType(), '/');
+        $mainMediaType = strtok((string) $media->getMediaType(), '/');
         if (empty($this->converters[$mainMediaType])) {
             return false;
         }
@@ -306,6 +306,6 @@ trait DerivativeMediaTrait
     {
         return $media->hasOriginal()
             && $media->getRenderer() === 'file'
-            && in_array(strtok($media->getMediaType(), '/'), ['audio', 'video']);
+            && in_array(strtok((string) $media->getMediaType(), '/'), ['audio', 'video']);
     }
 }

@@ -293,7 +293,7 @@ HTML;
         if (!$convertersAudio && !$convertersVideo) {
             return;
         }
-        $mainMediaType = strtok($media->getMediaType(), '/');
+        $mainMediaType = strtok((string) $media->getMediaType(), '/');
         if ($mainMediaType === 'audio' && !$convertersAudio) {
             return;
         }
@@ -343,6 +343,6 @@ HTML;
     {
         return $media->hasOriginal()
             && $media->getRenderer() === 'file'
-            && in_array(strtok($media->getMediaType(), '/'), ['audio', 'video']);
+            && in_array(strtok((string) $media->getMediaType(), '/'), ['audio', 'video']);
     }
 }

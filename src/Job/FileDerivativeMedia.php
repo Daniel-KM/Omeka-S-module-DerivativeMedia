@@ -80,7 +80,7 @@ DQL;
             }
         }
 
-        $totalResources = $api->search('media', ['limit' => 1])->getTotalResults();
+        $totalResources = $api->search('media', ['limit' => 0])->getTotalResults();
 
         // Check only media with an original file.
         $criteria->andWhere($expr->eq('hasOriginal', 1));
