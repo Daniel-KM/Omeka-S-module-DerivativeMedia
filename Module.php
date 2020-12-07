@@ -208,8 +208,8 @@ class Module extends AbstractModule
     public function viewDetailsMedia(Event $event): void
     {
         $view = $event->getTarget();
+        /** @var \Omeka\Api\Representation\MediaRepresentation $media */
         $media = $view->resource;
-        /* @var \Omeka\Api\Representation\MediaRepresentation $media */
         $data = $media->mediaData();
         if (empty($data) || empty($data['derivative'])) {
             return;
@@ -258,62 +258,46 @@ HTML;
     public function afterSaveItem(Event $event): void
     {
         $item = $event->getParam('response')->getContent();
+        $convert = false;
         foreach ($item->getMedia() as $media) {
-            $this->processMedia($media);
+            // Don't reprocess derivative.
+            $data = $media->getData();
+            if (!empty($data['derivative'])) {
+                continue;
+            }
+            if ($this->checkConvertAudioVideo($media)) {
+                $convert = true;
+                break;
+            }
         }
+        if (!$convert) {
+            return;
+        }
+
+        $args = [];
+        $args['itemId'] = $item->getId();
+        $dispatcher = $this->getServiceLocator()->get('Omeka\Job\Dispatcher');
+        $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeItem::class, $args);
     }
 
     public function afterSaveMedia(Event $event): void
     {
         $media = $event->getParam('response')->getContent();
-        $this->processMedia($media);
-    }
-
-    protected function processMedia(Media $media): void
-    {
-        if (!$this->isManaged($media)) {
-            return;
-        }
-
-        $data = $media->getData();
 
         // Don't reprocess derivative.
+        $data = $media->getData();
         if (!empty($data['derivative'])) {
             return;
         }
 
-        $services = $this->getServiceLocator();
-
-        $removeCommented = function ($v, $k) {
-            return !empty($v) && mb_strlen(trim($k)) && mb_substr(trim($k), 0, 1) !== '#';
-        };
-        $settings = $services->get('Omeka\Settings');
-        $convertersAudio = array_filter($settings->get('derivativemedia_converters_audio', []), $removeCommented, ARRAY_FILTER_USE_BOTH);
-        $convertersVideo = array_filter($settings->get('derivativemedia_converters_video', []), $removeCommented, ARRAY_FILTER_USE_BOTH);
-        if (!$convertersAudio && !$convertersVideo) {
-            return;
-        }
-        $mainMediaType = strtok((string) $media->getMediaType(), '/');
-        if ($mainMediaType === 'audio' && !$convertersAudio) {
-            return;
-        }
-        if ($mainMediaType === 'video' && !$convertersVideo) {
-            return;
-        }
-
-        /** @var \Omeka\File\Store\StoreInterface $store */
-        $store = $services->get('Omeka\File\Store');
-        if (!($store instanceof \Omeka\File\Store\Local)) {
-            $services->get('Omeka\Logger')->err(
-                '[Derivative Media] This module requires a local store currently.' // @translate
-            );
+        if (!$this->checkConvertAudioVideo($media)) {
             return;
         }
 
         $args = [];
         $args['mediaId'] = $media->getId();
-        $dispatcher = $services->get('ControllerPluginManager')->get('jobDispatcher');
-        $dispatcher()->dispatch(\DerivativeMedia\Job\DerivativeMedia::class, $args);
+        $dispatcher = $this->getServiceLocator()->get('Omeka\Job\Dispatcher');
+        $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMedia::class, $args);
     }
 
     public function afterDeleteMedia(Event $event): void
@@ -337,6 +321,55 @@ HTML;
             $storagePath = $folder . '/' . $derivative['filename'];
             $store->delete($storagePath);
         }
+    }
+
+    protected function checkConvertAudioVideo(Media $media): bool
+    {
+        static $hasLocalStore;
+        static $convertersAudio;
+        static $convertersVideo;
+
+        if (is_null($hasLocalStore)) {
+            $services = $this->getServiceLocator();
+            /** @var \Omeka\File\Store\StoreInterface $store */
+            $store = $services->get('Omeka\File\Store');
+            $hasLocalStore = $store instanceof \Omeka\File\Store\Local;
+            if (!$hasLocalStore) {
+                $services->get('Omeka\Logger')->err(
+                    '[Derivative Media] This module requires a local store currently.' // @translate
+                );
+                return false;
+            }
+
+            $removeCommented = function ($v, $k) {
+                return !empty($v) && mb_strlen(trim($k)) && mb_substr(trim($k), 0, 1) !== '#';
+            };
+            $settings = $services->get('Omeka\Settings');
+            $convertersAudio = array_filter($settings->get('derivativemedia_converters_audio', []), $removeCommented, ARRAY_FILTER_USE_BOTH);
+            $convertersVideo = array_filter($settings->get('derivativemedia_converters_video', []), $removeCommented, ARRAY_FILTER_USE_BOTH);
+        }
+
+        if (!$hasLocalStore) {
+            return false;
+        }
+
+        if (!$convertersAudio && !$convertersVideo) {
+            return false;
+        }
+
+        if (!$this->isManaged($media)) {
+            return false;
+        }
+
+        $mainMediaType = strtok((string) $media->getMediaType(), '/');
+        if ($mainMediaType === 'audio' && $convertersAudio) {
+            return true;
+        }
+        if ($mainMediaType === 'video' && $convertersVideo) {
+            return true;
+        }
+
+        return false;
     }
 
     protected function isManaged(Media $media)
