@@ -2,7 +2,7 @@
 
 namespace DerivativeMedia\Form;
 
-use DerivativeMedia\Form\Element\ArrayTextarea;
+use Omeka\Form\Element\ArrayTextarea;
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
 
