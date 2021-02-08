@@ -70,6 +70,23 @@ and the [browser support table].
 In all cases, it is better to have original files that follow common standards.
 Check if a simple fix like [this one] is enough before uploading files.
 
+The default queries are (without `ffmpeg -i input` and output):
+
+```
+# Audio
+mp3/{filename}.mp3   = -c copy -c:a libmp3lame -qscale:a 2
+ogg/{filename}.ogg   = -c copy -vn -c:a libopus
+
+# Video
+webm/{filename}.webm = -c copy -c:v libvpx-vp9 -crf 30 -b:v 0 -deadline realtime -pix_fmt yuv420p -c:a libopus
+mp4/{filename}.mp4   = -c copy -c:v libx264 -movflags +faststart -filter:v crop='floor(in_w/2)*2:floor(in_h/2)*2' -crf 22 -level 3 -preset medium -tune film -pix_fmt yuv420p -c:a libmp3lame -qscale:a 2
+```
+
+One-line command to prepare all wav into mp3 of a directory:
+```sh
+cd /my/dir; for filename in *.wav; do name=`echo "$filename" | cut -d'.' -f1`; basepath=${filename%.*}; basename=${basepath##*/}; echo "$basename.wav => $basename.mp3"; ffmpeg -i "$filename" -c copy -c:a libmp3lame -qscale:a 2 "${basename}.mp3"; done
+```
+
 
 TODO
 ----
