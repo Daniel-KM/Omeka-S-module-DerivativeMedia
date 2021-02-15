@@ -257,6 +257,14 @@ HTML;
 
     public function afterSaveItem(Event $event): void
     {
+        // Don't run during a batch edit of items, because it runs one job by
+        // item and it is slow. A batch process is always partial.
+        /** @var \Omeka\Api\Request $request */
+        $request = $event->getParam('request');
+        if ($request->getOption('isPartial')) {
+            return;
+        }
+
         $item = $event->getParam('response')->getContent();
         $convert = false;
         foreach ($item->getMedia() as $media) {
@@ -282,6 +290,14 @@ HTML;
 
     public function afterSaveMedia(Event $event): void
     {
+        // Don't run during a batch edit of media, because it runs one job by
+        // media and it is slow. A batch process is always partial.
+        /** @var \Omeka\Api\Request $request */
+        $request = $event->getParam('request');
+        if ($request->getOption('isPartial')) {
+            return;
+        }
+
         $media = $event->getParam('response')->getContent();
 
         // Don't reprocess derivative.
