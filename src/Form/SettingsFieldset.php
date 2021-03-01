@@ -19,7 +19,7 @@ class SettingsFieldset extends Fieldset
                 'options' => [
                     'label' => 'Audio converters', // @translate
                     'info' => 'Each converter is one row with a filepath pattern, a "=", and the ffmpeg command (without file).', // @translate
-                    'documentation' => 'https://gitlab.com/Daniel-KM/Omeka-S-module-DerivativeMedia',
+                    'documentation' => 'https://gitlab.com/Daniel-KM/Omeka-S-module-DerivativeMedia#usage',
                     'as_key_value' => true,
                 ],
                 'attributes' => [
