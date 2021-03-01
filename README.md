@@ -36,7 +36,7 @@ config instructions.
 Usage
 -----
 
-Set settings in the main settings page. Each row is the text area is one format.
+Set settings in the main settings page. Each row in the text area is one format.
 The filepath is the left part of the row (`mp4/{filename}.mp4`) and the ffmpeg
 arguments are the right part.
 
