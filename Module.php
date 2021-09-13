@@ -194,10 +194,10 @@ class Module extends AbstractModule
         $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
 
         if (!empty($process['update_metadata'])) {
-            $job = $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMetadata::class, $params);
+            $job = $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMediaMetadata::class, $params);
             $message = 'Storing metadata for existing files ({link}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
         } else {
-            $job = $dispatcher->dispatch(\DerivativeMedia\Job\FileDerivativeMedia::class, $params);
+            $job = $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMediaFile::class, $params);
             $message = 'Creating derivative media ({link}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
         }
         $message = new PsrMessage(

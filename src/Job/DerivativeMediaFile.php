@@ -5,7 +5,7 @@ namespace DerivativeMedia\Job;
 use Doctrine\Common\Collections\Criteria;
 use Omeka\Job\AbstractJob;
 
-class FileDerivativeMedia extends AbstractJob
+class DerivativeMediaFile extends AbstractJob
 {
     use DerivativeMediaTrait;
 
@@ -37,7 +37,7 @@ class FileDerivativeMedia extends AbstractJob
 
         // The reference id is the job id for now.
         $referenceIdProcessor = new \Laminas\Log\Processor\ReferenceId();
-        $referenceIdProcessor->setReferenceId('derivative/media/job_' . $this->job->getId());
+        $referenceIdProcessor->setReferenceId('derivative/media_file/job_' . $this->job->getId());
 
         // Prepare the list of medias.
 

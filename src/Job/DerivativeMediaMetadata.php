@@ -4,7 +4,7 @@ namespace DerivativeMedia\Job;
 
 use Doctrine\Common\Collections\Criteria;
 
-class DerivativeMetadata extends FileDerivativeMedia
+class DerivativeMediaMetadata extends DerivativeMediaFile
 {
     /**
      * Copy of FileDerivativeMedia, except message and operation to process.
@@ -29,7 +29,7 @@ class DerivativeMetadata extends FileDerivativeMedia
 
         // The reference id is the job id for now.
         $referenceIdProcessor = new \Laminas\Log\Processor\ReferenceId();
-        $referenceIdProcessor->setReferenceId('derivative/media/job_' . $this->job->getId());
+        $referenceIdProcessor->setReferenceId('derivative/media_metadata/job_' . $this->job->getId());
 
         // Prepare the list of medias.
 
