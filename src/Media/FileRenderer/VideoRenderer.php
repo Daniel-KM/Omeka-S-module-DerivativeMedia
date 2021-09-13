@@ -24,9 +24,9 @@ class VideoRenderer implements RendererInterface
 
         // Use a format compatible with html5 and xhtml.
         $escapeAttr = $view->plugin('escapeHtmlAttr');
-        $attrs = '';
-        $sources = '';
 
+        $sources = '';
+        $source = '<source src="%s" type="%s"/>' . "\n";
         $originalUrl = $media->originalUrl();
 
         $data = $media->mediaData();
@@ -34,19 +34,20 @@ class VideoRenderer implements RendererInterface
         if ($hasDerivative) {
             $basePath = $view->serverUrl($view->basePath('/files'));
             foreach ($data['derivative'] as $folder => $derivative) {
-                $sources .= '<source src="' . $escapeAttr($basePath . '/' . $folder . '/' . $derivative['filename']) . '"'
-                    . (empty($derivative['type']) ? '' : ' type="' . $derivative['type'] . '"')
-                    . "/>\n";
+                $sources .= sprintf($source,
+                    $escapeAttr($basePath . '/' . $folder . '/' . $derivative['filename']),
+                    empty($derivative['type']) ? '' : $derivative['type']
+                );
             }
-            $format = "<video%s>\n%s\n</video>";
             // Append the original file if wanted.
             if ($view->setting('derivativemedia_append_original_video', false)) {
-                $sources .= '<source src="' . $escapeAttr($originalUrl) . '" type="' . $media->mediaType() . '"/>' . "\n";
+                $sources .= sprintf($source, $escapeAttr($originalUrl), $media->mediaType());
             }
         } else {
-            $format = '<video%s>%s</video>';
-            $attrs .= sprintf(' src="%s"', $escapeAttr($originalUrl));
+            $sources .= sprintf($source, $escapeAttr($originalUrl), $media->mediaType());
         }
+
+        $attrs = ' title="' . $escapeAttr($media->displayTitle()) . '"';
 
         if (isset($options['width'])) {
             $attrs .= sprintf(' width="%s"', (int) $options['width']);
@@ -69,11 +70,23 @@ class VideoRenderer implements RendererInterface
         if (!empty($options['muted'])) {
             $attrs .= ' muted="muted"';
         }
+        if (isset($options['class']) && $options['class']) {
+            $attrs .= sprintf(' class="%s"', $escapeAttr($options['class']));
+        }
+        if (isset($options['preload']) && $options['preload']) {
+            $attrs .= sprintf(' preload="%s"', $escapeAttr($options['preload']));
+        }
 
-        return sprintf(
-            $format,
+        return sprintf('<video%s>
+    %s
+    %s
+</video>',
             $attrs,
-            $sources . $view->hyperlink($media->filename(), $originalUrl)
+            $sources,
+            sprintf(
+                $view->translate('Your browser does not support HTML5 video, but you can download it: %s.'), // @translate
+                $view->hyperlink($media->filename(), $originalUrl)
+            )
         );
     }
 }

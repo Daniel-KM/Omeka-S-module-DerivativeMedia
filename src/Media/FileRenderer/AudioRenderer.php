@@ -24,9 +24,9 @@ class AudioRenderer implements RendererInterface
 
         // Use a format compatible with html5 and xhtml.
         $escapeAttr = $view->plugin('escapeHtmlAttr');
-        $attrs = '';
-        $sources = '';
 
+        $sources = '';
+        $source = '<source src="%s" type="%s"/>' . "\n";
         $originalUrl = $media->originalUrl();
 
         $data = $media->mediaData();
@@ -34,19 +34,20 @@ class AudioRenderer implements RendererInterface
         if ($hasDerivative) {
             $basePath = $view->serverUrl($view->basePath('/files'));
             foreach ($data['derivative'] as $folder => $derivative) {
-                $sources .= '<source src="' . $escapeAttr($basePath . '/' . $folder . '/' . $derivative['filename']) . '"'
-                    . (empty($derivative['type']) ? '' : ' type="' . $derivative['type'] . '"')
-                    . "/>\n";
+                $sources .= sprintf($source,
+                    $escapeAttr($basePath . '/' . $folder . '/' . $derivative['filename']),
+                    empty($derivative['type']) ? '' : $derivative['type']
+                );
             }
-            $format = "<audio%s>\n%s\n</audio>";
             // Append the original file if wanted.
             if ($view->setting('derivativemedia_append_original_audio', false)) {
-                $sources .= '<source src="' . $escapeAttr($originalUrl) . '" type="' . $media->mediaType() . '"/>' . "\n";
+                $sources .= sprintf($source, $escapeAttr($originalUrl), $media->mediaType());
             }
         } else {
-            $format = '<audio%s>%s</audio>';
-            $attrs .= sprintf(' src="%s"', $escapeAttr($originalUrl));
+            $sources .= sprintf($source, $escapeAttr($originalUrl), $media->mediaType());
         }
+
+        $attrs = ' title="' . $escapeAttr($media->displayTitle()) . '"';
 
         if (!empty($options['autoplay'])) {
             $attrs .= ' autoplay="autoplay"';
@@ -60,11 +61,23 @@ class AudioRenderer implements RendererInterface
         if (!empty($options['muted'])) {
             $attrs .= ' muted="muted"';
         }
+        if (isset($options['class']) && $options['class']) {
+            $attrs .= sprintf(' class="%s"', $escapeAttr($options['class']));
+        }
+        if (isset($options['preload']) && $options['preload']) {
+            $attrs .= sprintf(' preload="%s"', $escapeAttr($options['preload']));
+        }
 
-        return sprintf(
-            $format,
+        return sprintf('<audio%s>
+    %s
+    %s
+</audio>',
             $attrs,
-            $sources . $view->hyperlink($media->filename(), $originalUrl)
+            $sources,
+            sprintf(
+                $view->translate('Your browser does not support HTML5 audio, but you can download it: %s.'), // @translate
+                $view->hyperlink($media->filename(), $originalUrl)
+            )
         );
     }
 }
