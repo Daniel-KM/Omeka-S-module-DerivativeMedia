@@ -1,19 +1,27 @@
-Derivative Media (module for Omeka S)
-==================================
+Derivative Media Optimizer (module for Omeka S)
+===============================================
 
 > __New versions of this module and support for Omeka S version 3.0 and above
 > are available on [GitLab], which seems to respect users and privacy better
 > than the previous repository.__
 
-[Derivative Media] is a module for [Omeka S] that creates cross-browser audio and
-video derivative files via [ffmpeg].
+[Derivative Media] is a module for [Omeka S] that optimizes files for the web:
+it creates derivative files from audio, video and pdf files that are streamable
+and linearized (can be rendered before full loading), generally smaller for the
+same quality, adapted for mobile or desktop, sized for slow or big connection,
+and cross-browser compatible, including Safari. Multiple derivative files can be
+created for each file. It works the same way Omeka does for images (large,
+medium and square thumbnails).
+
+The conversion uses [ffmpeg] and [ghostcript], two command-line tools that are
+generally installed by default on most servers. The commands are customizable.
 
 
 Installation
 ------------
 
-This module requires the package `ffmpeg` installed on the server and available
-in the path.
+This module requires the server packages `ffmpeg` and `ghostscript` (command `gs`)
+installed on the server and available in the path.
 
 First, install the required module [Log] and the optional module [Generic].
 
@@ -36,26 +44,34 @@ config instructions.
 Usage
 -----
 
-Set settings in the main settings page. Each row in the text area is one format.
-The filepath is the left part of the row (`mp4/{filename}.mp4`) and the ffmpeg
-arguments are the right part.
+### Configuration of commands
 
-The default params allows to create four derivative files, two for audio and
-two for video. They are designed to keep the same quality than the original
-file, and to maximize compatibility with old browsers and Apple Safari. The webm
-one is commented (a "#" is prepended), because it is slow.
+Set settings in the main settings page. Each row in the text area is one format.
+The filepath is the left part of the row (`mp4/{filename}.mp4`) and the command
+is the right part.
+
+The default params allows to create five derivative files, two for audio, two
+for video, and one for pdf. They are designed to keep the same quality than the
+original file, and to maximize compatibility with old browsers and Apple Safari.
+The webm one is commented (a "#" is prepended), because it is slow.
 
 You can modify params as you want and remove or add new ones. They are adapted
 for a recent Linux distribution with a recent version of ffmpeg. You may need to
 change names of arguments and codecs on older versions.
 
+For pdf, the html5 standard doesn't give the possibility to display multiple
+sources for one link, so it's useless to multiply them.
+
 Ideally, the params should mix compatibilities parameters for old browsers and
 Apple Safari, improved parameters for modern browsers (vp9/webm), and different
 qualities for low speed networks (128kB), and high speed networks (fiber).
 
-Then in the site item pages or in the admin media pages, all files will be
+Then, in the site item pages or in the admin media pages, all files will be
 appended together in the html5 `<audio>` and `<video>` elements, so the browser
-will choose the best one.
+will choose the best one. For pdf, the derivative file will be used
+automatically by modules [Universal Viewer] (via [IIIF Server]) and [Pdf Viewer].
+
+### Bulk creation
 
 You can convert existing files via the config form. This job is available in the
 module [Bulk Check] too.
@@ -67,31 +83,56 @@ to speed or slow process, but faster means a lower ratio quality/size. See
 [ffmpeg wiki] for more info about arguments for mp4, [ffmpeg wiki too] for webm,
 and the [browser support table].
 
+For mp4, important options (preset and tune) are [explained here].
+For webm, important options (preset and tune) are [explained here].
+
 In all cases, it is better to have original files that follow common standards.
 Check if a simple fix like [this one] is enough before uploading files.
 
-The default queries are (without `ffmpeg -i input` and output):
+The default queries are (without `ffmpeg` or `gs` prepended, and output,
+appended):
 
 ```
 # Audio
-mp3/{filename}.mp3   = -c copy -c:a libmp3lame -qscale:a 2
-ogg/{filename}.ogg   = -c copy -vn -c:a libopus
+mp3/{filename}.mp3   = -i {input} -c copy -c:a libmp3lame -qscale:a 2
+ogg/{filename}.ogg   = -i {input} -c copy -vn -c:a libopus
 
 # Video
-webm/{filename}.webm = -c copy -c:v libvpx-vp9 -crf 30 -b:v 0 -deadline realtime -pix_fmt yuv420p -c:a libopus
-mp4/{filename}.mp4   = -c copy -c:v libx264 -movflags +faststart -filter:v crop='floor(in_w/2)*2:floor(in_h/2)*2' -crf 22 -level 3 -preset medium -tune film -pix_fmt yuv420p -c:a libmp3lame -qscale:a 2
+webm/{filename}.webm = -i {input} -c copy -c:v libvpx-vp9 -crf 30 -b:v 0 -deadline realtime -pix_fmt yuv420p -c:a libopus
+mp4/{filename}.mp4   = -i {input} -c copy -c:v libx264 -movflags +faststart -filter:v crop='floor(in_w/2)*2:floor(in_h/2)*2' -crf 22 -level 3 -preset medium -tune film -pix_fmt yuv420p -c:a libmp3lame -qscale:a 2
+
+# Pdf
+
 ```
 
-One-line command to prepare all wav into mp3 of a directory:
+It's important to check the version of ffmpeg that is installed on the server,
+because the options may be different or may have been changed.
+
+
+### External preparation
+
+Because conversion is cpu-intensive, they can be created on another computer,
+then copied in the right place.
+
+Here is an example of a one-line command to prepare all wav into mp3 of a
+directory:
+
 ```sh
 cd /my/dir; for filename in *.wav; do name=`echo "$filename" | cut -d'.' -f1`; basepath=${filename%.*}; basename=${basepath##*/}; echo "$basename.wav => $basename.mp3"; ffmpeg -i "$filename" -c copy -c:a libmp3lame -qscale:a 2 "${basename}.mp3"; done
 ```
+
+After copy, Omeka should know that new derivative files exist, because it
+doesn't check directories and formats each time a media is rendered. To record
+the metadata, go to the config form and click "Store metadata".
 
 
 TODO
 ----
 
 - [ ] Adapt for any store, not only local one.
+- [ ] Adapt for thumbnails.
+- [ ] Adapt for models.
+- [ ] Improve security of the command or limit access to super admin only (in config form anyway).
 
 
 Warning
@@ -154,6 +195,8 @@ Copyright
 [ffmpeg]: https://ffmpeg.org
 [ffmpeg wiki]: https://trac.ffmpeg.org/wiki/Encode/H.264
 [ffmpeg wiki too]: https://trac.ffmpeg.org/wiki/Encode/VP9
+[explained here]: https://trac.ffmpeg.org/wiki/Encode/H.264#a2.Chooseapresetandtune
+[ghostscript]: https://ffmpeg.org
 [browser support table]: https://en.wikipedia.org/wiki/HTML5_video#Browser_support
 [this one]: https://forum.omeka.org/t/mov-videos-not-playing-on-item-page-only-audio/11775/12
 [module issues]: https://gitlab.com/Daniel-KM/Omeka-S-module-DerivativeMedia/-/issues
