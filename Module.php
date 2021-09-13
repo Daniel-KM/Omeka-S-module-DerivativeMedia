@@ -174,23 +174,34 @@ class Module extends AbstractModule
 
         $params = $form->getData();
 
-        if (empty($params['process']) || $params['process'] !== $controller->translate('Process')) {
+        if (empty($params['process']) && empty($params['update_metadata'])) {
             $message = 'No job launched.'; // @translate
             $controller->messenger()->addWarning($message);
             return true;
         }
 
+        $process = $params;
+
         unset($params['csrf']);
         unset($params['process']);
+        unset($params['update_metadata']);
+
         $params['item_sets'] = $params['item_sets'] ?: [];
         $params['ingesters'] = $params['ingesters'] ?: [];
         $params['renderers'] = $params['renderers'] ?: [];
         $params['media_types'] = $params['media_types'] ?: [];
 
         $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
-        $job = $dispatcher->dispatch(\DerivativeMedia\Job\FileDerivativeMedia::class, $params);
+
+        if (!empty($process['update_metadata'])) {
+            $job = $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMetadata::class, $params);
+            $message = 'Storing metadata for existing files ({link}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
+        } else {
+            $job = $dispatcher->dispatch(\DerivativeMedia\Job\FileDerivativeMedia::class, $params);
+            $message = 'Creating derivative media ({link}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
+        }
         $message = new PsrMessage(
-            'Creating derivative media in background ({link}job #{job_id}{link_end}, {link_log}logs{link_end})', // @translate
+            $message,
             [
                 'link' => sprintf('<a href="%s">',
                     htmlspecialchars($controller->url()->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))

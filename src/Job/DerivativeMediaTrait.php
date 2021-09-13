@@ -119,7 +119,7 @@ trait DerivativeMediaTrait
         return true;
     }
 
-    protected function derivateMedia(Media $media)
+    protected function derivateMedia(Media $media): bool
     {
         $mainMediaType = strtok((string) $media->getMediaType(), '/');
         if (empty($this->converters[$mainMediaType])) {
@@ -145,14 +145,6 @@ trait DerivativeMediaTrait
             return false;
         }
 
-        // Prepare media data.
-        $mediaData = $media->getData();
-        if (empty($mediaData)) {
-            $mediaData = ['derivative' => []];
-        } elseif (!isset($mediaData['derivative'])) {
-            $mediaData['derivative'] = [];
-        }
-
         $realpath = new RealPath(false);
 
         $storageId = $media->getStorageId();
@@ -172,6 +164,14 @@ trait DerivativeMediaTrait
             $basename = str_replace('{filename}', $storageId, mb_substr($pattern, mb_strpos($pattern, '/{filename}.') + 1));
             $storageName = $folder . '/' . $basename;
             $derivativePath = $this->basePath . '/' . $storageName;
+
+            if ($folder === 'original') {
+                $this->logger->err(
+                    'Media #{media_id}: the output cannot be the original folder.', // @translate
+                    ['media_id' => $media->getId(), 'pattern' => $pattern]
+                );
+                return false;
+            }
 
             // Another security check.
             if ($derivativePath !== $realpath->filter($derivativePath)) {
@@ -212,11 +212,18 @@ trait DerivativeMediaTrait
                 }
             }
 
+            $mediaData = $media->getData();
+
             // Remove existing file in order to keep database sync in all cases.
-            if (file_exists($derivativePath) || isset($mediaData['derivative'][$folder])) {
-                $this->store->delete($storageName);
-                unset($mediaData['derivative'][$folder]);
-                $media->setData($mediaData);
+            if ($folder !== 'original'
+                && ($fileExists = file_exists($derivativePath)
+                    || (!empty($mediaData) && !empty($mediaData['derivative']) && array_key_exists($folder, $mediaData['derivative'])
+                ))
+            ) {
+                if ($fileExists) {
+                    $this->store->delete($storageName);
+                }
+                $this->storeMetadata($media, $folder, null, null);
                 $this->entityManager->flush($media);
                 $this->logger->info(
                     'Media #{media_id}: existing derivative media removed ({filename}).', // @translate
@@ -268,7 +275,7 @@ trait DerivativeMediaTrait
             $mediaType = $tempFile->getMediaType();
             if (!in_array(strtok($mediaType, '/'), ['audio', 'video'])) {
                 $this->logger->err(
-                    'Media #{media_id}: derivative media is not audio/video, but "{mediatype}" ({filename}).', // @translate
+                    'Media #{media_id}: derivative media is not audio or video, but "{mediatype}" ({filename}).', // @translate
                     ['media_id' => $media->getId(), 'mediatype' => $mediaType, 'filename' => $storageName]
                 );
                 $tempFile->delete();
@@ -288,9 +295,8 @@ trait DerivativeMediaTrait
 
             $tempFile->delete();
 
-            $mediaData['derivative'][$folder]['filename'] = $basename;
-            $mediaData['derivative'][$folder]['type'] = $mediaType;
-            $media->setData($mediaData);
+            $this->storeMetadata($media, $folder, $basename, $mediaType);
+
             $this->entityManager->flush($media);
             $this->logger->info(
                 'Media #{media_id}: derivative media created ({filename}).', // @translate
@@ -300,6 +306,153 @@ trait DerivativeMediaTrait
 
         unset($media);
         return true;
+    }
+
+    /**
+     * @todo Factorize with derivativeMedia()
+     */
+    protected function checkFilesAndStoreMetadata(Media $media): bool
+    {
+        $mainMediaType = strtok((string) $media->getMediaType(), '/');
+        if (empty($this->converters[$mainMediaType])) {
+            return false;
+        }
+
+        $filename = $media->getFilename();
+        $sourcePath = $this->basePath . '/original/' . $filename;
+
+        if (!file_exists($sourcePath)) {
+            $this->logger->warn(
+                'Media #{media_id}: the original file does not exist ({filename})', // @translate
+                ['media_id' => $media->getId(), 'filename' => 'original/' . $filename]
+            );
+            return false;
+        }
+
+        if (!is_readable($sourcePath)) {
+            $this->logger->warn(
+                'Media #{media_id}: the original file is not readable ({filename}).', // @translate
+                ['media_id' => $media->getId(), 'filename' => 'original/' . $filename]
+            );
+            return false;
+        }
+
+        $realpath = new RealPath(false);
+
+        $storageId = $media->getStorageId();
+        foreach ($this->converters[$mainMediaType] as $pattern => $command) {
+            if ($this->shouldStop()) {
+                $this->logger->warn(
+                    'Media #{media_id}: Process stopped.', // @translate
+                    ['media_id' => $media->getId()]
+                );
+                return false;
+            }
+
+            $command = trim($command);
+            $pattern = trim($pattern);
+
+            $folder = mb_substr($pattern, 0, mb_strpos($pattern, '/{filename}.'));
+            $basename = str_replace('{filename}', $storageId, mb_substr($pattern, mb_strpos($pattern, '/{filename}.') + 1));
+            $storageName = $folder . '/' . $basename;
+            $derivativePath = $this->basePath . '/' . $storageName;
+
+            if ($folder === 'original') {
+                $this->logger->err(
+                    'Media #{media_id}: the output cannot be the original folder.', // @translate
+                    ['media_id' => $media->getId(), 'pattern' => $pattern]
+                );
+                return false;
+            }
+
+            // Another security check.
+            if ($derivativePath !== $realpath->filter($derivativePath)) {
+                $this->logger->err(
+                    'Media #{media_id}: the derivative pattern "{pattern}" does not create a real path.', // @translate
+                    ['media_id' => $media->getId(), 'pattern' => $pattern]
+                );
+                return false;
+            }
+
+            if (!file_exists($derivativePath)) {
+                $this->storeMetadata($media, $folder, null, null);
+                $this->entityManager->flush($media);
+                continue;
+            }
+
+            if (!is_readable($derivativePath)) {
+                $this->storeMetadata($media, $folder, null, null);
+                $this->entityManager->flush($media);
+                $this->logger->err(
+                    'Media #{media_id}: the derivative file is not readable ({filename}).', // @translate
+                    ['media_id' => $media->getId(), 'filename' => $storageName]
+                );
+                continue;
+            }
+
+            if (!filesize($derivativePath)) {
+                $this->storeMetadata($media, $folder, null, null);
+                $this->entityManager->flush($media);
+                $this->logger->err(
+                    'Media #{media_id}: the derivative file is empty ({filename}).', // @translate
+                    ['media_id' => $media->getId(), 'filename' => $storageName]
+                );
+                continue;
+            }
+
+            // Use temp file factory only to get media-type. The file is kept.
+            $tempFile = $this->tempFileFactory->build();
+            $tempFile->delete();
+            $tempFile->setTempPath($derivativePath);
+            $mediaType = $tempFile->getMediaType();
+
+            if (!in_array(strtok($mediaType, '/'), ['audio', 'video'])) {
+                $this->storeMetadata($media, $folder, null, null);
+                $this->entityManager->flush($media);
+                $this->logger->err(
+                    'Media #{media_id}: derivative media is not audio or video, but "{mediatype}" ({filename}).', // @translate
+                    ['media_id' => $media->getId(), 'mediatype' => $mediaType, 'filename' => $storageName]
+                );
+                continue;
+            }
+
+            $this->storeMetadata($media, $folder, $basename, $mediaType);
+            $this->entityManager->flush($media);
+
+            $this->logger->info(
+                'Media #{media_id}: derivative media file metadata stored ({filename}).', // @translate
+                ['media_id' => $media->getId(), 'filename' => $storageName]
+            );
+        }
+
+        unset($media);
+        return true;
+    }
+
+    /**
+     * Store or remove data about a derivative file (no flush).
+     */
+    protected function storeMetadata(Media $media, string $folder, ?string $basename = null, ?string $mediaType = null)
+    {
+        // Prepare media data.
+        $mediaData = $media->getData();
+
+        if (empty($mediaData)) {
+            $mediaData = ['derivative' => []];
+        } elseif (!isset($mediaData['derivative'])) {
+            $mediaData['derivative'] = [];
+        }
+
+        if (empty($basename) || empty($mediaType)) {
+            unset($mediaData['derivative'][$folder]);
+        } else {
+            $mediaData['derivative'][$folder]['filename'] = $basename;
+            $mediaData['derivative'][$folder]['type'] = $mediaType;
+        }
+
+        $media->setData($mediaData);
+
+        return $this;
     }
 
     protected function isManaged(Media $media)

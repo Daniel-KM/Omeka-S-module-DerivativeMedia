@@ -3,21 +3,13 @@
 namespace DerivativeMedia\Job;
 
 use Doctrine\Common\Collections\Criteria;
-use Omeka\Job\AbstractJob;
 
-class FileDerivativeMedia extends AbstractJob
+class DerivativeMetadata extends FileDerivativeMedia
 {
-    use DerivativeMediaTrait;
-
     /**
-     * Limit for the loop to avoid heavy sql requests.
+     * Copy of FileDerivativeMedia, except message and operation to process.
      *
-     * @var int
-     */
-    const SQL_LIMIT = 25;
-
-    /**
-     * @todo Factorize with DerivativeMetadata.
+     * @todo Factorize.
      *
      * {@inheritDoc}
      * @see \Omeka\Job\JobInterface::perform()
@@ -98,14 +90,14 @@ DQL;
 
         if (empty($totalToProcess)) {
             $this->logger->info(
-                'No media to process for creation of derivative medias (on a total of {total} medias). You may check your query.', // @translate
+                'No media to process for storing metadata of derivative medias (on a total of {total} medias). You may check your query.', // @translate
                 ['total' => $totalResources]
             );
             return;
         }
 
         $this->logger->info(
-            'Processing creation of derivative medias of {total_process} medias (on a total of {total} medias).', // @translate
+            'Processing storing metadata of derivative medias of {total_process} medias (on a total of {total} medias).', // @translate
             ['total_process' => $totalToProcess, 'total' => $totalResources]
         );
 
@@ -130,19 +122,19 @@ DQL;
             foreach ($medias as $key => $media) {
                 if ($this->shouldStop()) {
                     $this->logger->warn(
-                        'The job "Derivative Media" was stopped: {count}/{total} resources processed.', // @translate
+                        'The job "Storing metadata" was stopped: {count}/{total} resources processed.', // @translate
                         ['count' => $offset + $key, 'total' => $totalToProcess]
                     );
                     break 2;
                 }
 
                 $this->logger->info(
-                    'Media #{media_id} ({count}/{total}): creating derivative files.', // @translate
+                    'Media #{media_id} ({count}/{total}): storing metadata of derivative files.', // @translate
                     ['media_id' => $media->getId(), 'count' => $offset + $key + 1, 'total' => $totalToProcess]
                 );
 
                 if ($this->isManaged($media)) {
-                    $result = $this->derivateMedia($media);
+                    $result = $this->checkFilesAndStoreMetadata($media);
                     ++$totalProcessed;
                     $result
                         ? ++$totalSucceed
@@ -166,70 +158,8 @@ DQL;
         }
 
         $this->logger->info(
-            'End of the creation of derivative files: {count}/{total} processed, {skipped} skipped, {succeed} succeed, {failed} failed.', // @translate
+            'End of the process to store metadata of derivative files: {count}/{total} processed, {skipped} skipped, {succeed} succeed, {failed} failed.', // @translate
             ['count' => $totalProcessed, 'total' => $totalToProcess, 'skipped' => $totalToProcess - $totalProcessed, 'succeed' => $totalSucceed, 'failed' => $totalFailed]
         );
-    }
-
-    /**
-     * Create a doctrine expression for a range.
-     *
-     * @param string $column
-     * @param array|string $ids
-     * @return \Doctrine\Common\Collections\Expr\CompositeExpression|null
-     */
-    protected function exprRange($column, $ids)
-    {
-        $ranges = $this->rangeToArray($ids);
-        if (empty($ranges)) {
-            return [];
-        }
-
-        $conditions = [];
-
-        $expr = Criteria::create()->expr();
-        foreach ($ranges as $range) {
-            if (strpos($range, '-')) {
-                $from = strtok($range, '-');
-                $to = strtok('-');
-                if ($from && $to) {
-                    $conditions[] = $expr->andX($expr->gte($column, $from), $expr->lte($column, $to));
-                } elseif ($from) {
-                    $conditions[] = $expr->gte($column, $from);
-                } else {
-                    $conditions[] = $expr->lte($column, $to);
-                }
-            } else {
-                $conditions[] = $expr->eq($column, $range);
-            }
-        }
-
-        return $conditions;
-    }
-
-    /**
-     * Clean a list of ranges of ids.
-     *
-     * @param string|array $ids
-     * @return array
-     */
-    protected function rangeToArray($ids)
-    {
-        $clean = function ($str) {
-            $str = preg_replace('/[^0-9-]/', ' ', $str);
-            $str = preg_replace('/\s*-+\s*/', '-', $str);
-            $str = preg_replace('/-+/', '-', $str);
-            $str = preg_replace('/\s+/', ' ', $str);
-            return trim($str);
-        };
-
-        $ids = is_array($ids)
-            ? array_map($clean, $ids)
-            : explode(' ', $clean($ids));
-
-        // Skip empty ranges and ranges with multiple "-".
-        return array_values(array_filter($ids, function ($v) {
-            return !empty($v) && substr_count($v, '-') <= 1;
-        }));
     }
 }

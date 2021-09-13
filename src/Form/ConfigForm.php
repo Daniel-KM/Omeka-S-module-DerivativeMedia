@@ -94,11 +94,23 @@ class ConfigForm extends Form
                 'name' => 'process',
                 'type' => Element\Submit::class,
                 'options' => [
-                    'label' => 'Run in background', // @translate
+                    'label' => 'Create derivative files in background', // @translate
                 ],
                 'attributes' => [
                     'id' => 'process',
                     'value' => 'Process', // @translate
+                ],
+            ])
+            ->add([
+                'name' => 'update_metadata',
+                'type' => Element\Submit::class,
+                'options' => [
+                    'label' => 'Store metadata for existing files in directories', // @translate
+                    'info' => 'When files are created outside of Omeka and copied in the right directories (webm/, mp3/, etc.) with the right names (same as original and extension), Omeka should record some metadata to be able to render them.', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'update_metadata',
+                    'value' => 'Update metadata', // @translate
                 ],
             ]);
 
@@ -127,7 +139,7 @@ class ConfigForm extends Form
     protected function listIngesters()
     {
         $sql = 'SELECT DISTINCT(ingester) FROM media ORDER BY ingester';
-        $stmt = $this->getConnection()->query($sql);
+        $stmt = $this->connection->executeQuery($sql);
         $result = $stmt->fetchAll(\PDO::FETCH_COLUMN);
         return ['' => 'All ingesters'] // @translate
             + array_combine($result, $result);
@@ -139,7 +151,7 @@ class ConfigForm extends Form
     protected function listRenderers()
     {
         $sql = 'SELECT DISTINCT(renderer) FROM media ORDER BY renderer';
-        $stmt = $this->getConnection()->query($sql);
+        $stmt = $this->connection->executeQuery($sql);
         $result = $stmt->fetchAll(\PDO::FETCH_COLUMN);
         return ['' => 'All renderers'] // @translate
             + array_combine($result, $result);
@@ -151,7 +163,7 @@ class ConfigForm extends Form
     protected function listMediaTypes()
     {
         $sql = 'SELECT DISTINCT(media_type) FROM media WHERE media_type IS NOT NULL AND media_type != "" ORDER BY media_type';
-        $stmt = $this->getConnection()->query($sql);
+        $stmt = $this->connection->executeQuery($sql);
         $result = $stmt->fetchAll(\PDO::FETCH_COLUMN);
         return ['' => 'All media types'] // @translate
             + array_combine($result, $result);
@@ -165,13 +177,5 @@ class ConfigForm extends Form
     {
         $this->connection = $connection;
         return $this;
-    }
-
-    /**
-     * @return \Doctrine\DBAL\Connection
-     */
-    public function getConnection()
-    {
-        return $this->connection;
     }
 }
