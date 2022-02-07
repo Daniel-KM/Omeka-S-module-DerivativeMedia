@@ -224,7 +224,8 @@ trait DerivativeMediaTrait
                     $this->store->delete($storageName);
                 }
                 $this->storeMetadata($media, $folder, null, null);
-                $this->entityManager->flush($media);
+                $this->entityManager->persist($media);
+                $this->entityManager->flush();
                 $this->logger->info(
                     'Media #{media_id}: existing derivative media removed ({filename}).', // @translate
                     ['media_id' => $media->getId(), 'filename' => $storageName]
@@ -376,13 +377,15 @@ trait DerivativeMediaTrait
 
             if (!file_exists($derivativePath)) {
                 $this->storeMetadata($media, $folder, null, null);
-                $this->entityManager->flush($media);
+                $this->entityManager->persist($media);
+                $this->entityManager->flush();
                 continue;
             }
 
             if (!is_readable($derivativePath)) {
                 $this->storeMetadata($media, $folder, null, null);
-                $this->entityManager->flush($media);
+                $this->entityManager->persist($media);
+                $this->entityManager->flush();
                 $this->logger->err(
                     'Media #{media_id}: the derivative file is not readable ({filename}).', // @translate
                     ['media_id' => $media->getId(), 'filename' => $storageName]
@@ -392,7 +395,8 @@ trait DerivativeMediaTrait
 
             if (!filesize($derivativePath)) {
                 $this->storeMetadata($media, $folder, null, null);
-                $this->entityManager->flush($media);
+                $this->entityManager->persist($media);
+                $this->entityManager->flush();
                 $this->logger->err(
                     'Media #{media_id}: the derivative file is empty ({filename}).', // @translate
                     ['media_id' => $media->getId(), 'filename' => $storageName]
@@ -408,7 +412,8 @@ trait DerivativeMediaTrait
 
             if (!in_array(strtok($mediaType, '/'), ['audio', 'video'])) {
                 $this->storeMetadata($media, $folder, null, null);
-                $this->entityManager->flush($media);
+                $this->entityManager->persist($media);
+                $this->entityManager->flush();
                 $this->logger->err(
                     'Media #{media_id}: derivative media is not audio or video, but "{mediatype}" ({filename}).', // @translate
                     ['media_id' => $media->getId(), 'mediatype' => $mediaType, 'filename' => $storageName]
@@ -417,7 +422,8 @@ trait DerivativeMediaTrait
             }
 
             $this->storeMetadata($media, $folder, $basename, $mediaType);
-            $this->entityManager->flush($media);
+            $this->entityManager->persist($media);
+            $this->entityManager->flush();
 
             $this->logger->info(
                 'Media #{media_id}: derivative media file metadata stored ({filename}).', // @translate
