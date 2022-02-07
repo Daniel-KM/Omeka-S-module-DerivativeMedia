@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-09-28 00:00+0000\n"
+"POT-Creation-Date: 2022-02-07 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -35,29 +35,50 @@ msgstr ""
 msgid "This processor is available in module Bulk Check too."
 msgstr ""
 
-#: Module.php:177
-msgid "Process"
-msgstr ""
-
-#: Module.php:225
+#: Module.php:236
 msgid "Derivative medias"
 msgstr ""
 
-#: src/Generic/AbstractModule.php:601
+#: src/Generic/AbstractModule.php:66
 #, php-format
 msgid "This module requires the module \"%s\"."
 msgstr ""
 
-#: src/Generic/AbstractModule.php:621
+#: src/Generic/AbstractModule.php:73
 #, php-format
 msgid "This module requires modules \"%s\"."
 msgstr ""
 
-#: src/Generic/AbstractModule.php:689
+#: src/Generic/AbstractModule.php:80
+msgid "This module has resources that cannot be installed."
+msgstr ""
+
+#: src/Generic/AbstractModule.php:87
+msgid ""
+"This module cannot install its tables, because they exist already. Try to "
+"remove them first."
+msgstr ""
+
+#: src/Generic/AbstractModule.php:328
+#, php-format
+msgid "The module removed tables \"%s\" from a previous broken install."
+msgstr ""
+
+#: src/Generic/AbstractModule.php:792
 #, php-format
 msgid ""
 "The module \"%s\" was automatically deactivated because the dependencies are "
 "unavailable."
+msgstr ""
+
+#: src/Media/FileRenderer/AudioRenderer.php:78
+#, php-format
+msgid "Your browser does not support HTML5 audio, but you can download it: %s."
+msgstr ""
+
+#: src/Media/FileRenderer/VideoRenderer.php:87
+#, php-format
+msgid "Your browser does not support HTML5 video, but you can download it: %s."
 msgstr ""
 
 #: Module.php:47
@@ -78,13 +99,19 @@ msgstr ""
 msgid "No job launched."
 msgstr ""
 
-#: Module.php:193
+#: Module.php:198
 msgid ""
-"Creating derivative media in background ({link}job #{job_id}{link_end}, "
+"Storing metadata for existing files ({link}job #{job_id}{link_end}, "
 "{link_log}logs{link_end})"
 msgstr ""
 
-#: Module.php:308
+#: Module.php:201
+msgid ""
+"Creating derivative media ({link}job #{job_id}{link_end}, {link_log}"
+"logs{link_end})"
+msgstr ""
+
+#: Module.php:366
 msgid "[Derivative Media] This module requires a local store currently."
 msgstr ""
 
@@ -122,7 +149,7 @@ msgstr ""
 msgid "Ingesters to process"
 msgstr ""
 
-#: src/Form/ConfigForm.php:39 src/Form/ConfigForm.php:132
+#: src/Form/ConfigForm.php:39 src/Form/ConfigForm.php:144
 msgid "All ingesters"
 msgstr ""
 
@@ -130,7 +157,7 @@ msgstr ""
 msgid "Renderers to process"
 msgstr ""
 
-#: src/Form/ConfigForm.php:55 src/Form/ConfigForm.php:144
+#: src/Form/ConfigForm.php:55 src/Form/ConfigForm.php:156
 msgid "All renderers"
 msgstr ""
 
@@ -138,7 +165,7 @@ msgstr ""
 msgid "Media types to process"
 msgstr ""
 
-#: src/Form/ConfigForm.php:71 src/Form/ConfigForm.php:156
+#: src/Form/ConfigForm.php:71 src/Form/ConfigForm.php:168
 msgid "All media types"
 msgstr ""
 
@@ -147,7 +174,30 @@ msgid "Media ids"
 msgstr ""
 
 #: src/Form/ConfigForm.php:97
-msgid "Run in background"
+msgid "Create derivative files in background"
+msgstr ""
+
+#: src/Form/ConfigForm.php:101
+msgid "Process"
+msgstr ""
+
+#: src/Form/ConfigForm.php:108
+msgid "Store metadata for existing files in directories"
+msgstr ""
+
+#: src/Form/ConfigForm.php:109
+msgid ""
+"When files are created outside of Omeka and copied in the right directories "
+"(webm/, mp3/, etc.) with the right names (same as original and extension), "
+"Omeka should record some metadata to be able to render them."
+msgstr ""
+
+#: src/Form/ConfigForm.php:113
+msgid "Update metadata"
+msgstr ""
+
+#: src/Job/DerivativeItem.php:25
+msgid "No item #{item_id}: no derivative media to create."
 msgstr ""
 
 #: src/Job/DerivativeMedia.php:25
@@ -173,19 +223,23 @@ msgstr ""
 msgid "A local store is required to derivate media currently."
 msgstr ""
 
-#: src/Job/DerivativeMediaTrait.php:134
+#: src/Job/DerivativeMediaTrait.php:134 src/Job/DerivativeMediaTrait.php:327
 msgid "Media #{media_id}: the original file does not exist ({filename})"
 msgstr ""
 
-#: src/Job/DerivativeMediaTrait.php:142
+#: src/Job/DerivativeMediaTrait.php:142 src/Job/DerivativeMediaTrait.php:335
 msgid "Media #{media_id}: the original file is not readable ({filename})."
 msgstr ""
 
-#: src/Job/DerivativeMediaTrait.php:162
+#: src/Job/DerivativeMediaTrait.php:154 src/Job/DerivativeMediaTrait.php:347
 msgid "Media #{media_id}: Process stopped."
 msgstr ""
 
-#: src/Job/DerivativeMediaTrait.php:179
+#: src/Job/DerivativeMediaTrait.php:170 src/Job/DerivativeMediaTrait.php:363
+msgid "Media #{media_id}: the output cannot be the original folder."
+msgstr ""
+
+#: src/Job/DerivativeMediaTrait.php:179 src/Job/DerivativeMediaTrait.php:372
 msgid ""
 "Media #{media_id}: the derivative pattern \"{pattern}\" does not create a "
 "real path."
@@ -196,70 +250,111 @@ msgstr ""
 msgid "Media #{media_id}: derivative media is not writeable ({filename})."
 msgstr ""
 
-#: src/Job/DerivativeMediaTrait.php:222
+#: src/Job/DerivativeMediaTrait.php:230
 msgid "Media #{media_id}: existing derivative media removed ({filename})."
 msgstr ""
 
-#: src/Job/DerivativeMediaTrait.php:228
+#: src/Job/DerivativeMediaTrait.php:236
 msgid "Media #{media_id}: creating derivative media \"{filename}\"."
 msgstr ""
 
-#: src/Job/DerivativeMediaTrait.php:244
+#: src/Job/DerivativeMediaTrait.php:252
 msgid "Media #{media_id}: derivative media cannot be created ({filename})."
 msgstr ""
 
-#: src/Job/DerivativeMediaTrait.php:253
+#: src/Job/DerivativeMediaTrait.php:261
 msgid ""
 "Media #{media_id}: Output results for \"{filename}\":\n"
 "{output}"
 msgstr ""
 
-#: src/Job/DerivativeMediaTrait.php:261
+#: src/Job/DerivativeMediaTrait.php:269
 msgid "Media #{media_id}: derivative media is empty ({filename})."
 msgstr ""
 
-#: src/Job/DerivativeMediaTrait.php:271
+#: src/Job/DerivativeMediaTrait.php:279 src/Job/DerivativeMediaTrait.php:418
 msgid ""
-"Media #{media_id}: derivative media is not audio/video, but "
+"Media #{media_id}: derivative media is not audio or video, but "
 "\"{mediatype}\" ({filename})."
 msgstr ""
 
-#: src/Job/DerivativeMediaTrait.php:282
+#: src/Job/DerivativeMediaTrait.php:290
 msgid "Media #{media_id}: derivative media cannot be stored ({filename})."
 msgstr ""
 
-#: src/Job/DerivativeMediaTrait.php:296
+#: src/Job/DerivativeMediaTrait.php:303
 msgid "Media #{media_id}: derivative media created ({filename})."
 msgstr ""
 
-#: src/Job/FileDerivativeMedia.php:95
+#: src/Job/DerivativeMediaTrait.php:390
+msgid "Media #{media_id}: the derivative file is not readable ({filename})."
+msgstr ""
+
+#: src/Job/DerivativeMediaTrait.php:401
+msgid "Media #{media_id}: the derivative file is empty ({filename})."
+msgstr ""
+
+#: src/Job/DerivativeMediaTrait.php:429
+msgid "Media #{media_id}: derivative media file metadata stored ({filename})."
+msgstr ""
+
+#: src/Job/DerivativeMediaMetadata.php:93
+msgid ""
+"No media to process for storing metadata of derivative medias (on a total of "
+"{total} medias). You may check your query."
+msgstr ""
+
+#: src/Job/DerivativeMediaMetadata.php:100
+msgid ""
+"Processing storing metadata of derivative medias of {total_process} medias "
+"(on a total of {total} medias)."
+msgstr ""
+
+#: src/Job/DerivativeMediaMetadata.php:125
+msgid ""
+"The job \"Storing metadata\" was stopped: {count}/{total} resources "
+"processed."
+msgstr ""
+
+#: src/Job/DerivativeMediaMetadata.php:132
+msgid ""
+"Media #{media_id} ({count}/{total}): storing metadata of derivative files."
+msgstr ""
+
+#: src/Job/DerivativeMediaMetadata.php:144 src/Job/DerivativeMediaFile.php:152
+msgid ""
+"Media #{media_id} ({count}/{total}): The media is not an audio or video file."
+msgstr ""
+
+#: src/Job/DerivativeMediaMetadata.php:161
+msgid ""
+"End of the process to store metadata of derivative files: {count}/{total} "
+"processed, {skipped} skipped, {succeed} succeed, {failed} failed."
+msgstr ""
+
+#: src/Job/DerivativeMediaFile.php:101
 msgid ""
 "No media to process for creation of derivative medias (on a total of {total} "
 "medias). You may check your query."
 msgstr ""
 
-#: src/Job/FileDerivativeMedia.php:102
+#: src/Job/DerivativeMediaFile.php:108
 msgid ""
 "Processing creation of derivative medias of {total_process} medias (on a "
 "total of {total} medias)."
 msgstr ""
 
-#: src/Job/FileDerivativeMedia.php:127
+#: src/Job/DerivativeMediaFile.php:133
 msgid ""
 "The job \"Derivative Media\" was stopped: {count}/{total} resources "
 "processed."
 msgstr ""
 
-#: src/Job/FileDerivativeMedia.php:134
+#: src/Job/DerivativeMediaFile.php:140
 msgid "Media #{media_id} ({count}/{total}): creating derivative files."
 msgstr ""
 
-#: src/Job/FileDerivativeMedia.php:144
-msgid ""
-"Media #{media_id} ({count}/{total}): The media is not an audio video file."
-msgstr ""
-
-#: src/Job/FileDerivativeMedia.php:161
+#: src/Job/DerivativeMediaFile.php:169
 msgid ""
 "End of the creation of derivative files: {count}/{total} processed, "
 "{skipped} skipped, {succeed} succeed, {failed} failed."
