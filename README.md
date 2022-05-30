@@ -94,12 +94,14 @@ appended):
 
 ```
 # Audio
-mp3/{filename}.mp3   = -i {input} -c copy -c:a libmp3lame -qscale:a 2
-ogg/{filename}.ogg   = -i {input} -c copy -vn -c:a libopus
+mp3/{filename}.mp3   = -c copy -c:a libmp3lame -qscale:a 2
+ogg/{filename}.ogg   = -c copy -vn -c:a libopus
+aac/{filename}.m4a   = -c copy -c:a aac -q:a 2 -movflags +faststart
 
-# Video
-webm/{filename}.webm = -i {input} -c copy -c:v libvpx-vp9 -crf 30 -b:v 0 -deadline realtime -pix_fmt yuv420p -c:a libopus
-mp4/{filename}.mp4   = -i {input} -c copy -c:v libx264 -movflags +faststart -filter:v crop='floor(in_w/2)*2:floor(in_h/2)*2' -crf 22 -level 3 -preset medium -tune film -pix_fmt yuv420p -c:a libmp3lame -qscale:a 2
+# Video. To avoid issue with Apple Safari, you may add mov before mp4.
+webm/{filename}.webm = -c copy -c:v libvpx-vp9 -crf 30 -b:v 0 -deadline realtime -pix_fmt yuv420p -c:a libopus
+mov/{filename}.mov   = -c copy -c:v libx264 -movflags +faststart -filter:v crop='floor(in_w/2)*2:floor(in_h/2)*2' -crf 22 -level 3 -preset ultrafast -tune film -pix_fmt yuv420p -c:a aac -qscale:a 2 -f mov
+mp4/{filename}.mp4   = -c copy -c:v libx264 -movflags +faststart -filter:v crop='floor(in_w/2)*2:floor(in_h/2)*2' -crf 22 -level 3 -preset ultrafast -tune film -pix_fmt yuv420p -c:a libmp3lame -qscale:a 2
 
 # Pdf
 
@@ -118,12 +120,53 @@ Here is an example of a one-line command to prepare all wav into mp3 of a
 directory:
 
 ```sh
-cd /my/dir; for filename in *.wav; do name=`echo "$filename" | cut -d'.' -f1`; basepath=${filename%.*}; basename=${basepath##*/}; echo "$basename.wav => $basename.mp3"; ffmpeg -i "$filename" -c copy -c:a libmp3lame -qscale:a 2 "${basename}.mp3"; done
+cd /my/source/dir; for filename in *.wav; do name=`echo "$filename" | cut -d'.' -f1`; basepath=${filename%.*}; basename=${basepath##*/}; echo "$basename.wav => $basename.mp3"; ffmpeg -i "$filename" -c copy -c:a libmp3lame -qscale:a 2 "${basename}.mp3"; done
 ```
 
-After copy, Omeka should know that new derivative files exist, because it
-doesn't check directories and formats each time a media is rendered. To record
-the metadata, go to the config form and click "Store metadata".
+Another example when original files are in subdirectories (module Archive Repertory):
+
+```sh
+# Go to the root directory (important to recreate structure with command below).
+cd '/var/www/html/files/original'
+
+# Convert all files.
+find '/var/www/html/files/original' -type f -name '*.wav' -exec ffmpeg -i "{}" -c copy -c:a libmp3lame -qscale:a 2 "{}".mp3 \;
+
+# Recreate structure of a directory (here the destination is "/var/www/html/files").
+find * -type d -exec mkdir -p "/var/www/html/files/mp3/{}" \;
+
+# Move a specific type of files into a directory.
+find . -type f -name "*.mp3" -exec mv "{}" "/var/www/html/files/mp3/{}" \;
+
+# Remove empty directories.
+rmdir "/var/www/html/files/mp3/*"
+
+# Rename new files.
+find '/var/www/html/files/mp3' -type f -name '*.wav.mp3' -exec rename 's/.wav.mp3/.mp3/' "{}" \;
+```
+
+**IMPORTANT**: After copy, Omeka should know that new derivative files exist,
+because it doesn't check directories and formats each time a media is rendered.
+To record the metadata, go to the config form and click "Store metadata".
+
+### Fast start
+
+For mp4 and mov, it's important to set the option `-movflags +faststart` to
+allow the video to start before the full loading. To check if a file has the
+option:
+
+```sh
+ffmpeg -i 'my_video.mp4' -v trace 2>&1 | grep -m 1 -o -e "type:'mdat'" -e "type:'moov'"
+```
+
+If output is `mdat` and not `moov`, the file is not ready for fast start. To fix
+it, simply copy the file with the option:
+
+```sh
+ffmpeg -i 'my_video.mp4' -c copy -movflags +faststart 'my_video.faststart.mp4'
+```
+
+See [ffmpeg help] for more information.
 
 
 TODO
@@ -132,7 +175,10 @@ TODO
 - [ ] Adapt for any store, not only local one.
 - [ ] Adapt for thumbnails.
 - [ ] Adapt for models.
-- [ ] Improve security of the command or limit access to super admin only (in config form anyway).
+- [ ] Improve security of the command or limit access to super admin only (in main settings anyway).
+- [ ] Add a check for the duration: a shorter result than original means that an issue occurred.
+- [ ] Add a check for missing conversions (a table with a column by conversion).
+- [ ] Add a check for fast start (mov,mp4,m4a,3gp,3g2,mj2).
 
 
 Warning
@@ -183,8 +229,9 @@ of the CeCILL license and that you accept its terms.
 Copyright
 ---------
 
-* Copyright Daniel Berthereau, 2020
+* Copyright Daniel Berthereau, 2020-2022
 
+First version of this module was done for [Archives sonores de poésie] of [Sorbonne Université].
 
 [Derivative Media]: https://gitlab.com/Daniel-KM/Omeka-S-module-DerivativeMedia
 [Omeka S]: https://omeka.org/s
@@ -199,10 +246,13 @@ Copyright
 [ghostscript]: https://ffmpeg.org
 [browser support table]: https://en.wikipedia.org/wiki/HTML5_video#Browser_support
 [this one]: https://forum.omeka.org/t/mov-videos-not-playing-on-item-page-only-audio/11775/12
+[ffmpeg help]: https://trac.ffmpeg.org/wiki/HowToCheckIfFaststartIsEnabledForPlayback
 [module issues]: https://gitlab.com/Daniel-KM/Omeka-S-module-DerivativeMedia/-/issues
 [CeCILL v2.1]: https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html
 [GNU/GPL]: https://www.gnu.org/licenses/gpl-3.0.html
 [FSF]: https://www.fsf.org
 [OSI]: http://opensource.org
 [GitLab]: https://gitlab.com/Daniel-KM
+[Archives sonores de poésie]: https://asp.huma-num.fr
+[Sorbonne Université]: https://lettres.sorbonne-universite.fr
 [Daniel-KM]: https://gitlab.com/Daniel-KM "Daniel Berthereau"
