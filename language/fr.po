@@ -7,15 +7,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-02-07 00:00+0000\n"
-"PO-Revision-Date: 2022-02-07 00:00+0000\n"
+"POT-Creation-Date: 2022-06-06 00:00+0000\n"
+"PO-Revision-Date: 2022-06-06 00:00+0000\n"
 "Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
 "Language-Team: \n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.0.1\n"
+"X-Generator: Poedit 3.1\n"
 
 #: Module.php:58
 msgid ""
@@ -43,7 +43,7 @@ msgstr "Le processeur est également disponible dans le module Bulk Check."
 msgid "Derivative medias"
 msgstr "Médias dérivés"
 
-#: src/Generic/AbstractModule.php:66
+#: src/Generic/AbstractModule.php:66 src/Generic/AbstractModule.php:740
 #, php-format
 msgid "This module requires the module \"%s\"."
 msgstr "Ce module requiert le module \"%s\"."
@@ -71,7 +71,12 @@ msgid "The module removed tables \"%s\" from a previous broken install."
 msgstr ""
 "Le module a supprimé les tables \"%s\" depuis une installation échouée."
 
-#: src/Generic/AbstractModule.php:792
+#: src/Generic/AbstractModule.php:735
+#, php-format
+msgid "This module requires the module \"%1$s\", version %2$s or above."
+msgstr "Ce module requiert le module « %1$s », version %2$s ou supérieure."
+
+#: src/Generic/AbstractModule.php:832
 #, php-format
 msgid ""
 "The module \"%s\" was automatically deactivated because the dependencies are "
@@ -148,8 +153,8 @@ msgid ""
 "Each converter is one row with a filepath pattern, a \"=\", and the ffmpeg "
 "command (without file)."
 msgstr ""
-"Chaque convertisseur correspond à une ligne avec un modèle de chemin, un \"="
-"\", et la commande ffmpeg (sans le fichier)."
+"Chaque convertisseur correspond à une ligne avec un modèle de chemin, un "
+"\"=\", et la commande ffmpeg (sans le fichier)."
 
 #: src/Form/SettingsFieldset.php:34
 msgid "Append original audio"
@@ -343,8 +348,8 @@ msgstr "Média #{media_id} : le fichier dérivé est vide ({filename})."
 #: src/Job/DerivativeMediaTrait.php:429
 msgid "Media #{media_id}: derivative media file metadata stored ({filename})."
 msgstr ""
-"Média #{media_id} : les métadonnées du fichier dérivé ne peuvent pas être "
-"enregistrées ({filename})."
+"Média #{media_id} : les métadonnées du fichier dérivé ont été enregistrées "
+"({filename})."
 
 #: src/Job/DerivativeMediaMetadata.php:93
 msgid ""

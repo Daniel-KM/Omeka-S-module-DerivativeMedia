@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-02-07 00:00+0000\n"
+"POT-Creation-Date: 2022-06-06 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -39,7 +39,7 @@ msgstr ""
 msgid "Derivative medias"
 msgstr ""
 
-#: src/Generic/AbstractModule.php:66
+#: src/Generic/AbstractModule.php:66 src/Generic/AbstractModule.php:740
 #, php-format
 msgid "This module requires the module \"%s\"."
 msgstr ""
@@ -64,7 +64,12 @@ msgstr ""
 msgid "The module removed tables \"%s\" from a previous broken install."
 msgstr ""
 
-#: src/Generic/AbstractModule.php:792
+#: src/Generic/AbstractModule.php:735
+#, php-format
+msgid "This module requires the module \"%1$s\", version %2$s or above."
+msgstr ""
+
+#: src/Generic/AbstractModule.php:832
 #, php-format
 msgid ""
 "The module \"%s\" was automatically deactivated because the dependencies are "
