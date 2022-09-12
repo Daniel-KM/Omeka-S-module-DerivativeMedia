@@ -13,6 +13,7 @@ class SettingsFieldset extends Fieldset
     public function init(): void
     {
         $this
+            ->setAttribute('id', 'derivative-media')
             ->add([
                 'name' => 'derivativemedia_converters_audio',
                 'type' => ArrayTextarea::class,
