@@ -13,7 +13,7 @@ and cross-browser compatible, including Safari. Multiple derivative files can be
 created for each file. It works the same way Omeka does for images (large,
 medium and square thumbnails).
 
-The conversion uses [ffmpeg] and [ghostcript], two command-line tools that are
+The conversion uses [ffmpeg] and [ghostscript], two command-line tools that are
 generally installed by default on most servers. The commands are customizable.
 
 
@@ -243,7 +243,7 @@ First version of this module was done for [Archives sonores de poésie] of [Sorb
 [ffmpeg wiki]: https://trac.ffmpeg.org/wiki/Encode/H.264
 [ffmpeg wiki too]: https://trac.ffmpeg.org/wiki/Encode/VP9
 [explained here]: https://trac.ffmpeg.org/wiki/Encode/H.264#a2.Chooseapresetandtune
-[ghostscript]: https://ffmpeg.org
+[ghostscript]: https://www.ghostscript.com
 [browser support table]: https://en.wikipedia.org/wiki/HTML5_video#Browser_support
 [this one]: https://forum.omeka.org/t/mov-videos-not-playing-on-item-page-only-audio/11775/12
 [ffmpeg help]: https://trac.ffmpeg.org/wiki/HowToCheckIfFaststartIsEnabledForPlayback
