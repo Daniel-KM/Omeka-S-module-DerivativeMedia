@@ -16,12 +16,15 @@ medium and square thumbnails).
 The conversion uses [ffmpeg] and [ghostscript], two command-line tools that are
 generally installed by default on most servers. The commands are customizable.
 
+The process on pdf is currently not supported.
+
 
 Installation
 ------------
 
-This module requires the server packages `ffmpeg` and `ghostscript` (command `gs`)
-installed on the server and available in the path.
+This module requires the server packages `ffmpeg` (for audio and video) and
+`ghostscript` (command `gs` for pdf, not supported yet) installed on the server
+and available in the path.
 
 First, install the required module [Log] and the optional module [Generic].
 
@@ -179,6 +182,7 @@ TODO
 - [ ] Add a check for the duration: a shorter result than original means that an issue occurred.
 - [ ] Add a check for missing conversions (a table with a column by conversion).
 - [ ] Add a check for fast start (mov,mp4,m4a,3gp,3g2,mj2).
+- [ ] Finalize for pdf.
 
 
 Warning
@@ -233,6 +237,7 @@ Copyright
 
 First version of this module was done for [Archives sonores de poésie] of [Sorbonne Université].
 
+^
 [Derivative Media]: https://gitlab.com/Daniel-KM/Omeka-S-module-DerivativeMedia
 [Omeka S]: https://omeka.org/s
 [Installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
