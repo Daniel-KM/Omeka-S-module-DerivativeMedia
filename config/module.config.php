@@ -17,6 +17,11 @@ return [
             Form\ConfigForm::class => Service\Form\ConfigFormFactory::class,
         ],
     ],
+    'controller_plugins' => [
+        'invokables' => [
+            'checkFfmpeg' => Mvc\Controller\Plugin\CheckFfmpeg::class,
+        ],
+    ],
     'translator' => [
         'translation_file_patterns' => [
             [

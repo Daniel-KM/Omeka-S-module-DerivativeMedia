@@ -51,14 +51,6 @@ class Module extends AbstractModule
             );
             throw new ModuleCannotInstallException((string) $message);
         }
-
-        // TODO Use Omeka cli.
-        // @link http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script
-        if ((int) shell_exec('hash ffmpeg 2>&- || echo 1')) {
-            $services->get('Omeka\Logger')->err('Command "ffmpeg" not found.'); // @translate
-            $t = $services->get('MvcTranslator');
-            throw new ModuleCannotInstallException($t->translate('The command-line utility "ffmpeg" must be installed first and must be available in the cli path.')); // @translate
-        }
     }
 
     public function warnUninstall(Event $event): void
@@ -147,6 +139,8 @@ class Module extends AbstractModule
 
     public function getConfigForm(PhpRenderer $renderer)
     {
+        $this->checkFfmpeg(true);
+
         $services = $this->getServiceLocator();
         $form = $services->get('FormElementManager')->get(ConfigForm::class);
         $form->init();
@@ -199,10 +193,20 @@ class Module extends AbstractModule
         $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
 
         if (!empty($process['process_metadata'])) {
+            if (!$this->checkFfmpeg(false)) {
+                $message = 'The task requires "ffmpeg".'; // @translate
+                $controller->messenger()->addWarning($message);
+                return true;
+            }
             unset($params['query']);
             $job = $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMediaMetadata::class, $params);
             $message = 'Storing metadata for existing files ({link}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
         } elseif (!empty($process['process_derivative'])) {
+            if (!$this->checkFfmpeg(false)) {
+                $message = 'The task requires "ffmpeg".'; // @translate
+                $controller->messenger()->addWarning($message);
+                return true;
+            }
             unset($params['query']);
             $job = $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMediaFile::class, $params);
             $message = 'Creating derivative media ({link}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
@@ -284,6 +288,10 @@ HTML;
 
     public function afterSaveItem(Event $event): void
     {
+        if (!$this->checkFfmpeg()) {
+            return;
+        }
+
         // Don't run during a batch edit of items, because it runs one job by
         // item and it is slow. A batch process is always partial.
         /** @var \Omeka\Api\Request $request */
@@ -317,6 +325,10 @@ HTML;
 
     public function afterSaveMedia(Event $event): void
     {
+        if (!$this->checkFfmpeg()) {
+            return;
+        }
+
         // Don't run during a batch edit of media, because it runs one job by
         // media and it is slow. A batch process is always partial.
         /** @var \Omeka\Api\Request $request */
@@ -420,5 +432,20 @@ HTML;
         return $media->hasOriginal()
             && $media->getRenderer() === 'file'
             && in_array(strtok((string) $media->getMediaType(), '/'), ['audio', 'video']);
+    }
+
+    protected function checkFfmpeg(bool $warnMessage = false): bool
+    {
+        $plugins = $this->getServiceLocator()->get('ControllerPluginManager');
+        $checkFfmpeg = $plugins->get('checkFfmpeg');
+        $checkFfmpeg = $checkFfmpeg();
+        if (!$checkFfmpeg && $warnMessage) {
+            $messenger = $plugins->get('messenger');
+            $message = new \Omeka\Stdlib\Message(
+                'The command-line utility "ffmpeg" should be installed and should be available in the cli path to make derivatives.' // @translate
+            );
+            $messenger->addWarning($message);
+        }
+        return $checkFfmpeg;
     }
 }

@@ -51,6 +51,17 @@ trait DerivativeMediaTrait
         $referenceIdProcessor = new \Laminas\Log\Processor\ReferenceId();
         $referenceIdProcessor->setReferenceId('derivative/media/job_' . $this->job->getId());
 
+        $plugins = $services->get('ControllerPluginManager');
+        $checkFfmpeg = $plugins->get('checkFfmpeg');
+        $checkFfmpeg = $checkFfmpeg();
+        if (!$checkFfmpeg) {
+            $message = new \Omeka\Stdlib\Message(
+                'The command-line utility "ffmpeg" should be installed and should be available in the cli path to make derivatives.' // @translate
+            );
+            $this->logger->err($message);
+            return;
+        }
+
         $removeCommented = function ($v, $k) {
             return !empty($v) && mb_strlen(trim($k)) && mb_substr(trim($k), 0, 1) !== '#';
         };
