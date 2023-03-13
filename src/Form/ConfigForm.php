@@ -4,6 +4,7 @@ namespace DerivativeMedia\Form;
 
 use Doctrine\DBAL\Connection;
 use Laminas\Form\Element;
+use Laminas\Form\Fieldset;
 use Laminas\Form\Form;
 use Omeka\Form\Element\ItemSetSelect;
 
@@ -17,6 +18,16 @@ class ConfigForm extends Form
     public function init(): void
     {
         $this
+            ->add([
+                'name' => 'fieldset_derivative',
+                'type' => Fieldset::class,
+                'options' => [
+                    'label' => 'Create derivatives', // @translate
+                ],
+            ]);
+
+        $fieldset = $this->get('fieldset_derivative');
+        $fieldset
             ->add([
                 'name' => 'item_sets',
                 'type' => ItemSetSelect::class,
@@ -91,30 +102,67 @@ class ConfigForm extends Form
                 ],
             ])
             ->add([
-                'name' => 'process',
+                'name' => 'process_derivative',
                 'type' => Element\Submit::class,
                 'options' => [
                     'label' => 'Create derivative files in background', // @translate
                 ],
                 'attributes' => [
-                    'id' => 'process',
+                    'id' => 'process_derivative',
                     'value' => 'Process', // @translate
                 ],
             ])
             ->add([
-                'name' => 'update_metadata',
+                'name' => 'process_metadata',
                 'type' => Element\Submit::class,
                 'options' => [
                     'label' => 'Store metadata for existing files in directories', // @translate
                     'info' => 'When files are created outside of Omeka and copied in the right directories (webm/, mp3/, etc.) with the right names (same as original and extension), Omeka should record some metadata to be able to render them.', // @translate
                 ],
                 'attributes' => [
-                    'id' => 'update_metadata',
+                    'id' => 'process_metadata',
                     'value' => 'Update metadata', // @translate
                 ],
             ]);
 
+        $this
+            ->add([
+                'name' => 'fieldset_dimensions',
+                'type' => Fieldset::class,
+                'options' => [
+                    'label' => 'Prepare dimensions', // @translate
+                ],
+            ]);
+
+        $fieldset = $this->get('fieldset_dimensions');
+        $fieldset
+            ->add([
+                'name' => 'query',
+                'type' => Element\Text::class,
+                'options' => [
+                    'label' => 'Query to filter items to process', // @translate
+                    'info' => 'This query will be used to select all items whose attached images, audio and video files will be prepared in the background.', // @translate
+                    'documentation' => 'https://omeka.org/s/docs/user-manual/sites/site_pages/#browse-preview',
+                ],
+                'attributes' => [
+                    'id' => 'query',
+                ],
+            ])
+            ->add([
+                'name' => 'process_dimensions',
+                'type' => Element\Submit::class,
+                'options' => [
+                    'label' => 'Prepare dimensions for images, audio and videos attached to items selected above in background', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'process_dimensions',
+                    'value' => 'Process', // @translate
+                ],
+            ])
+        ;
+
         $this->getInputFilter()
+            ->get('fieldset_derivative')
             ->add([
                 'name' => 'item_sets',
                 'required' => false,
