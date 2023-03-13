@@ -298,7 +298,9 @@ trait DerivativeMediaTrait
 
             $this->storeMetadata($media, $folder, $basename, $mediaType);
 
-            $this->entityManager->flush($media);
+            $this->entityManager->persist($media);
+            $this->entityManager->flush();
+
             $this->logger->info(
                 'Media #{media_id}: derivative media created ({filename}).', // @translate
                 ['media_id' => $media->getId(), 'filename' => $storageName]

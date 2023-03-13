@@ -30,7 +30,9 @@ class Module extends AbstractModule
 {
     const NAMESPACE = __NAMESPACE__;
 
-    protected $dependency = 'Log';
+    protected $dependencies = [
+        'Log',
+    ];
 
     public function getConfig()
     {

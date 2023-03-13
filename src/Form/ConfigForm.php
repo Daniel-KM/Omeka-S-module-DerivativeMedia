@@ -139,8 +139,7 @@ class ConfigForm extends Form
     protected function listIngesters()
     {
         $sql = 'SELECT DISTINCT(ingester) FROM media ORDER BY ingester';
-        $stmt = $this->connection->executeQuery($sql);
-        $result = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        $result = $this->connection->executeQuery($sql)->fetchFirstColumn();
         return ['' => 'All ingesters'] // @translate
             + array_combine($result, $result);
     }
@@ -151,8 +150,7 @@ class ConfigForm extends Form
     protected function listRenderers()
     {
         $sql = 'SELECT DISTINCT(renderer) FROM media ORDER BY renderer';
-        $stmt = $this->connection->executeQuery($sql);
-        $result = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        $result = $this->connection->executeQuery($sql)->fetchFirstColumn();
         return ['' => 'All renderers'] // @translate
             + array_combine($result, $result);
     }
@@ -163,17 +161,12 @@ class ConfigForm extends Form
     protected function listMediaTypes()
     {
         $sql = 'SELECT DISTINCT(media_type) FROM media WHERE media_type IS NOT NULL AND media_type != "" ORDER BY media_type';
-        $stmt = $this->connection->executeQuery($sql);
-        $result = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        $result = $this->connection->executeQuery($sql)->fetchFirstColumn();
         return ['' => 'All media types'] // @translate
             + array_combine($result, $result);
     }
 
-    /**
-     * @param Connection $connection
-     * @return self
-     */
-    public function setConnection(Connection $connection)
+    public function setConnection(Connection $connection): self
     {
         $this->connection = $connection;
         return $this;
