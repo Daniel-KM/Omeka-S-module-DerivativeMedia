@@ -194,7 +194,7 @@ trait DerivativeMediaTrait
             // TODO To be removed: this is managed by the store anyway.
             $dirpath = dirname($derivativePath);
             if (file_exists($dirpath)) {
-                if (!is_dir($dirpath) || !is_writable($dirpath)) {
+                if (!is_dir($dirpath) || !is_writeable($dirpath)) {
                     $this->logger->warn(
                         'Media #{media_id}: derivative media is not writeable ({filename}).', // @translate
                         ['media_id' => $media->getId(), 'filename' => $storageName]
