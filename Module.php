@@ -62,6 +62,32 @@ class Module extends AbstractModule
             );
             throw new ModuleCannotInstallException((string) $message);
         }
+
+        if (!class_exists('ZipArchive')) {
+            $plugins = $services->get('ControllerPluginManager');
+            $messenger = $plugins->get('messenger');
+            $message = new PsrMessage(
+                'The extension "php-zip" should be installed on the server to create Zip files.', // @translate
+            );
+            $messenger->addWarning($message);
+        }
+    }
+
+    protected function postInstall(): void
+    {
+        $services = $this->getServiceLocator();
+        $plugins = $services->get('ControllerPluginManager');
+        $messenger = $plugins->get('messenger');
+        $url = $plugins->get('url');
+        $message = new PsrMessage(
+            'Before compressing files with config tasks, the settings should be set in {anchor}main settings{anchor_end}.', // @translate
+            [
+                'anchor' => sprintf('<a href="%s">', $url->fromRoute('admin/default', ['controller' => 'setting', 'action' => 'browse'], ['fragment' => 'derivative-media'])),
+                'anchor_end' => '</a>',
+            ]
+        );
+        $message->setEscapeHtml(false);
+        $messenger->addWarning($message);
     }
 
     public function warnUninstall(Event $event): void
