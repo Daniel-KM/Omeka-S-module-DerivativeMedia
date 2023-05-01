@@ -11,6 +11,7 @@ return [
     ],
     'form_elements' => [
         'invokables' => [
+            Form\Element\OptionalMultiCheckbox::class => Form\Element\OptionalMultiCheckbox::class,
             Form\SettingsFieldset::class => Form\SettingsFieldset::class,
         ],
         'factories' => [
@@ -34,6 +35,10 @@ return [
     ],
     'derivativemedia' => [
         'settings' => [
+            'derivativemedia_enable' => [
+                'audio',
+                'video',
+            ],
             'derivativemedia_converters_audio' => [
                 'mp3/{filename}.mp3' => '-c copy -c:a libmp3lame -qscale:a 2',
                 'ogg/{filename}.ogg' => '-c copy -vn -c:a libopus',

@@ -2,6 +2,7 @@
 
 namespace DerivativeMedia\Form;
 
+use DerivativeMedia\Form\Element as DerivativeMediaElement;
 use Omeka\Form\Element as OmekaElement;
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
@@ -22,6 +23,21 @@ class SettingsFieldset extends Fieldset
         $this
             ->setAttribute('id', 'derivative-media')
             ->setOption('element_groups', $this->elementGroups)
+            ->add([
+                'name' => 'derivativemedia_enable',
+                'type' => DerivativeMediaElement\OptionalMultiCheckbox::class,
+                'options' => [
+                    'element_group' => 'derivative_media',
+                    'label' => 'Enabled conversion for audio', // @translate
+                    'value_options' => [
+                        'audio' => 'Audio', // @translate
+                        'video' => 'Video', // @translate
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'derivativemedia_enable',
+                ],
+            ])
             ->add([
                 'name' => 'derivativemedia_converters_audio',
                 'type' => OmekaElement\ArrayTextarea::class,

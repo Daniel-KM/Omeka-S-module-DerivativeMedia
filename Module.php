@@ -402,8 +402,13 @@ HTML;
                 return !empty($v) && mb_strlen(trim($k)) && mb_substr(trim($k), 0, 1) !== '#';
             };
             $settings = $services->get('Omeka\Settings');
-            $convertersAudio = array_filter($settings->get('derivativemedia_converters_audio', []), $removeCommented, ARRAY_FILTER_USE_BOTH);
-            $convertersVideo = array_filter($settings->get('derivativemedia_converters_video', []), $removeCommented, ARRAY_FILTER_USE_BOTH);
+            $enabled = $settings->get('derivativemedia_enable', ['audio', 'video']);
+            $convertersAudio = in_array('audio', $enabled)
+                ? array_filter($settings->get('derivativemedia_converters_audio', []), $removeCommented, ARRAY_FILTER_USE_BOTH)
+                : [];
+            $convertersVideo = in_array('video', $enabled)
+                ? array_filter($settings->get('derivativemedia_converters_video', []), $removeCommented, ARRAY_FILTER_USE_BOTH)
+                : [];
         }
 
         if (!$hasLocalStore) {
