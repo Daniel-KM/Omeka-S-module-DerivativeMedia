@@ -141,11 +141,17 @@ class IndexController extends \Omeka\Controller\IndexController
             if (!$ready) {
                 continue;
             }
+            $mediaType = $media->mediaType();
+            if (!$mediaType) {
+                continue;
+            }
             $mediaData[$media->id()] = [
                 'source' => $media->source(),
                 'filename' => $filename,
                 'filepath' => $filepath,
-                'mediatype' => $media->mediaType(),
+                'mediatype' => $mediaType,
+                'maintype' => strtok($mediaType, '/'),
+                'extension' => $media->extension(),
                 'size' => $media->size(),
             ];
         }
@@ -165,6 +171,14 @@ class IndexController extends \Omeka\Controller\IndexController
             return null;
         }
 
+        // ZipArchive::OVERWRITE is available only in php 8.
+        if (file_exists($filepath)) {
+            if (!unlink($filepath)) {
+                $this->logger()->err('Enable to remove existing file.'); // @translate
+                return null;
+            }
+        }
+
         $zip = new ZipArchive();
         if ($zip->open($filepath, ZipArchive::CREATE) !== true) {
             $this->logger()->err('Unable to create the zip file.'); // @translate
@@ -177,18 +191,25 @@ class IndexController extends \Omeka\Controller\IndexController
 
         // Store files: they are all already compressed (image, video, pdf...),
         // except some txt, xml and old docs.
-        // TODO Light compress txt, xml and uncompressed big files.
 
         $index = 0;
         foreach ($mediaData as $file) {
             $zip->addFile($file['filepath']);
-            $zip->setCompressionIndex($index, ZipArchive::CM_STORE);
+            // Light and quick compress text and xml.
+            if ($file['maintype'] === 'text'
+                || $file['mediatype'] === 'application/xml'
+                || substr($file['mediatype'], -4) === '+xml'
+            ) {
+                $zip->setCompressionIndex($index, ZipArchive::CM_DEFLATE, 1);
+            } else {
+                $zip->setCompressionIndex($index, ZipArchive::CM_STORE);
+            }
             ++$index;
         }
 
         $result = $zip->close();
 
-        return $result ;
+        return $result;
     }
 
     protected function ensureDirectory(string $dirpath): bool
