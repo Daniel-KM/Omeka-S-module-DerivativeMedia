@@ -32,6 +32,7 @@ class SettingsFieldset extends Fieldset
                     'value_options' => [
                         'audio' => 'Audio', // @translate
                         'video' => 'Video', // @translate
+                        'zip' => 'Zip item files', // @translate
                     ],
                 ],
                 'attributes' => [

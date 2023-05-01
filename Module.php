@@ -17,13 +17,14 @@ use Laminas\View\Renderer\PhpRenderer;
 use Log\Stdlib\PsrMessage;
 use Omeka\Entity\Media;
 use Omeka\Module\Exception\ModuleCannotInstallException;
+use Laminas\Mvc\MvcEvent;
 
 /**
  * Derivative Media
  *
  * Create derivative audio/video media files for cross-browser compatibility.
  *
- * @copyright Daniel Berthereau, 2020
+ * @copyright Daniel Berthereau, 2020-2023
  * @license http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.txt
  */
 class Module extends AbstractModule
@@ -37,6 +38,16 @@ class Module extends AbstractModule
     public function getConfig()
     {
         return include __DIR__ . '/config/module.config.php';
+    }
+
+    public function onBootstrap(MvcEvent $event): void
+    {
+        parent::onBootstrap($event);
+        $this->getServiceLocator()->get('Omeka\Acl')
+                ->allow(
+                    null,
+                    ['DerivativeMedia\Controller\Index']
+            );
     }
 
     protected function preInstall(): void

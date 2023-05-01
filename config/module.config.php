@@ -18,9 +18,34 @@ return [
             Form\ConfigForm::class => Service\Form\ConfigFormFactory::class,
         ],
     ],
+    'controllers' => [
+        'invokables' => [
+            'DerivativeMedia\Controller\Index' => Controller\IndexController::class,
+        ],
+    ],
     'controller_plugins' => [
         'invokables' => [
             'checkFfmpeg' => Mvc\Controller\Plugin\CheckFfmpeg::class,
+        ],
+    ],
+    'router' => [
+        'routes' => [
+            'derivative' => [
+                'type' => \Laminas\Router\Http\Segment::class,
+                'options' => [
+                    'route' => '/derivative/:type/:id',
+                    'constraints' => [
+                        'type' => 'zip',
+                        'id' => '\d+',
+                    ],
+                    'defaults' => [
+                        '__NAMESPACE__' => 'DerivativeMedia\Controller',
+                        '__ADMIN__' => true,
+                        'controller' => 'Index',
+                        'action' => 'index',
+                    ],
+                ],
+            ],
         ],
     ],
     'translator' => [
