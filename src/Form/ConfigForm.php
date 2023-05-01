@@ -6,7 +6,7 @@ use Doctrine\DBAL\Connection;
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
 use Laminas\Form\Form;
-use Omeka\Form\Element\ItemSetSelect;
+use Omeka\Form\Element as OmekaElement;
 
 class ConfigForm extends Form
 {
@@ -30,7 +30,7 @@ class ConfigForm extends Form
         $fieldset
             ->add([
                 'name' => 'item_sets',
-                'type' => ItemSetSelect::class,
+                'type' => OmekaElement\ItemSetSelect::class,
                 'options' => [
                     'label' => 'Item sets', // @translate
                 ],
@@ -125,15 +125,15 @@ class ConfigForm extends Form
                 ],
             ]);
 
+        // Available in module Derivative Media and IiifServer.
         $this
             ->add([
                 'name' => 'fieldset_dimensions',
                 'type' => Fieldset::class,
                 'options' => [
-                    'label' => 'Prepare dimensions', // @translate
+                    'label' => 'Store dimensions (module IiifServer)', // @translate
                 ],
             ]);
-
         $fieldset = $this->get('fieldset_dimensions');
         $fieldset
             ->add([

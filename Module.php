@@ -228,7 +228,9 @@ class Module extends AbstractModule
                 ),
                 'job_id' => $job->getId(),
                 'link_end' => '</a>',
-                'link_log' => sprintf('<a href="%1$s">', $this->isModuleActive('Log') ? $controller->url()->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]]) :  $controller->url()->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()])),
+                'link_log' => sprintf('<a href="%1$s">', $this->isModuleActive('Log')
+                    ? $controller->url()->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])
+                    : $controller->url()->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()])),
             ]
         );
         $message->setEscapeHtml(false);

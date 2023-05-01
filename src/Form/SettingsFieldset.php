@@ -2,7 +2,7 @@
 
 namespace DerivativeMedia\Form;
 
-use Omeka\Form\Element\ArrayTextarea;
+use Omeka\Form\Element as OmekaElement;
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
 
@@ -24,7 +24,7 @@ class SettingsFieldset extends Fieldset
             ->setOption('element_groups', $this->elementGroups)
             ->add([
                 'name' => 'derivativemedia_converters_audio',
-                'type' => ArrayTextarea::class,
+                'type' => OmekaElement\ArrayTextarea::class,
                 'options' => [
                     'element_group' => 'derivative_media',
                     'label' => 'Audio converters', // @translate
@@ -50,7 +50,7 @@ class SettingsFieldset extends Fieldset
             ])
             ->add([
                 'name' => 'derivativemedia_converters_video',
-                'type' => ArrayTextarea::class,
+                'type' => OmekaElement\ArrayTextarea::class,
                 'options' => [
                     'element_group' => 'derivative_media',
                     'label' => 'Video converters', // @translate
