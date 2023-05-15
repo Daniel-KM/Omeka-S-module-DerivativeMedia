@@ -44,9 +44,9 @@ class Module extends AbstractModule
     {
         parent::onBootstrap($event);
         $this->getServiceLocator()->get('Omeka\Acl')
-                ->allow(
-                    null,
-                    ['DerivativeMedia\Controller\Index']
+            ->allow(
+                null,
+                ['DerivativeMedia\Controller\Index']
             );
     }
 

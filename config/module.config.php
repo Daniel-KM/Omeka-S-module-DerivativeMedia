@@ -40,7 +40,6 @@ return [
                     ],
                     'defaults' => [
                         '__NAMESPACE__' => 'DerivativeMedia\Controller',
-                        '__ADMIN__' => true,
                         'controller' => 'Index',
                         'action' => 'index',
                     ],
