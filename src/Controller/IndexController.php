@@ -3,9 +3,12 @@
 namespace DerivativeMedia\Controller;
 
 use DerivativeMedia\Module;
+use DerivativeMedia\Mvc\Controller\Plugin\TraitDerivative;
 
 class IndexController extends \Omeka\Controller\IndexController
 {
+    use TraitDerivative;
+
     /**
      * @todo Manage other storage type. See module AccessResource.
      * @todo Some formats don't really need storage (text…), so make them truly dynamic.
@@ -42,17 +45,14 @@ class IndexController extends \Omeka\Controller\IndexController
             throw new \Omeka\Mvc\Exception\RuntimeException('Resource is not an item.'); // @translate
         }
 
-        $services = $resource->getServiceLocator();
-        $config = $services->get('Config');
-        $this->basePath = $config['file_store']['local']['base_path'] ?: (OMEKA_PATH . '/files');
-
         /** @var \Omeka\Api\Representation\ItemRepresentation $item */
         $item = $resource;
 
         $force = !empty($this->params()->fromQuery('force'));
 
         // Quick check if the file exists when needed.
-        $filepath = $this->basePath . '/' . $type . '/' . $id . '.' . Module::DERIVATIVES[$type]['extension'];
+        $filepath = $this->itemFilepath($item, $type);
+
         $ready = !$force
             && file_exists($filepath) && is_readable($filepath) && filesize($filepath);
 
@@ -61,17 +61,26 @@ class IndexController extends \Omeka\Controller\IndexController
                 throw new \Omeka\Mvc\Exception\RuntimeException('This derivative is not ready. Ask the webmaster for it.'); // @translate
             }
 
-            $ready = $this->createDerivative($type, $filepath, $item);
-            if (!$ready) {
-                if (is_null($ready)) {
-                    //  TODO Improve the check: the derivative may be dependant on media types.
-                    if ($item->media()) {
-                        throw new \Omeka\Mvc\Exception\RuntimeException('This derivative is being created. Come back later.'); // @translate
-                    }
-                    throw new \Omeka\Mvc\Exception\RuntimeException('This item has no media.'); // @translate
-                } else {
+            $dataMedia = $this->dataMedia($item, $type);
+            if (!$dataMedia) {
+                throw new \Omeka\Mvc\Exception\RuntimeException('This type of derivative file cannot be prepared for this item.'); // @translate
+            }
+
+            if (Module::DERIVATIVES[$type]['mode'] === 'live') {
+                $ready = $this->createDerivative($type, $filepath, $item, $dataMedia);
+                if (!$ready) {
                     throw new \Omeka\Mvc\Exception\RuntimeException('This derivative files of this item cannot be prepared.'); // @translate
                 }
+            } else {
+                $args = [
+                    'itemId' => $item->id(),
+                    'type' => $type,
+                    'dataMedia' => $dataMedia,
+                ];
+                /** @var \Omeka\Job\Dispatcher $dispatcher */
+                $dispatcher = $this->jobDispatcher();
+                $dispatcher->dispatch(\DerivativeMedia\Job\CreateDerivative::class, $args);
+                throw new \Omeka\Mvc\Exception\RuntimeException('This derivative is being created. Come back later.'); // @translate
             }
         }
 

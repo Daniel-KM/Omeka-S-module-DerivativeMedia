@@ -2,12 +2,17 @@
 
 namespace DerivativeMedia\Mvc\Controller\Plugin;
 
+use DerivativeMedia\Module;
 use Omeka\Api\Representation\ItemRepresentation;
 
 trait TraitDerivative
 {
-    protected function dataMedia(ItemRepresentation $item, $type): array
+    protected function dataMedia(ItemRepresentation $item, string $type): array
     {
+        if (!isset(Module::DERIVATIVES[$type])) {
+            return [];
+        }
+
         $dataMedia = [];
         foreach ($item->media() as $media) {
             if (!$media->hasOriginal() || !$media->size()) {
@@ -80,6 +85,18 @@ trait TraitDerivative
         }
 
         return $dataMedia;
+    }
+
+    protected function itemFilepath(ItemRepresentation $item, string $type): ?string
+    {
+        if (!isset(Module::DERIVATIVES[$type])) {
+            return null;
+        }
+
+        $config = $item->getServiceLocator()->get('Config');
+        $basePath = $config['file_store']['local']['base_path'] ?: (OMEKA_PATH . '/files');
+
+        return $basePath . '/' . $type . '/' . $item->id() . '.' . Module::DERIVATIVES[$type]['extension'];
     }
 
     protected function tempFilepath(string $filepath): string

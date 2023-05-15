@@ -47,15 +47,21 @@ class HasDerivative extends AbstractHelper
      * - in_progress (boolean): file will be available soon
      * - url (string): url of the file.
      */
-    public function __invoke(?AbstractResourceEntityRepresentation $resource): array
+    public function __invoke(?AbstractResourceEntityRepresentation $resource, ?string $type = null): array
     {
         $result = [];
+
+        if ($type
+            && (!isset(Module::DERIVATIVES[$type]) || !in_array($type, $this->enabled))
+        ) {
+            return [];
+        }
 
         if ($resource instanceof MediaRepresentation) {
             // $medias = [$resource];
         } elseif ($resource instanceof ItemRepresentation) {
             // medias = $resource->media();
-            $result[$resource->id()] = $this->hasDerivativeItem($resource);
+            $result[$resource->id()] = $this->hasDerivativeItem($resource, $type);
         } else {
             return [];
         }
@@ -72,14 +78,14 @@ class HasDerivative extends AbstractHelper
      * @param \Omeka\Api\Representation\ItemRepresentation $item
      * @return array
      */
-    protected function hasDerivativeItem(ItemRepresentation $item): array
+    protected function hasDerivativeItem(ItemRepresentation $item, ?string $type = null): array
     {
         $result = [];
 
         $itemId = $item->id();
         $url = $this->getView()->get('url');
 
-        foreach ($this->enabled as $type) {
+        foreach ($type ? [$type] : $this->enabled as $type) {
             if (!isset(Module::DERIVATIVES[$type])
                 || Module::DERIVATIVES[$type]['level'] === 'media'
             ) {
@@ -89,7 +95,9 @@ class HasDerivative extends AbstractHelper
             $filepath = $this->basePath . '/' . $type . '/' . $item->id() . '.' . Module::DERIVATIVES[$type]['extension'];
             $tempFilepath =$this->tempFilepath($filepath);
 
-            $ready = file_exists($filepath) && is_readable($filepath) && filesize($filepath);
+            $size = null;
+
+            $ready = file_exists($filepath) && is_readable($filepath) && ($size = filesize($filepath));
             $isInProgress = !$ready
                 && file_exists($tempFilepath) && is_readable($tempFilepath) && filesize($tempFilepath);
 
@@ -105,6 +113,7 @@ class HasDerivative extends AbstractHelper
                 'feasible' => $feasible,
                 'in_progress' => $isInProgress,
                 'ready' => $ready,
+                'size' => $size,
                 'url' => $ready || $isInProgress
                     ? $url('derivative', ['type' => $type, 'id' => $itemId])
                     : null,
