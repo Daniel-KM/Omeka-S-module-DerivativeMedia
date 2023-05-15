@@ -39,6 +39,10 @@ trait TraitDerivative
                 && ($mediaType !== 'application/alto+xml' || ($extension === 'xml' && !in_array($mediaType, ['application/x-empty', 'application/alto+xml'])))
             ) {
                 continue;
+            } elseif ($type === 'iiif-2' && !in_array($mainType, ['image', 'audio', 'video'])) {
+                continue;
+            } elseif ($type === 'iiif-3' && !in_array($mainType, ['image', 'audio', 'video'])) {
+                continue;
             } elseif ($type === 'pdf'
                 && ($mainType !== 'image')
                 // TODO Get image and pdf to manage the case there are pdf too.
@@ -96,7 +100,10 @@ trait TraitDerivative
         $config = $item->getServiceLocator()->get('Config');
         $basePath = $config['file_store']['local']['base_path'] ?: (OMEKA_PATH . '/files');
 
-        return $basePath . '/' . $type . '/' . $item->id() . '.' . Module::DERIVATIVES[$type]['extension'];
+        return $basePath
+            . '/' . Module::DERIVATIVES[$type]['dir']
+            . '/' . $item->id()
+            . '.' . Module::DERIVATIVES[$type]['extension'];
     }
 
     protected function tempFilepath(string $filepath): string

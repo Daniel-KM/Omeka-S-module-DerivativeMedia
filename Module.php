@@ -58,6 +58,31 @@ class Module extends AbstractModule
             'build' => [
                 'mediatype' => ['application/alto+xml'],
             ],
+            'dir' => 'alto',
+        ],
+        'iiif-2' => [
+            'mode' => 'live',
+            'level' => 'item',
+            'multiple' => false,
+            // According to specification for 2.1, the response should be json,
+            // except if client asks json-ld.
+            'mediatype' => 'application/json',
+            'extension' => 'manifest.json',
+            'build' => [
+                'mediatype' => ['image', 'audio', 'video'],
+            ],
+            'dir' => 'iiif/2',
+        ],
+        'iiif-3' => [
+            'mode' => 'live',
+            'level' => 'item',
+            'multiple' => false,
+            'mediatype' => 'application/ld+json;profile="http://iiif.io/api/presentation/3/context.json"',
+            'extension' => 'manifest.json',
+            'build' => [
+                'mediatype' => ['image', 'audio', 'video'],
+            ],
+            'dir' => 'iiif/3',
         ],
         'pdf' => [
             'mode' => 'dynamic',
@@ -68,6 +93,7 @@ class Module extends AbstractModule
             'build' => [
                 'mediatype' => ['image'],
             ],
+            'dir' => 'pdf',
         ],
         'txt' => [
             'mode' => 'live',
@@ -78,6 +104,7 @@ class Module extends AbstractModule
             'build' => [
                 'mediatype' => ['text/plain'],
             ],
+            'dir' => 'txt',
         ],
         'text' => [
             'mode' => 'live',
@@ -88,6 +115,7 @@ class Module extends AbstractModule
             'build' => [
                 'property' => 'extracttext:extracted_text',
             ],
+            'dir' => 'text',
         ],
         // TODO Static for > 100MB/1GB or stream output to user directly.
         'zip' => [
@@ -99,6 +127,7 @@ class Module extends AbstractModule
             'build' => [
                 'mediatype' => [''],
             ],
+            'dir' => 'zip',
         ],
         'zipm' => [
             'mode' => 'live',
@@ -109,6 +138,7 @@ class Module extends AbstractModule
             'build' => [
                 'mediatype' => ['image', 'audio', 'video'],
             ],
+            'dir' => 'zipm',
         ],
         'zipo' => [
             'mode' => 'live',
@@ -119,6 +149,7 @@ class Module extends AbstractModule
             'build' => [
                 'mediatype_not' => ['image', 'audio', 'video'],
             ],
+            'dir' => 'zipo',
         ],
     ];
 

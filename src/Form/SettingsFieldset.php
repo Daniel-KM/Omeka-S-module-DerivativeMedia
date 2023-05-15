@@ -38,7 +38,9 @@ class SettingsFieldset extends Fieldset
                         'pdf' => 'Pdf from images files', // @translate
                         'txt' => 'Single text file from by-page txt files', // @translate
                         'text' => 'Single text file from property "extracted text"', // @translate
-                        'alto' => 'Single xml Alto from by-page xml Alto (standard ocr format, require IiifSearch)', // @translate
+                        'alto' => 'Single xml Alto from by-page xml Alto (standard ocr format, require Iiif Search)', // @translate
+                        'iiif-2' => 'Iiif manifest (version 2, require Iiif Server)', // @translate
+                        'iiif-3' => 'Iiif manifest (version 3, require Iiif Server)', // @translate
                     ],
                 ],
                 'attributes' => [

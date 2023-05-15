@@ -78,6 +78,10 @@ class CreateDerivative extends AbstractPlugin
 
         if ($type === 'alto') {
             $result = $this->prepareDerivativeAlto($tempFilepath, $dataMedia, $item);
+        } elseif ($type === 'iiif-/2') {
+            $result = $this->prepareDerivativeIiif($tempFilepath, $dataMedia, $item, 2);
+        } elseif ($type === 'iiif-3') {
+            $result = $this->prepareDerivativeIiif($tempFilepath, $dataMedia, $item, 3);
         } elseif ($type === 'pdf') {
             $result = $this->prepareDerivativePdf($tempFilepath, $dataMedia, $item);
         } elseif ($type === 'text') {
@@ -105,10 +109,32 @@ class CreateDerivative extends AbstractPlugin
             $this->logger()->err('To create xml alto, the module IiifSearch is required for now.'); // @translate
             return false;
         }
+
         /** @var \IiifSearch\View\Helper\XmlAltoSingle $xmlAltoSingle */
         $xmlAltoSingle = $helpers->get('xmlAltoSingle');
         $result = $xmlAltoSingle($item, $filepath, $dataMedia);
+
         return (bool) $result;
+    }
+
+    protected function prepareDerivativeIiif(string $filepath, array $dataMedia, ?ItemRepresentation $item, $version): ?bool
+    {
+        $helpers = $this->viewHelpers();
+        if (!$helpers->has('iiifManifest')) {
+            $this->logger()->err('To create iiif manifest, the module IiifServer is required for now.'); // @translate
+            return false;
+        }
+
+        /** @var \IiifServer\View\Helper\IiifManifest $iiifManifest */
+        $iiifManifest = $helpers->get('iiifManifest');
+        $manifest = $iiifManifest($item, $version);
+
+        if ($manifest) {
+            $result = file_put_contents($filepath, $manifest);
+            return (bool) $result;
+        }
+
+        return false;
     }
 
     protected function prepareDerivativePdf(string $filepath, array $dataMedia, ?ItemRepresentation $item): ?bool
