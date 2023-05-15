@@ -39,9 +39,11 @@ class HasDerivative extends AbstractHelper
      *
      * Some derivative can be created dynamically.
      *
-     * @return array Associative array with the resource id (item and medias) as
-     * key and an array of derivative types as value. This array is a list of
-     * derivative types as key and an array with:
+     * @return array Array of derivative types and data. If option "fullDerivative"
+     * is set, a upper level is added, so output is an associative array with
+     * the resource id (item and medias) as key and an array of derivative types
+     * as value.
+     * This array is a list of derivative types as key and an array with:
      * - mode (string): file can be build as "static", "dynamic" or "live".
      * - feasible (boolean): if item can have this type of derivative.
      * - in_progress (boolean): if the derivative is currently building.
@@ -50,7 +52,7 @@ class HasDerivative extends AbstractHelper
      * - file (string): relative filepath of the derivative.
      * - url (string): url of the derivative file.
      */
-    public function __invoke(?AbstractResourceEntityRepresentation $resource, ?string $type = null): array
+    public function __invoke(?AbstractResourceEntityRepresentation $resource, ?string $type = null, bool $fullDerivative = false): array
     {
         $result = [];
 
@@ -69,7 +71,9 @@ class HasDerivative extends AbstractHelper
             return [];
         }
 
-        return $result;
+        return $fullDerivative
+            ? $result
+            : reset($result);
     }
 
     /**
