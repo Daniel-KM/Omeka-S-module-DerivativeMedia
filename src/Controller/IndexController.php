@@ -23,10 +23,12 @@ class IndexController extends \Omeka\Controller\IndexController
         $mediaTypes = [
             'zip' => 'application/zip',
             'zipm' => 'application/zip',
+            'zipo' => 'application/zip',
         ];
         $mediaExtensions = [
             'zip' => 'zip',
             'zipm' => 'zip',
+            'zipo' => 'zip',
         ];
 
         $type = $this->params('type');
@@ -152,6 +154,8 @@ class IndexController extends \Omeka\Controller\IndexController
             }
             $mainType = strtok($mediaType, '/');
             if ($type === 'zipm' && !in_array($mainType, ['image', 'audio', 'video'])) {
+                continue;
+            } elseif ($type === 'zipo' && in_array($mainType, ['image', 'audio', 'video'])) {
                 continue;
             }
             $mediaData[$media->id()] = [

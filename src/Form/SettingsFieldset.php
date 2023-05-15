@@ -34,6 +34,7 @@ class SettingsFieldset extends Fieldset
                         'video' => 'Video', // @translate
                         'zip' => 'Zip item files', // @translate
                         'zipm' => 'Zip item image/audio/video files', // @translate
+                        'zipo' => 'Zip item other files', // @translate
                     ],
                 ],
                 'attributes' => [

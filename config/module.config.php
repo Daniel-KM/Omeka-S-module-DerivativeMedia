@@ -30,12 +30,13 @@ return [
     ],
     'router' => [
         'routes' => [
+            // Dynamic formats.
             'derivative' => [
                 'type' => \Laminas\Router\Http\Segment::class,
                 'options' => [
                     'route' => '/derivative/:type/:id',
                     'constraints' => [
-                        'type' => 'zipm|zip',
+                        'type' => 'zipm|zipo|zip',
                         'id' => '\d+',
                     ],
                     'defaults' => [
