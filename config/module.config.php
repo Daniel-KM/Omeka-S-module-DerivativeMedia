@@ -56,10 +56,10 @@ return [
             'derivative' => [
                 'type' => \Laminas\Router\Http\Segment::class,
                 'options' => [
-                    'route' => '/derivative/:type/:id',
+                    'route' => '/derivative/:id/:type',
                     'constraints' => [
-                        'type' => 'alto|iiif-2|iiif-3|pdf|text|txt|zipm|zipo|zip',
                         'id' => '\d+',
+                        'type' => 'alto|iiif-2|iiif-3|pdf|text|txt|zipm|zipo|zip',
                     ],
                     'defaults' => [
                         '__NAMESPACE__' => 'DerivativeMedia\Controller',
