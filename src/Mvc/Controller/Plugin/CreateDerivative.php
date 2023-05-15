@@ -4,14 +4,26 @@ namespace DerivativeMedia\Mvc\Controller\Plugin;
 
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 use Omeka\Api\Representation\ItemRepresentation;
+use Omeka\Stdlib\Cli;
 use ZipArchive;
 
 class CreateDerivative extends AbstractPlugin
 {
     /**
+     * @var \Omeka\Stdlib\Cli
+     */
+    protected $cli;
+
+    /**
      * @var string
      */
     protected $basePath;
+
+    public function __construct(Cli $cli, string $basePath)
+    {
+        $this->cli = $cli;
+        $this->basePath = $basePath;
+    }
 
     /**
      * Create derivative of an item at the specified filepath.
@@ -26,11 +38,6 @@ class CreateDerivative extends AbstractPlugin
         if (!$item && !$dataMedia) {
             return false;
         }
-
-        // Init data.
-        $services = $item->getServiceLocator();
-        $config = $services->get('Config');
-        $this->basePath = $config['file_store']['local']['base_path'] ?: (OMEKA_PATH . '/files');
 
         $dataMedia = $dataMedia ?: $this->dataMedia($type, $item);
         if (empty($dataMedia)) {
@@ -152,14 +159,11 @@ class CreateDerivative extends AbstractPlugin
 
     protected function prepareDerivativePdf(string $filepath, array $dataMedia, ?ItemRepresentation $item): ?bool
     {
-        /** @var \Omeka\Stdlib\Cli $cli */
-        $cli = $item->getServiceLocator()->get('Omeka\Cli');
-
         $files = array_column($dataMedia, 'filepath');
 
         // Avoid to modify quality to speed process.
         $command = 'convert ' . implode(' ', array_map('escapeshellarg', $files)) . ' -quality 100 ' . escapeshellarg($filepath);
-        $result = $cli->execute($command);
+        $result = $this->cli->execute($command);
 
         return $result !== false;
     }
