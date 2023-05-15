@@ -21,11 +21,13 @@ class IndexController extends \Omeka\Controller\IndexController
     public function indexAction()
     {
         $mediaTypes = [
+            'txt' => 'text/plain',
             'zip' => 'application/zip',
             'zipm' => 'application/zip',
             'zipo' => 'application/zip',
         ];
         $mediaExtensions = [
+            'txt' => 'txt',
             'zip' => 'zip',
             'zipm' => 'zip',
             'zipo' => 'zip',
@@ -153,9 +155,15 @@ class IndexController extends \Omeka\Controller\IndexController
                 continue;
             }
             $mainType = strtok($mediaType, '/');
+            $extension = $media->extension();
             if ($type === 'zipm' && !in_array($mainType, ['image', 'audio', 'video'])) {
                 continue;
             } elseif ($type === 'zipo' && in_array($mainType, ['image', 'audio', 'video'])) {
+                continue;
+            } elseif ($type === 'txt'
+                // Manage extracted text without content.
+                && ($mediaType !== 'text/plain' || ($extension === 'txt' && !in_array($mediaType, ['application/x-empty', 'text/plain'])))
+            ) {
                 continue;
             }
             $mediaData[$media->id()] = [
@@ -164,7 +172,7 @@ class IndexController extends \Omeka\Controller\IndexController
                 'filepath' => $filepath,
                 'mediatype' => $mediaType,
                 'maintype' => $mainType,
-                'extension' => $media->extension(),
+                'extension' => $extension,
                 'size' => $media->size(),
             ];
         }
@@ -173,18 +181,11 @@ class IndexController extends \Omeka\Controller\IndexController
 
     protected function prepareDerivative(ItemRepresentation $item, string $filepath, array $mediaData, string $type): ?bool
     {
-        // TODO Type is always zip for now.
-        if (!class_exists('ZipArchive')) {
-            $this->logger()->err('The php extension "php-zip" must be installed.'); // @translate
-            return null;
-        }
-
         if (!$this->ensureDirectory(dirname($filepath))) {
             $this->logger()->err('Enable to create directory.'); // @translate
             return null;
         }
 
-        // ZipArchive::OVERWRITE is available only in php 8.
         if (file_exists($filepath)) {
             if (!unlink($filepath)) {
                 $this->logger()->err('Enable to remove existing file.'); // @translate
@@ -192,6 +193,48 @@ class IndexController extends \Omeka\Controller\IndexController
             }
         }
 
+        if ($type === 'txt') {
+            return $this->prepareDerivativeText($item, $filepath, $mediaData, $type);
+        }
+
+        if (substr($type, 0, 3) === 'zip') {
+            return $this->prepareDerivativeZip($item, $filepath, $mediaData, $type);
+        }
+    }
+
+    protected function prepareDerivativeText(ItemRepresentation $item, string $filepath, array $mediaData, string $type): ?bool
+    {
+        $output = '';
+
+        $pageSeparator = <<<'TXT'
+==============
+Page %1$d/%2$d
+==============
+
+
+TXT;
+
+        $total = count($mediaData);
+        $index = 0;
+        foreach ($mediaData as $mediaData) {
+            ++$index;
+            $output .= sprintf($pageSeparator, $index, $total);
+            $output .= file_get_contents($mediaData['filepath']) . PHP_EOL;
+        }
+
+        $result = file_put_contents($filepath, trim($output));
+
+        return (bool) $result;
+    }
+
+    protected function prepareDerivativeZip(ItemRepresentation $item, string $filepath, array $mediaData, string $type): ?bool
+    {
+        if (!class_exists('ZipArchive')) {
+            $this->logger()->err('The php extension "php-zip" must be installed.'); // @translate
+            return null;
+        }
+
+        // ZipArchive::OVERWRITE is available only in php 8.
         $zip = new ZipArchive();
         if ($zip->open($filepath, ZipArchive::CREATE) !== true) {
             $this->logger()->err('Unable to create the zip file.'); // @translate
