@@ -36,7 +36,7 @@ return [
                 'options' => [
                     'route' => '/derivative/:type/:id',
                     'constraints' => [
-                        'type' => 'alto|text|txt|zipm|zipo|zip',
+                        'type' => 'alto|pdf|text|txt|zipm|zipo|zip',
                         'id' => '\d+',
                     ],
                     'defaults' => [

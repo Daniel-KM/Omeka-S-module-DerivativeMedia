@@ -23,6 +23,7 @@ class IndexController extends \Omeka\Controller\IndexController
     {
         $mediaTypes = [
             'alto' => 'application/alto+xml',
+            'pdf' => 'application/pdf',
             'text' => 'text/plain',
             'txt' => 'text/plain',
             'zip' => 'application/zip',
@@ -32,6 +33,7 @@ class IndexController extends \Omeka\Controller\IndexController
 
         $mediaExtensions = [
             'alto' => 'alto.xml',
+            'pdf' => 'pdf',
             'text' => 'txt',
             'txt' => 'txt',
             'zip' => 'zip',
@@ -162,18 +164,20 @@ class IndexController extends \Omeka\Controller\IndexController
             }
             $mainType = strtok($mediaType, '/');
             $extension = $media->extension();
-            if ($type === 'zipm' && !in_array($mainType, ['image', 'audio', 'video'])) {
+            if ($type === 'alto'
+                // Manage altowithout content.
+                && ($mediaType !== 'application/alto+xml' || ($extension === 'xml' && !in_array($mediaType, ['application/x-empty', 'application/alto+xml'])))
+                ) {
                 continue;
-            } elseif ($type === 'zipo' && in_array($mainType, ['image', 'audio', 'video'])) {
+            } elseif ($type === 'pdf'
+                && ($mainType !== 'image')
+                // TODO Get image and pdf to manage the case there are pdf too.
+                // && ($mainType !== 'image' || $mediaType !== 'application/pdf')
+            ) {
                 continue;
             } elseif ($type === 'txt'
                 // Manage extracted text without content.
                 && ($mediaType !== 'text/plain' || ($extension === 'txt' && !in_array($mediaType, ['application/x-empty', 'text/plain'])))
-            ) {
-                continue;
-            } elseif ($type === 'alto'
-                // Manage extracted text without content.
-                && ($mediaType !== 'application/alto+xml' || ($extension === 'xml' && !in_array($mediaType, ['application/x-empty', 'application/alto+xml'])))
             ) {
                 continue;
             } elseif ($type === 'text'
@@ -181,6 +185,10 @@ class IndexController extends \Omeka\Controller\IndexController
                 && (($extracted = (string) $media->value('extracttext:extracted_text')) && strlen($extracted))
             ) {
                 $mediaData[$media->id()] = $extracted;
+                continue;
+            } elseif ($type === 'zipm' && !in_array($mainType, ['image', 'audio', 'video'])) {
+                continue;
+            } elseif ($type === 'zipo' && in_array($mainType, ['image', 'audio', 'video'])) {
                 continue;
             }
             $mediaData[$media->id()] = [
@@ -212,11 +220,13 @@ class IndexController extends \Omeka\Controller\IndexController
 
         if ($type === 'alto') {
             return $this->prepareDerivativeAlto($item, $filepath, $mediaData);
+        } elseif ($type === 'pdf') {
+            return $this->prepareDerivativePdf($item, $filepath, $mediaData);
         } elseif ($type === 'text') {
             return $this->prepareDerivativeTextExtracted($item, $filepath, $mediaData);
         } elseif ($type === 'txt') {
             return $this->prepareDerivativeText($item, $filepath, $mediaData);
-        } elseif (substr($type, 0, 3) === 'zip') {
+        } elseif (in_array($type, ['zip', 'zipm', 'zipo'])) {
             return $this->prepareDerivativeZip($item, $filepath, $mediaData, $type);
         }
     }
@@ -231,6 +241,20 @@ class IndexController extends \Omeka\Controller\IndexController
         $xmlAltoSingle = $helpers->get('xmlAltoSingle');
         $result = $xmlAltoSingle($item, $filepath, $mediaData);
         return (bool) $result;
+    }
+
+    protected function prepareDerivativePdf(ItemRepresentation $item, string $filepath, array $mediaData): ?bool
+    {
+        /** @var \Omeka\Stdlib\Cli $cli*/
+        $cli = $item->getServiceLocator()->get('Omeka\Cli');
+
+        $files = array_column($mediaData, 'filepath');
+
+        // Avoid to modify quality to speed process.
+        $command = 'convert ' . implode(' ', array_map('escapeshellarg', $files)) . ' -quality 100 ' . escapeshellarg($filepath);
+        $result = $cli->execute($command);
+
+        return $result !== false;
     }
 
     protected function prepareDerivativeTextExtracted(ItemRepresentation $item, string $filepath, array $mediaData): ?bool
