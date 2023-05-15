@@ -22,6 +22,11 @@ class IndexController extends \Omeka\Controller\IndexController
     {
         $mediaTypes = [
             'zip' => 'application/zip',
+            'zipm' => 'application/zip',
+        ];
+        $mediaExtensions = [
+            'zip' => 'zip',
+            'zipm' => 'zip',
         ];
 
         $type = $this->params('type');
@@ -54,11 +59,11 @@ class IndexController extends \Omeka\Controller\IndexController
         $item = $resource;
 
         // Quick check if the file exists.
-        $filepath = $this->basePath . '/' . $type . '/' . $id . '.' . $type;
+        $filepath = $this->basePath . '/' . $type . '/' . $id . '.' . $mediaExtensions[$type];
         $ready = file_exists($filepath) && is_readable($filepath) && filesize($filepath);
 
         if (!$ready) {
-            $mediaData = $this->mediaData($item);
+            $mediaData = $this->mediaData($item, $type);
             if (!count($mediaData)) {
                 throw new \Omeka\Mvc\Exception\RuntimeException('This item has no media.'); // @translate
             }
@@ -128,7 +133,7 @@ class IndexController extends \Omeka\Controller\IndexController
         return $response;
     }
 
-    protected function mediaData(ItemRepresentation $item): array
+    protected function mediaData(ItemRepresentation $item, string $type): array
     {
         $mediaData = [];
         foreach ($item->media() as $media) {
@@ -145,12 +150,16 @@ class IndexController extends \Omeka\Controller\IndexController
             if (!$mediaType) {
                 continue;
             }
+            $mainType = strtok($mediaType, '/');
+            if ($type === 'zipm' && !in_array($mainType, ['image', 'audio', 'video'])) {
+                continue;
+            }
             $mediaData[$media->id()] = [
                 'source' => $media->source(),
                 'filename' => $filename,
                 'filepath' => $filepath,
                 'mediatype' => $mediaType,
-                'maintype' => strtok($mediaType, '/'),
+                'maintype' => $mainType,
                 'extension' => $media->extension(),
                 'size' => $media->size(),
             ];

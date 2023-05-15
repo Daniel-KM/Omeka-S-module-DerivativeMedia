@@ -35,7 +35,7 @@ return [
                 'options' => [
                     'route' => '/derivative/:type/:id',
                     'constraints' => [
-                        'type' => 'zip',
+                        'type' => 'zipm|zip',
                         'id' => '\d+',
                     ],
                     'defaults' => [
