@@ -70,9 +70,12 @@ class IndexController extends \Omeka\Controller\IndexController
         /** @var \Omeka\Api\Representation\ItemRepresentation $item */
         $item = $resource;
 
-        // Quick check if the file exists.
+        $force = !empty($this->params()->fromQuery('force'));
+
+        // Quick check if the file exists when needed.
         $filepath = $this->basePath . '/' . $type . '/' . $id . '.' . $mediaExtensions[$type];
-        $ready = file_exists($filepath) && is_readable($filepath) && filesize($filepath);
+        $ready = !$force
+            && file_exists($filepath) && is_readable($filepath) && filesize($filepath);
 
         if (!$ready) {
             $mediaData = $this->mediaData($item, $type);
