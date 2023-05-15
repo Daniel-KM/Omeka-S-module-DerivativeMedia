@@ -43,9 +43,12 @@ class HasDerivative extends AbstractHelper
      * key and an array of derivative types as value. This array is a list of
      * derivative types as key and an array with:
      * - mode (string): file can be build as "static", "dynamic" or "live".
-     * - ready (boolean): file is available
-     * - in_progress (boolean): file will be available soon
-     * - url (string): url of the file.
+     * - feasible (boolean): if item can have this type of derivative.
+     * - in_progress (boolean): if the derivative is currently building.
+     * - ready (boolean): derivative file is available.
+     * - size (null|integer): real size or estimation.
+     * - file (string): relative filepath of the derivative.
+     * - url (string): url of the derivative file.
      */
     public function __invoke(?AbstractResourceEntityRepresentation $resource, ?string $type = null): array
     {
@@ -92,7 +95,10 @@ class HasDerivative extends AbstractHelper
                 continue;
             }
 
-            $filepath = $this->basePath . '/' . $type . '/' . $item->id() . '.' . Module::DERIVATIVES[$type]['extension'];
+            // Don't make the full filepath available in view.
+            $filepath =$this->itemFilepath($item, $type);
+            $file = mb_substr($filepath, mb_strlen($this->basePath) + 1);
+
             $tempFilepath =$this->tempFilepath($filepath);
 
             $size = null;
@@ -117,6 +123,7 @@ class HasDerivative extends AbstractHelper
                 'in_progress' => $isInProgress,
                 'ready' => $ready,
                 'size' => $size,
+                'file' => $file,
                 'url' => $ready || $isInProgress
                     ? $url('derivative', ['type' => $type, 'id' => $itemId])
                     : null,
