@@ -16,10 +16,12 @@ class DerivativeMedia extends AbstractJob
             return;
         }
 
+        $api = $this->getServiceLocator()->get('Omeka\ApiManager');
+
         $mediaId = $this->getArg('mediaId');
         try {
             /** @var \Omeka\Entity\Media $media */
-            $media = $this->getServiceLocator()->get('Omeka\ApiManager')->read('media', ['id' => $mediaId], [], ['initialize' => false, 'finalize' => false])->getContent();
+            $media = $api->read('media', ['id' => $mediaId], [], ['initialize' => false, 'finalize' => false])->getContent();
         } catch (NotFoundException $e) {
             $this->logger->err(
                 'No media #{media_id}: no derivative media to create.', // @translate

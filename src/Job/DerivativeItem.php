@@ -16,10 +16,12 @@ class DerivativeItem extends AbstractJob
             return;
         }
 
+        $api = $this->getServiceLocator()->get('Omeka\ApiManager');
+
         $itemId = $this->getArg('itemId');
         try {
             /** @var \Omeka\Entity\Item $item */
-            $item = $this->getServiceLocator()->get('Omeka\ApiManager')->read('items', ['id' => $itemId], [], ['initialize' => false, 'finalize' => false])->getContent();
+            $item = $api->read('items', ['id' => $itemId], [], ['initialize' => false, 'finalize' => false])->getContent();
         } catch (NotFoundException $e) {
             $this->logger->err(
                 'No item #{item_id}: no derivative media to create.', // @translate

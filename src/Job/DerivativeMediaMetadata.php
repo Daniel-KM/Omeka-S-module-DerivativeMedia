@@ -27,10 +27,6 @@ class DerivativeMediaMetadata extends DerivativeMediaFile
         $services = $this->getServiceLocator();
         $api = $services->get('Omeka\ApiManager');
 
-        // The reference id is the job id for now.
-        $referenceIdProcessor = new \Laminas\Log\Processor\ReferenceId();
-        $referenceIdProcessor->setReferenceId('derivative/media_metadata/job_' . $this->job->getId());
-
         // Prepare the list of medias.
 
         $repository = $this->entityManager->getRepository(\Omeka\Entity\Media::class);
