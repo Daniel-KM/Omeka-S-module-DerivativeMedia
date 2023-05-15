@@ -9,7 +9,15 @@ return [
             'video' => Media\FileRenderer\VideoRenderer::class,
         ],
     ],
+    'view_manager' => [
+        'template_path_stack' => [
+            dirname(__DIR__) . '/view',
+        ],
+    ],
     'view_helpers' => [
+        'invokables' => [
+            'derivativeMedia' => View\Helper\DerivativeMedia::class,
+        ],
         'factories' => [
             'hasDerivative' => Service\ViewHelper\HasDerivativeFactory::class,
         ],
