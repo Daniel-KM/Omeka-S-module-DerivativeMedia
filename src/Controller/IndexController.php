@@ -14,6 +14,7 @@ class IndexController extends \Omeka\Controller\IndexController
 
     /**
      * @todo Manage other storage type. See module AccessResource.
+     * @todo Some formats don't really need storage (text…), so make them truly dynamic.
      *
      * {@inheritDoc}
      * @see \Omeka\Controller\IndexController::indexAction()
@@ -22,13 +23,16 @@ class IndexController extends \Omeka\Controller\IndexController
     {
         $mediaTypes = [
             'alto' => 'application/alto+xml',
+            'text' => 'text/plain',
             'txt' => 'text/plain',
             'zip' => 'application/zip',
             'zipm' => 'application/zip',
             'zipo' => 'application/zip',
         ];
+
         $mediaExtensions = [
             'alto' => 'alto.xml',
+            'text' => 'txt',
             'txt' => 'txt',
             'zip' => 'zip',
             'zipm' => 'zip',
@@ -172,6 +176,12 @@ class IndexController extends \Omeka\Controller\IndexController
                 && ($mediaType !== 'application/alto+xml' || ($extension === 'xml' && !in_array($mediaType, ['application/x-empty', 'application/alto+xml'])))
             ) {
                 continue;
+            } elseif ($type === 'text'
+                // This is an exception.
+                && (($extracted = (string) $media->value('extracttext:extracted_text')) && strlen($extracted))
+            ) {
+                $mediaData[$media->id()] = $extracted;
+                continue;
             }
             $mediaData[$media->id()] = [
                 'source' => $media->source(),
@@ -202,6 +212,8 @@ class IndexController extends \Omeka\Controller\IndexController
 
         if ($type === 'alto') {
             return $this->prepareDerivativeAlto($item, $filepath, $mediaData);
+        } elseif ($type === 'text') {
+            return $this->prepareDerivativeTextExtracted($item, $filepath, $mediaData);
         } elseif ($type === 'txt') {
             return $this->prepareDerivativeText($item, $filepath, $mediaData);
         } elseif (substr($type, 0, 3) === 'zip') {
@@ -218,6 +230,31 @@ class IndexController extends \Omeka\Controller\IndexController
         /** @var \IiifSearch\View\Helper\XmlAltoSingle $xmlAltoSingle */
         $xmlAltoSingle = $helpers->get('xmlAltoSingle');
         $result = $xmlAltoSingle($item, $filepath, $mediaData);
+        return (bool) $result;
+    }
+
+    protected function prepareDerivativeTextExtracted(ItemRepresentation $item, string $filepath, array $mediaData): ?bool
+    {
+        $output = '';
+
+        $pageSeparator = <<<'TXT'
+==============
+Page %1$d/%2$d
+==============
+
+
+TXT;
+
+        $total = count($mediaData);
+        $index = 0;
+        foreach ($mediaData as $mediaData) {
+            ++$index;
+            $output .= sprintf($pageSeparator, $index, $total);
+            $output .= $mediaData . PHP_EOL;
+        }
+
+        $result = file_put_contents($filepath, trim($output));
+
         return (bool) $result;
     }
 
