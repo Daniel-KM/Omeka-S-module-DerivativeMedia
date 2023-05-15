@@ -245,7 +245,7 @@ class IndexController extends \Omeka\Controller\IndexController
 
     protected function prepareDerivativePdf(ItemRepresentation $item, string $filepath, array $mediaData): ?bool
     {
-        /** @var \Omeka\Stdlib\Cli $cli*/
+        /** @var \Omeka\Stdlib\Cli $cli */
         $cli = $item->getServiceLocator()->get('Omeka\Cli');
 
         $files = array_column($mediaData, 'filepath');
@@ -277,7 +277,10 @@ TXT;
             $output .= $mediaData . PHP_EOL;
         }
 
-        $result = file_put_contents($filepath, trim($output));
+        // Fix for windows: remove end of line then add them.
+        $output = str_replace(["\r\n", "\n\r","\n"], ["\n", "\n", "\r\n"], trim($output));
+
+        $result = file_put_contents($filepath, $output);
 
         return (bool) $result;
     }
@@ -301,6 +304,9 @@ TXT;
             $output .= sprintf($pageSeparator, $index, $total);
             $output .= file_get_contents($mediaData['filepath']) . PHP_EOL;
         }
+
+        // Fix for windows: remove end of line then add them.
+        $output = str_replace(["\r\n", "\n\r","\n"], ["\n", "\n", "\r\n"], trim($output));
 
         $result = file_put_contents($filepath, trim($output));
 
