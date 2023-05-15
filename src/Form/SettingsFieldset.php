@@ -48,6 +48,26 @@ class SettingsFieldset extends Fieldset
                 ],
             ])
             ->add([
+                'name' => 'derivativemedia_update',
+                'type' => DerivativeMediaElement\OptionalRadio::class,
+                'options' => [
+                    'element_group' => 'derivative_media',
+                    'label' => 'Create or update derivative files on individual save (not batch process)', // @translate
+                    'info' => 'Quick processes can be done during a web request (30 seconds); heavy processes are audio, video, pdf and zip with many big files and require a background job. Audio and video processes are never reprocessed, since the original cannot change.', // @translate
+                    // Note: derivative currently building may not be up-to-date!
+                    'value_options' => [
+                        'no' => 'No (may need manual process)', // @translate
+                        'existing_live' => 'Update only existing derivative files (quick processes only)', // @translate
+                        'existing' => 'Update only existing derivative files', // @translate
+                        'all_live' => 'Create and update all quick derivatives', // @translate
+                        'all' => 'Create and update all derivatives (take care of disk space and server overload)', // @translate
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'derivativemedia_update',
+                ],
+            ])
+            ->add([
                 'name' => 'derivativemedia_converters_audio',
                 'type' => OmekaElement\ArrayTextarea::class,
                 'options' => [

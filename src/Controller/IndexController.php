@@ -85,7 +85,7 @@ class IndexController extends \Omeka\Controller\IndexController
                 ];
                 /** @var \Omeka\Job\Dispatcher $dispatcher */
                 $dispatcher = $this->jobDispatcher();
-                $dispatcher->dispatch(\DerivativeMedia\Job\CreateDerivative::class, $args);
+                $dispatcher->dispatch(\DerivativeMedia\Job\CreateDerivatives::class, $args);
                 throw new \Omeka\Mvc\Exception\RuntimeException('This derivative is being created. Come back later.'); // @translate
             }
         }

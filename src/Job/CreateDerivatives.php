@@ -7,7 +7,7 @@ use DerivativeMedia\Mvc\Controller\Plugin\TraitDerivative;
 use Omeka\Api\Exception\NotFoundException;
 use Omeka\Job\AbstractJob;
 
-class CreateDerivative extends AbstractJob
+class CreateDerivatives extends AbstractJob
 {
     use TraitDerivative;
 
@@ -29,45 +29,57 @@ class CreateDerivative extends AbstractJob
             $item = $api->read('items', ['id' => $itemId], [], ['initialize' => false])->getContent();
         } catch (NotFoundException $e) {
             $this->logger->err(
-                'No item #{item_id}: no derivative media to create.', // @translate
+                'No item #{item_id}: no derivative to create.', // @translate
                 ['item_id' => $itemId]
             );
             return;
         }
 
         $type = $this->getArg('type');
-        if (!isset(Module::DERIVATIVES[$type])) {
+        $types = is_array($type) ? $type : [$type];
+        $types = array_filter($types);
+
+        if (empty($types)) {
             $this->logger->err(
-                'The type {type} is not managed.', // @translate
-                ['type' => $type]
+                'No types to process.' // @translate
             );
             return;
         }
 
+        // Recheck types with enabled types.
         $settings = $services->get('Omeka\Settings');
         $enabled = $settings->get('derivativemedia_enable', []);
-        if (!in_array($type, $enabled)) {
+
+        $types = array_intersect($types, array_keys(Module::DERIVATIVES), $enabled);
+        $types = array_combine($types, $types);
+        unset($types['audio'], $types['video']);
+
+        if (empty($types)) {
             $this->logger->err(
-                'The type {type} is not enabled.', // @translate
-                ['type' => $type]
+                'No enabled type of derivative to process.' // @translate
             );
             return;
         }
 
-        $dataMedia = $this->getArg('dataMedia', []);
+        // Warning: dataMedia should be provided only when a single type should
+        // be processed, because the list of medias is different.
+        $dataMedia = count($types) === 1 ? $this->getArg('dataMedia', []) : [];
 
-        $filepath = $this->itemFilepath($item, $type);
-
+        /** @var \DerivativeMedia\Mvc\Controller\Plugin\CreateDerivative $createDerivative */
         $plugins = $services->get('ControllerPluginManager');
         $createDerivative = $plugins->get('createDerivative');
 
-        // Messages are already logged, except in case of success
-        $result = $createDerivative($type, $filepath, $item, $dataMedia);
-        if ($result) {
-            $this->logger->notice(
-                'Item #{item_id}: derivative file for type "{type}" is created successfully.', // @translate
-                ['item_id' => $itemId, 'type' => $type]
-            );
+        foreach ($types as $type) {
+            $filepath = $this->itemFilepath($item, $type);
+
+            // Messages are already logged, except in case of success.
+            $result = $createDerivative($type, $filepath, $item, $dataMedia);
+            if ($result) {
+                $this->logger->notice(
+                    'Item #{item_id}: derivative file for type "{type}" is created successfully.', // @translate
+                    ['item_id' => $itemId, 'type' => $type]
+                );
+            }
         }
     }
 }

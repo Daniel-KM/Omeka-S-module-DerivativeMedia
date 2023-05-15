@@ -447,10 +447,6 @@ HTML;
 
     public function afterSaveItem(Event $event): void
     {
-        if (!$this->checkFfmpeg()) {
-            return;
-        }
-
         // Don't run during a batch edit of items, because it runs one job by
         // item and it is slow. A batch process is always partial.
         /** @var \Omeka\Api\Request $request */
@@ -459,59 +455,107 @@ HTML;
             return;
         }
 
-        $item = $event->getParam('response')->getContent();
-        $convert = false;
-        foreach ($item->getMedia() as $media) {
-            // Don't reprocess derivative.
-            $data = $media->getData();
-            if (!empty($data['derivative'])) {
-                continue;
-            }
-            if ($this->checkConvertAudioVideo($media)) {
-                $convert = true;
-                break;
-            }
-        }
-        if (!$convert) {
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+
+        $enabled = $settings->get('derivativemedia_enable', []);
+        $derivativeUpdate = $settings->get('derivativemedia_update', 'existing');
+
+        $processUpdate = in_array($derivativeUpdate, ['existing_live', 'existing', 'all_live', 'all']);
+        $processItemDerivative = !empty(array_diff($enabled, ['audio', 'video']));
+        $processMediaDerivative = in_array('audio', $enabled) || in_array('video', $enabled);
+
+        $processItem = $processItemDerivative && $processUpdate;
+        $processMedia = $processMediaDerivative && $this->checkFfmpeg();
+
+        if (!$processItem && !$processMedia) {
             return;
         }
 
-        $args = [];
-        $args['itemId'] = $item->getId();
-        $dispatcher = $this->getServiceLocator()->get('Omeka\Job\Dispatcher');
-        $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeItem::class, $args);
+        /** @var \Omeka\Entity\Item $item */
+        $item = $event->getParam('response')->getContent();
+
+        $medias = $item->getMedia();
+        if (!count($medias)) {
+            return;
+        }
+
+        // Check new media without audio/video derivative.
+        if ($processMedia) {
+            $convert = false;
+            foreach ($medias as $media) {
+                // Don't reprocess derivative.
+                $data = $media->getData();
+                if (!empty($data['derivative'])) {
+                    continue;
+                }
+                if ($this->checkConvertAudioVideo($media)) {
+                    $convert = true;
+                    break;
+                }
+            }
+            if ($convert) {
+                $args = [
+                    'itemId' => $item->getId(),
+                ];
+                $dispatcher = $services->get('Omeka\Job\Dispatcher');
+                $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeItem::class, $args);
+            }
+        }
+
+        if ($processItem) {
+            $this->processDerivativeItem($item, $derivativeUpdate);
+        }
     }
 
     public function afterSaveMedia(Event $event): void
     {
-        if (!$this->checkFfmpeg()) {
-            return;
-        }
-
-        // Don't run during a batch edit of media, because it runs one job by
-        // media and it is slow. A batch process is always partial.
+        // Don't run during a batch edit of items, because it runs one job by
+        // item and it is slow. A batch process is always partial.
         /** @var \Omeka\Api\Request $request */
         $request = $event->getParam('request');
         if ($request->getOption('isPartial')) {
             return;
         }
 
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+
+        $enabled = $settings->get('derivativemedia_enable', []);
+        $derivativeUpdate = $settings->get('derivativemedia_update', 'existing');
+
+        $processUpdate = in_array($derivativeUpdate, ['existing_live', 'existing', 'all_live', 'all']);
+        $processItemDerivative = !empty(array_diff($enabled, ['audio', 'video']));
+        $processMediaDerivative = in_array('audio', $enabled) || in_array('video', $enabled);
+
+        $processItem = $processItemDerivative && $processUpdate;
+        $processMedia = $processMediaDerivative && $this->checkFfmpeg();
+
+        if (!$processItem && !$processMedia) {
+            return;
+        }
+
+        /** @var \Omeka\Entity\Media $media */
         $media = $event->getParam('response')->getContent();
 
-        // Don't reprocess derivative.
-        $data = $media->getData();
-        if (!empty($data['derivative'])) {
-            return;
+        $dispatcher = $services->get('Omeka\Job\Dispatcher');
+
+        // Check new media without audio/video derivative.
+        if ($processMedia) {
+            // Don't reprocess derivative.
+            $data = $media->getData();
+            if (empty($data['derivative']) && $this->checkConvertAudioVideo($media)) {
+                $args = [
+                    'mediaId' => $media->getId(),
+                ];
+                $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMedia::class, $args);
+            }
         }
 
-        if (!$this->checkConvertAudioVideo($media)) {
-            return;
+        // FIXME Find a way not to process item for each update of a media, but one time for all. The same for deletion.
+        if ($processItem) {
+            // $this->processDerivativeItem($media->getItem(), $derivativeUpdate);
         }
-
-        $args = [];
-        $args['mediaId'] = $media->getId();
-        $dispatcher = $this->getServiceLocator()->get('Omeka\Job\Dispatcher');
-        $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMedia::class, $args);
     }
 
     public function afterDeleteMedia(Event $event): void
@@ -535,6 +579,60 @@ HTML;
             $storagePath = $folder . '/' . $derivative['filename'];
             $store->delete($storagePath);
         }
+
+        // TODO See update media.
+    }
+
+    protected function processDerivativeItem(\Omeka\Entity\Item $item, string $derivativeUpdate): void
+    {
+        // Quick check item level and list types to process.
+        $services = $this->getServiceLocator();
+
+        /** @var \Omeka\Api\Adapter\ItemAdapter $adapter */
+        $adapter = $services->get('Omeka\ApiAdapterManager')->get('items');
+
+        /** @var \Omeka\Api\Representation\ItemRepresentation $item */
+        $item = $adapter->getRepresentation($item);
+
+        /** @var \DerivativeMedia\View\Helper\HasDerivative $hasDerivative */
+        $hasDerivative = $services->get('ViewHelperManager')->get('hasDerivative');
+
+        $derivatives = $hasDerivative($item);
+
+        switch ($derivativeUpdate) {
+            case 'existing_live':
+                $todo = array_filter($derivatives, function($v) {
+                    return $v['ready']
+                    && $v['mode'] === 'live';
+                });
+                    break;
+            case 'existing':
+                $todo = array_filter($derivatives, function($v) {
+                    return $v['ready'];
+                });
+                    break;
+            case 'all_live':
+                $todo = array_filter($derivatives, function($v) {
+                    return $v['mode'] === 'live';
+                });
+                    break;
+            case 'all':
+                $todo = $derivatives;
+                break;
+            default:
+                return;
+        }
+
+        if (!$todo) {
+            return;
+        }
+
+        $args = [
+            'itemId' => $item->getId(),
+            'type' => array_keys($todo),
+        ];
+        $dispatcher = $services->get('Omeka\Job\Dispatcher');
+        $dispatcher->dispatch(\DerivativeMedia\Job\CreateDerivatives::class, $args);
     }
 
     protected function checkConvertAudioVideo(Media $media): bool
@@ -559,7 +657,7 @@ HTML;
                 return !empty($v) && mb_strlen(trim($k)) && mb_substr(trim($k), 0, 1) !== '#';
             };
             $settings = $services->get('Omeka\Settings');
-            $enabled = $settings->get('derivativemedia_enable', ['audio', 'video']);
+            $enabled = $settings->get('derivativemedia_enable', []);
             $convertersAudio = in_array('audio', $enabled)
                 ? array_filter($settings->get('derivativemedia_converters_audio', []), $removeCommented, ARRAY_FILTER_USE_BOTH)
                 : [];
