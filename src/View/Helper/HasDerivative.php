@@ -5,6 +5,7 @@ namespace DerivativeMedia\View\Helper;
 use DerivativeMedia\Module;
 use DerivativeMedia\Mvc\Controller\Plugin\TraitDerivative;
 use Laminas\View\Helper\AbstractHelper;
+use Laminas\View\Helper\Url;
 use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
 use Omeka\Api\Representation\ItemRepresentation;
 use Omeka\Api\Representation\MediaRepresentation;
@@ -23,10 +24,15 @@ class HasDerivative extends AbstractHelper
      */
     protected $enabled;
 
-    public function __construct(string $basePath, array $enabled)
+    /**
+     * @var \Laminas\View\Helper\Url
+     */
+
+    public function __construct(string $basePath, array $enabled, Url $url)
     {
         $this->basePath = $basePath;
         $this->enabled = $enabled;
+        $this->url = $url;
     }
 
     /**
@@ -90,7 +96,6 @@ class HasDerivative extends AbstractHelper
         $result = [];
 
         $itemId = $item->id();
-        $url = $this->getView()->get('url');
 
         foreach ($type ? [$type] : $this->enabled as $type) {
             if (!isset(Module::DERIVATIVES[$type])
@@ -129,7 +134,7 @@ class HasDerivative extends AbstractHelper
                 'size' => $size,
                 'file' => $file,
                 'url' => $ready || $isInProgress
-                    ? $url('derivative', ['type' => $type, 'id' => $itemId])
+                    ? $this->url->__invoke('derivative', ['type' => $type, 'id' => $itemId])
                     : null,
             ];
         }
