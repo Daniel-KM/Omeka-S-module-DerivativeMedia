@@ -2,39 +2,25 @@
 
 namespace DerivativeMedia\Controller;
 
+use DerivativeMedia\Module;
+
 class IndexController extends \Omeka\Controller\IndexController
 {
     /**
      * @todo Manage other storage type. See module AccessResource.
      * @todo Some formats don't really need storage (text…), so make them truly dynamic.
      *
+     * @todo Dynamic files cannot be stored in media data because of rights.
+     *
      * {@inheritDoc}
      * @see \Omeka\Controller\IndexController::indexAction()
      */
     public function indexAction()
     {
-        $mediaTypes = [
-            'alto' => 'application/alto+xml',
-            'pdf' => 'application/pdf',
-            'text' => 'text/plain',
-            'txt' => 'text/plain',
-            'zip' => 'application/zip',
-            'zipm' => 'application/zip',
-            'zipo' => 'application/zip',
-        ];
-
-        $mediaExtensions = [
-            'alto' => 'alto.xml',
-            'pdf' => 'pdf',
-            'text' => 'txt',
-            'txt' => 'txt',
-            'zip' => 'zip',
-            'zipm' => 'zip',
-            'zipo' => 'zip',
-        ];
-
         $type = $this->params('type');
-        if (!isset($type, $mediaTypes)) {
+        if (!isset(Module::DERIVATIVES[$type])
+            || Module::DERIVATIVES[$type]['level'] === 'media'
+        ) {
             throw new \Omeka\Mvc\Exception\RuntimeException('This type is not supported.'); // @translate
         }
 
@@ -45,7 +31,8 @@ class IndexController extends \Omeka\Controller\IndexController
 
         $id = $this->params('id');
 
-        // Check if the resource is available for the current user.
+        // Check if the resource is available and rights for the current user.
+
         // Automatically throw exception.
         /** @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource*/
         $resource = $this->api()->read('resources', ['id' => $id])->getContent();
@@ -65,11 +52,15 @@ class IndexController extends \Omeka\Controller\IndexController
         $force = !empty($this->params()->fromQuery('force'));
 
         // Quick check if the file exists when needed.
-        $filepath = $this->basePath . '/' . $type . '/' . $id . '.' . $mediaExtensions[$type];
+        $filepath = $this->basePath . '/' . $type . '/' . $id . '.' . Module::DERIVATIVES[$type]['extension'];
         $ready = !$force
             && file_exists($filepath) && is_readable($filepath) && filesize($filepath);
 
         if (!$ready) {
+            if (Module::DERIVATIVES[$type]['mode'] === 'static') {
+                throw new \Omeka\Mvc\Exception\RuntimeException('This derivative is not ready.'); // @translate
+            }
+
             $ready = $this->createDerivative($type, $filepath, $item);
             if (!$ready) {
                 if (is_null($ready)) {
@@ -81,7 +72,7 @@ class IndexController extends \Omeka\Controller\IndexController
         }
 
         // Send the file.
-        return $this->sendFile($filepath, $mediaTypes[$type], basename($filepath), 'attachment', true);
+        return $this->sendFile($filepath, Module::DERIVATIVES[$type]['mediatype'], basename($filepath), 'attachment', true);
     }
 
     /**

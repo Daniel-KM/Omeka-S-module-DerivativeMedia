@@ -13,11 +13,11 @@ use Generic\AbstractModule;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Mvc\Controller\AbstractController;
+use Laminas\Mvc\MvcEvent;
 use Laminas\View\Renderer\PhpRenderer;
 use Log\Stdlib\PsrMessage;
 use Omeka\Entity\Media;
 use Omeka\Module\Exception\ModuleCannotInstallException;
-use Laminas\Mvc\MvcEvent;
 
 /**
  * Derivative Media
@@ -33,6 +33,79 @@ class Module extends AbstractModule
 
     protected $dependencies = [
         'Log',
+    ];
+
+    const DERIVATIVES = [
+        // Media level.
+        'audio' => [
+            'mode' => 'static',
+            'level' => 'media',
+            'multiple' => true,
+        ],
+        'video' => [
+            'mode' => 'static',
+            'level' => 'media',
+            'multiple' => true,
+        ],
+
+        // Item level.
+        'alto' => [
+            'mode' => 'live',
+            'level' => 'item',
+            'multiple' => false,
+            'mediatype' => 'application/alto+xml',
+            'extension' => 'alto.xml',
+        ],
+        'pdf' => [
+            'mode' => 'dynamic',
+            'level' => 'item',
+            'multiple' => false,
+            'mediatype' => 'application/pdf',
+            'extension' => 'pdf',
+        ],
+        'txt' => [
+            'mode' => 'live',
+            'level' => 'item',
+            'multiple' => false,
+            'mediatype' => 'text/plain',
+            'extension' => 'txt',
+        ],
+        'text' => [
+            'mode' => 'live',
+            'level' => 'item',
+            'multiple' => false,
+            'mediatype' => 'text/plain',
+            'extension' => 'txt',
+        ],
+        'pdf' => [
+            'mode' => 'dynamic',
+            'level' => 'item',
+            'multiple' => false,
+            'mediatype' => 'application/pdf',
+            'extension' => 'pdf',
+        ],
+        // TODO Static for > 100MB/1GB or stream output to user directly.
+        'zip' => [
+            'mode' => 'live',
+            'level' => 'item',
+            'multiple' => false,
+            'mediatype' => 'application/zip',
+            'extension' => 'zip',
+        ],
+        'zipm' => [
+            'mode' => 'live',
+            'level' => 'item',
+            'multiple' => false,
+            'mediatype' => 'application/zip',
+            'extension' => 'zip',
+        ],
+        'zipo' => [
+            'mode' => 'live',
+            'level' => 'item',
+            'multiple' => false,
+            'mediatype' => 'application/zip',
+            'extension' => 'zip',
+        ],
     ];
 
     public function getConfig()
