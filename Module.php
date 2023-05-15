@@ -249,16 +249,20 @@ class Module extends AbstractModule
 
     public function getConfigForm(PhpRenderer $renderer)
     {
+        $services = $this->getServiceLocator();
+
+        $messenger = $services->get('ControllerPluginManager')->get('messenger');
+        $message = new \Omeka\Stdlib\Message(
+            'This page allows to launch background job to prepare static derivative files according to parameters set in main settings.', // @translate
+        );
+        $messenger->addSuccess($message);
+
         $this->checkFfmpeg(true);
 
-        $services = $this->getServiceLocator();
         $form = $services->get('FormElementManager')->get(ConfigForm::class);
         $form->init();
-        $html = '<p>'
-            . $renderer->translate('Set your parameters in main settings to create derivative medias.') // @translate
-            . '</p>';
-        $html .= $renderer->formCollection($form);
-        return $html;
+
+        return $renderer->formCollection($form);
     }
 
     public function handleConfigForm(AbstractController $controller)
@@ -281,7 +285,6 @@ class Module extends AbstractModule
 
         if (empty($params['process_derivative'])
             && empty($params['process_metadata'])
-            && empty($params['process_dimensions'])
         ) {
             $message = 'No job launched.'; // @translate
             $controller->messenger()->addWarning($message);
@@ -293,7 +296,6 @@ class Module extends AbstractModule
         unset($params['csrf']);
         unset($params['process_derivative']);
         unset($params['process_metadata']);
-        unset($params['process_dimensions']);
 
         $params['item_sets'] = $params['item_sets'] ?: [];
         $params['ingesters'] = $params['ingesters'] ?: [];
@@ -320,15 +322,6 @@ class Module extends AbstractModule
             unset($params['query']);
             $job = $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMediaFile::class, $params);
             $message = 'Creating derivative media ({link}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
-        } elseif (!empty($process['process_dimensions'])) {
-            if (!class_exists('IiifServer\Job\MediaDimensions')) {
-                $message = 'The task "Media dimensions" requires the module Iiif Server.'; // @translate
-                $controller->messenger()->addWarning($message);
-                return true;
-            }
-            $params = ['query' => $params['query'] ?: null];
-            $job = $dispatcher->dispatch(\IiifServer\Job\MediaDimensions::class, $params);
-            $message = 'Storing dimensions of images, audio and video ({link}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
         }
         $message = new PsrMessage(
             $message,
