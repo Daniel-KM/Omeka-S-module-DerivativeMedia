@@ -6,17 +6,34 @@ Derivative Media Optimizer (module for Omeka S)
 > than the previous repository.__
 
 [Derivative Media] is a module for [Omeka S] that optimizes files for the web:
-it creates derivative files from audio, video and pdf files that are streamable
-and linearized (can be rendered before full loading), generally smaller for the
-same quality, adapted for mobile or desktop, sized for slow or big connection,
-and cross-browser compatible, including Safari. Multiple derivative files can be
-created for each file. It works the same way Omeka does for images (large,
-medium and square thumbnails).
+it creates derivative files from audio and video files adapted for mobile
+or desktop, streamable, sized for slow or big connection, and cross-browser
+compatible,  including Safari. Multiple derivative files can be created for each
+file. It works the same way Omeka does for images (large, medium and square
+thumbnails).
+
+At item level, some more formats are supported:
+- `alto`: Xml format for OCR. When alto is available by page, a single xml may be
+  created. It is useful for the module [Iiif Search], because the search can be
+  done quicker on a single file.
+- `iiif/2` and `iiif/3`: Allow to cache [IIIF] manifests (v2 and v3) for items
+  with many medias or many visitors, so it can be used by module [Iiif Server]
+  or any other external Iiif viewer.
+- `text`: If text files are attached to the item, they can be gathered in a single
+  one.
+- `text`: If text is available in media values "extracttext:extracted_text", they
+  can be gathered in a single one.
+- `pdf`: concatenate all images in a single pdf file (require ImageMagick).
+- `zip`: zip all files.
+- `zip media`: zip all media files (audio, video, images).
+- `zip other`: zip all other files.
 
 The conversion uses [ffmpeg] and [ghostscript], two command-line tools that are
 generally installed by default on most servers. The commands are customizable.
 
-The process on pdf is currently not supported.
+The process on pdf is currently not supported, but in a future version it will
+make them streamable and linearized (can be rendered before full loading),
+generally smaller for the same quality.
 
 
 Installation
@@ -106,8 +123,9 @@ webm/{filename}.webm = -c copy -c:v libvpx-vp9 -crf 30 -b:v 0 -deadline realtime
 mov/{filename}.mov   = -c copy -c:v libx264 -movflags +faststart -filter:v crop='floor(in_w/2)*2:floor(in_h/2)*2' -crf 22 -level 3 -preset ultrafast -tune film -pix_fmt yuv420p -c:a aac -qscale:a 2 -f mov
 mp4/{filename}.mp4   = -c copy -c:v libx264 -movflags +faststart -filter:v crop='floor(in_w/2)*2:floor(in_h/2)*2' -crf 22 -level 3 -preset ultrafast -tune film -pix_fmt yuv420p -c:a libmp3lame -qscale:a 2
 
-# Pdf
-
+# Pdf (not supported yet, via gs)
+# see https://github.com/mattdesl/gsx-pdf-optimize
+pdfo/{filename}.pdf  = -sDEVICE=pdfwrite -dPDFSETTINGS=/screen -dNOPAUSE -dQUIET -dBATCH -dCompatibilityLevel=1.5 -dSubsetFonts=true -dCompressFonts=true -dEmbedAllFonts=true -sProcessColorModel=DeviceRGB -sColorConversionStrategy=RGB -sColorConversionStrategyForImages=RGB -dConvertCMYKImagesToRGB=true -dDetectDuplicateImages=true -dColorImageDownsampleType=/Bicubic -dColorImageResolution=300 -dGrayImageDownsampleType=/Bicubic -dGrayImageResolution=300 -dMonoImageDownsampleType=/Bicubic -dMonoImageResolution=300 -dDownsampleColorImages=true -dDoThumbnails=true -dCreateJobTicket=false -dPreserveEPSInfo=false -dPreserveOPIComments=false -dPreserveOverprintSettings=false -dUCRandBGInfo=/Remove
 ```
 
 It's important to check the version of ffmpeg that is installed on the server,
@@ -171,6 +189,23 @@ ffmpeg -i 'my_video.mp4' -c copy -movflags +faststart 'my_video.faststart.mp4'
 
 See [ffmpeg help] for more information.
 
+### Protection of files
+
+To protect files created dynamically (alto, text, zip…), add a rule in the file
+`.htaccess` at the root of Omeka to redirect files/alto, files/zip, etc. to
+/derivative/{type}/#id.
+
+### Theme with resource block and view helper
+
+Use the resource block "Derivative Media List" to display the list of available
+derivative of a resource.
+
+Or use the view helper `derivativeMedia()`:
+
+```php
+<?= $this->derivativeMedia($resource) ?>
+```
+
 
 TODO
 ----
@@ -183,6 +218,7 @@ TODO
 - [ ] Add a check for missing conversions (a table with a column by conversion).
 - [ ] Add a check for fast start (mov,mp4,m4a,3gp,3g2,mj2).
 - [ ] Finalize for pdf.
+- [ ] Add a check of number of job before running job CreateDerivatives.
 
 
 Warning
@@ -237,13 +273,16 @@ Copyright
 
 First version of this module was done for [Archives sonores de poésie] of [Sorbonne Université].
 
-^
+
 [Derivative Media]: https://gitlab.com/Daniel-KM/Omeka-S-module-DerivativeMedia
 [Omeka S]: https://omeka.org/s
 [Installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
 [Generic]: https://gitlab.com/Daniel-KM/Omeka-S-module-Generic
 [Log]: https://gitlab.com/Daniel-KM/Omeka-S-module-Log
 [Bulk Check]: https://gitlab.com/Daniel-KM/Omeka-S-module-BulkCheck
+[IIIF]: https://iiif.io
+[Iiif Search]: https://github.com/Symac/Omeka-S-module-IiifSearch
+[Iiif Server]: https://gitlab.com/Daniel-KM/Omeka-S-module-IiifServer
 [ffmpeg]: https://ffmpeg.org
 [ffmpeg wiki]: https://trac.ffmpeg.org/wiki/Encode/H.264
 [ffmpeg wiki too]: https://trac.ffmpeg.org/wiki/Encode/VP9
