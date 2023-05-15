@@ -64,6 +64,10 @@ class IndexController extends \Omeka\Controller\IndexController
             $ready = $this->createDerivative($type, $filepath, $item);
             if (!$ready) {
                 if (is_null($ready)) {
+                    //  TODO Improve the check: the derivative may be dependant on media types.
+                    if ($item->media()) {
+                        throw new \Omeka\Mvc\Exception\RuntimeException('This derivative is being created. Come back later.'); // @translate
+                    }
                     throw new \Omeka\Mvc\Exception\RuntimeException('This item has no media.'); // @translate
                 } else {
                     throw new \Omeka\Mvc\Exception\RuntimeException('This derivative files of this item cannot be prepared.'); // @translate

@@ -28,8 +28,12 @@ class CreateDerivative extends AbstractPlugin
     /**
      * Create derivative of an item at the specified filepath.
      *
+     * Unlike media, item as no field in database to store data. So the check is
+     * done directly on files.
+     *
      * @var array $dataMedia Media data contains required values.
-     * @return bool|null Success or error. Null if no media.
+     * @return bool|null Success or error. Null if no media or currently being
+     * created.
      *
      * @todo Check filepath.
      */
@@ -125,20 +129,32 @@ class CreateDerivative extends AbstractPlugin
             }
         }
 
+        // Use a temp file to avoid concurrent processes (two users request it).
+        $tempFilepath = $this->tempFilepath($filepath);
+
+        // Check if another process is creating the file.
+        if (file_exists($tempFilepath)) {
+            $this->logger()->warn('The derivative is currently beeing created.'); // @translate
+            return null;
+        }
+
         if ($type === 'alto') {
-            $result = $this->prepareDerivativeAlto($filepath, $dataMedia, $item);
+            $result = $this->prepareDerivativeAlto($tempFilepath, $dataMedia, $item);
         } elseif ($type === 'pdf') {
-            $result = $this->prepareDerivativePdf($filepath, $dataMedia, $item);
+            $result = $this->prepareDerivativePdf($tempFilepath, $dataMedia, $item);
         } elseif ($type === 'text') {
-            $result = $this->prepareDerivativeTextExtracted($filepath, $dataMedia, $item);
+            $result = $this->prepareDerivativeTextExtracted($tempFilepath, $dataMedia, $item);
         } elseif ($type === 'txt') {
-            $result = $this->prepareDerivativeText($filepath, $dataMedia, $item);
+            $result = $this->prepareDerivativeText($tempFilepath, $dataMedia, $item);
         } elseif (in_array($type, ['zip', 'zipm', 'zipo'])) {
-            $result = $this->prepareDerivativeZip($type, $filepath, $dataMedia, $item);
+            $result = $this->prepareDerivativeZip($type, $tempFilepath, $dataMedia, $item);
         }
 
         if ($result) {
+            rename($tempFilepath, $filepath);
             @chmod($filepath, 0664);
+        } elseif (file_exists($tempFilepath)) {
+            @unlink($tempFilepath);
         }
 
         return $result;
@@ -288,5 +304,16 @@ TXT;
             return true;
         }
         return mkdir($dirpath, 0775, true);
+    }
+
+    protected function tempFilepath(string $filepath): string
+    {
+        // Keep the original extension to manage tools like convert.
+        // Normally, all files have an extension.
+
+        $extension = pathinfo($filepath, PATHINFO_EXTENSION) ?? '';
+        return strlen($extension)
+            ? mb_substr($filepath, 0, - strlen($extension) - 1) . '.tmp' . '.' . $extension
+            : $filepath . '.tmp';
     }
 }
