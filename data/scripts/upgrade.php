@@ -26,13 +26,32 @@ $messenger = $plugins->get('messenger');
 $entityManager = $services->get('Omeka\EntityManager');
 
 if (version_compare($oldVersion, '3.4.4', '<')) {
-    $settings->set('derivativemedia_enable', ['audio', 'video']);
+    $settings->set('derivativemedia_enable', []);
     $message = new Message(
-        'An new option was added to enable specific converters.' // @translate
+        'A new option was added to enable specific converters.' // @translate
     );
     $messenger->addSuccess($message);
     $message = new Message(
         'It is now possible to output a zip of all files of an item (format url: https://example.org/derivative/zip/{item_id}).' // @translate
     );
+    $messenger->addSuccess($message);
+}
+
+if (version_compare($oldVersion, '3.4.4', '<')) {
+    $settings->set('derivativemedia_update', 'existing');
+    $message = new Message(
+        'Many new formats have been added: zip, text, alto, iiif, pdf.' // @translate
+    );
+    $messenger->addSuccess($message);
+    $message = new Message(
+        'A resource page block allows to display the list of available derivatives of a resource.' // @translate
+    );
+    $messenger->addSuccess($message);
+    $message = new Message(
+        'Check %1$snew settings%2$s.', // @translate
+        sprintf('<a href="%s">', $url('admin/default', ['controller' => 'setting'], ['fragment' => 'derivative-media'])),
+        '</a>'
+    );
+    $message->setEscapeHtml(false);
     $messenger->addSuccess($message);
 }
