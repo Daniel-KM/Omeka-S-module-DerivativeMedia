@@ -2,8 +2,13 @@
 
 namespace DerivativeMedia\Mvc\Controller\Plugin;
 
+use IiifSearch\View\Helper\XmlAltoSingle;
+use IiifServer\View\Helper\IiifManifest;
+use Laminas\Log\Logger;
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
+use Laminas\Mvc\Controller\Plugin\Url;
 use Omeka\Api\Representation\ItemRepresentation;
+use Omeka\Settings\Settings;
 use Omeka\Stdlib\Cli;
 use ZipArchive;
 
@@ -17,14 +22,51 @@ class CreateDerivative extends AbstractPlugin
     protected $cli;
 
     /**
+     * @var \Laminas\Log\Logger
+     */
+    protected $logger;
+
+    /**
+     * @var \Omeka\Settings\Settings
+     */
+    protected $settings;
+
+    /**
+     * @var \Laminas\Mvc\Controller\Plugin\Url
+     */
+    protected $url;
+
+    /**
+     * @var \IiifServer\View\Helper\IiifManifest
+     */
+    protected $iiifManifest;
+
+    /**
+     * @var \IiifSearch\View\Helper\XmlAltoSingle
+     */
+    protected $xmlAltoSingle;
+
+    /**
      * @var string
      */
     protected $basePath;
 
-    public function __construct(Cli $cli, string $basePath)
-    {
+    public function __construct(
+        Cli $cli,
+        Logger $logger,
+        Settings $settings,
+        Url $url,
+        string $basePath,
+        ?IiifManifest $iiifManifest,
+        ?XmlAltoSingle $xmlAltoSingle
+    ) {
         $this->cli = $cli;
+        $this->logger = $logger;
+        $this->settings = $settings;
+        $this->url = $url;
         $this->basePath = $basePath;
+        $this->iiifManifest = $iiifManifest;
+        $this->xmlAltoSingle = $xmlAltoSingle;
     }
 
     /**
@@ -56,13 +98,13 @@ class CreateDerivative extends AbstractPlugin
     protected function prepareDerivative(string $type, string $filepath, array $dataMedia, ?ItemRepresentation $item): ?bool
     {
         if (!$this->ensureDirectory(dirname($filepath))) {
-            $this->logger()->err('Unable to create directory.'); // @translate
+            $this->logger->err('Unable to create directory.'); // @translate
             return false;
         }
 
         if (file_exists($filepath)) {
             if (!unlink($filepath)) {
-                $this->logger()->err('Unable to remove existing file.'); // @translate
+                $this->logger->err('Unable to remove existing file.'); // @translate
                 return false;
             }
         }
@@ -72,7 +114,7 @@ class CreateDerivative extends AbstractPlugin
 
         // Check if another process is creating the file.
         if (file_exists($tempFilepath)) {
-            $this->logger()->warn('The derivative is currently beeing created.'); // @translate
+            $this->logger->warn('The derivative is currently beeing created.'); // @translate
             return null;
         }
 
@@ -104,30 +146,24 @@ class CreateDerivative extends AbstractPlugin
 
     protected function prepareDerivativeAlto(string $filepath, array $dataMedia, ?ItemRepresentation $item): ?bool
     {
-        $helpers = $this->viewHelpers();
-        if (!$helpers->has('xmlAltoSingle')) {
-            $this->logger()->err('To create xml alto, the module IiifSearch is required for now.'); // @translate
+        if (!$this->xmlAltoSingle) {
+            $this->logger->err('To create xml alto, the module IiifSearch is required for now.'); // @translate
             return false;
         }
 
-        /** @var \IiifSearch\View\Helper\XmlAltoSingle $xmlAltoSingle */
-        $xmlAltoSingle = $helpers->get('xmlAltoSingle');
-        $result = $xmlAltoSingle($item, $filepath, $dataMedia);
+        $result = $this->xmlAltoSingle->__invoke($item, $filepath, $dataMedia);
 
         return (bool) $result;
     }
 
     protected function prepareDerivativeIiif(string $filepath, array $dataMedia, ?ItemRepresentation $item, $version): ?bool
     {
-        $helpers = $this->viewHelpers();
-        if (!$helpers->has('iiifManifest')) {
-            $this->logger()->err('To create iiif manifest, the module IiifServer is required for now.'); // @translate
+        if (!$this->iiifManifest) {
+            $this->logger->err('To create iiif manifest, the module IiifServer is required for now.'); // @translate
             return false;
         }
 
-        /** @var \IiifServer\View\Helper\IiifManifest $iiifManifest */
-        $iiifManifest = $helpers->get('iiifManifest');
-        $manifest = $iiifManifest($item, $version);
+        $manifest = $this->iiifManifest->__invoke($item, $version);
 
         if ($manifest) {
             $result = file_put_contents($filepath, $manifest);
@@ -211,19 +247,19 @@ TXT;
     protected function prepareDerivativeZip(string $type, string $filepath, array $dataMedia, ?ItemRepresentation $item): ?bool
     {
         if (!class_exists('ZipArchive')) {
-            $this->logger()->err('The php extension "php-zip" must be installed.'); // @translate
+            $this->logger->err('The php extension "php-zip" must be installed.'); // @translate
             return false;
         }
 
         // ZipArchive::OVERWRITE is available only in php 8.
         $zip = new ZipArchive();
         if ($zip->open($filepath, ZipArchive::CREATE) !== true) {
-            $this->logger()->err('Unable to create the zip file.'); // @translate
+            $this->logger->err('Unable to create the zip file.'); // @translate
             return false;
         }
 
         // Here, the site may not be available, so can't store item site url.
-        $comment = $this->settings()->get('installation_title') . ' [' . $this->url()->fromRoute('top', [], ['force_canonical' => true]) . ']';
+        $comment = $this->settings->get('installation_title') . ' [' . $this->url->fromRoute('top', [], ['force_canonical' => true]) . ']';
         $zip->setArchiveComment($comment);
 
         // Store files: they are all already compressed (image, video, pdf...),

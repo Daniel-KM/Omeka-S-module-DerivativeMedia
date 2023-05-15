@@ -7,10 +7,19 @@ use Omeka\Api\Representation\ItemRepresentation;
 
 trait TraitDerivative
 {
+    /**
+     * @var string
+     */
+    protected $basePath;
+
     protected function dataMedia(ItemRepresentation $item, string $type): array
     {
         if (!isset(Module::DERIVATIVES[$type])) {
             return [];
+        }
+
+        if (empty($this->basePath)) {
+            $this->basePath = $item->getServiceLocator()->get('Config')['file_store']['local']['base_path'] ?: (OMEKA_PATH . '/files');
         }
 
         $dataMedia = [];
@@ -97,10 +106,11 @@ trait TraitDerivative
             return null;
         }
 
-        $config = $item->getServiceLocator()->get('Config');
-        $basePath = $config['file_store']['local']['base_path'] ?: (OMEKA_PATH . '/files');
+        if (empty($this->basePath)) {
+            $this->basePath = $item->getServiceLocator()->get('Config')['file_store']['local']['base_path'] ?: (OMEKA_PATH . '/files');
+        }
 
-        return $basePath
+        return $this->basePath
             . '/' . Module::DERIVATIVES[$type]['dir']
             . '/' . $item->id()
             . '.' . Module::DERIVATIVES[$type]['extension'];

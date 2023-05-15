@@ -12,9 +12,16 @@ class CreateDerivativeFactory implements FactoryInterface
     {
         $config = $services->get('Config');
         $basePath = $config['file_store']['local']['base_path'] ?: (OMEKA_PATH . '/files');
+        $controllerPlugins = $services->get('ControllerPluginManager');
+        $viewHelpers = $services->get('ViewHelperManager');
         return new CreateDerivative(
             $services->get('Omeka\Cli'),
-            $basePath
+            $services->get('Omeka\Logger'),
+            $services->get('Omeka\Settings'),
+            $controllerPlugins->get('url'),
+            $basePath,
+            $viewHelpers->has('iiifManifest') ? $viewHelpers->get('iiifManifest') : null,
+            $viewHelpers->has('xmlAltoSingle') ? $viewHelpers->get('xmlAltoSingle') : null
         );
     }
 }
