@@ -1,13 +1,13 @@
 $(function () {
 
-    $('a.derivative-media.on-demand:not(.demand-confirmed)').on('click', (e) => {
+    $('a.derivative-media:not(.demand-confirmed)').on('click', (e) => {
         const link = $(e.target);
         const url = link.data('url');
         const size = link.data('size');
         const href = link.attr('href');
 
         if (href && href.length && href !== '#') {
-            return;
+            return true;
         }
 
         e.stopPropagation();
@@ -29,7 +29,7 @@ $(function () {
     <form id="derivative-form" method="dialog" action="#">
         <p>${textWarn}</p>
         <div class="drivative-actions" style="display: flex; justify-content: space-evenly;">
-            <button type="cancel" id="derivative-no"  class="derivative-no" value="no" formmethod="dialog">${textNo}</button>
+            <button type="button" id="derivative-no" class="derivative-no" value="no" formmethod="dialog">${textNo}</button>
             <button type="button" id="derivative-yes" class="derivative-yes" value="yes" formmethod="dialog">${textYes}</button>
         </div>
     </form>
@@ -67,11 +67,23 @@ $(function () {
 
         yes.addEventListener('click', () => {
             dialog.close();
-            // link.attr('href', url);
-            // link.addClass('demand-confirmed');
+            if (!link.hasClass('on-demand')) {
+                link.attr('href', url);
+                 // Create an element to force direct download
+                // link.click();
+                var el = document.createElement('a');
+                el.setAttribute('href', url);
+                el.setAttribute('download', link.attr('download'));
+                el.setAttribute('style', 'display: none;');
+                document.body.appendChild(el);
+                el.click();
+                document.body.removeChild(el);
+                return true;
+            }
             // Js forbids a click to a link, so send via ajax. Anyway, the
             // response should not be sent. Use argument "prepare" to avoid
             // to send response immediatly.
+            // link.addClass('demand-confirmed');
             $.get(url, {prepare: 1})
                 .fail(function() {
                     // The fail is normal for now.
@@ -86,6 +98,7 @@ $(function () {
             return true;
         });
 
+        return false;
     });
 
 });
