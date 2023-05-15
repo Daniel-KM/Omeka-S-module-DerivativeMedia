@@ -55,6 +55,9 @@ class Module extends AbstractModule
             'multiple' => false,
             'mediatype' => 'application/alto+xml',
             'extension' => 'alto.xml',
+            'build' => [
+                'mediatype' => ['application/alto+xml'],
+            ],
         ],
         'pdf' => [
             'mode' => 'dynamic',
@@ -62,6 +65,9 @@ class Module extends AbstractModule
             'multiple' => false,
             'mediatype' => 'application/pdf',
             'extension' => 'pdf',
+            'build' => [
+                'mediatype' => ['image'],
+            ],
         ],
         'txt' => [
             'mode' => 'live',
@@ -69,6 +75,9 @@ class Module extends AbstractModule
             'multiple' => false,
             'mediatype' => 'text/plain',
             'extension' => 'txt',
+            'build' => [
+                'mediatype' => ['text/plain'],
+            ],
         ],
         'text' => [
             'mode' => 'live',
@@ -76,13 +85,9 @@ class Module extends AbstractModule
             'multiple' => false,
             'mediatype' => 'text/plain',
             'extension' => 'txt',
-        ],
-        'pdf' => [
-            'mode' => 'dynamic',
-            'level' => 'item',
-            'multiple' => false,
-            'mediatype' => 'application/pdf',
-            'extension' => 'pdf',
+            'build' => [
+                'property' => 'extracttext:extracted_text',
+            ],
         ],
         // TODO Static for > 100MB/1GB or stream output to user directly.
         'zip' => [
@@ -91,6 +96,9 @@ class Module extends AbstractModule
             'multiple' => false,
             'mediatype' => 'application/zip',
             'extension' => 'zip',
+            'build' => [
+                'mediatype' => [''],
+            ],
         ],
         'zipm' => [
             'mode' => 'live',
@@ -98,6 +106,9 @@ class Module extends AbstractModule
             'multiple' => false,
             'mediatype' => 'application/zip',
             'extension' => 'zip',
+            'build' => [
+                'mediatype' => ['image', 'audio', 'video'],
+            ],
         ],
         'zipo' => [
             'mode' => 'live',
@@ -105,6 +116,9 @@ class Module extends AbstractModule
             'multiple' => false,
             'mediatype' => 'application/zip',
             'extension' => 'zip',
+            'build' => [
+                'mediatype_not' => ['image', 'audio', 'video'],
+            ],
         ],
     ];
 

@@ -3,6 +3,7 @@
 namespace DerivativeMedia\View\Helper;
 
 use DerivativeMedia\Module;
+use DerivativeMedia\Mvc\Controller\Plugin\TraitDerivative;
 use Laminas\View\Helper\AbstractHelper;
 use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
 use Omeka\Api\Representation\ItemRepresentation;
@@ -10,6 +11,8 @@ use Omeka\Api\Representation\MediaRepresentation;
 
 class HasDerivative extends AbstractHelper
 {
+    use TraitDerivative;
+
     /**
      * @var string
      */
@@ -87,12 +90,21 @@ class HasDerivative extends AbstractHelper
             $tempFilepath =$this->tempFilepath($filepath);
 
             $ready = file_exists($filepath) && is_readable($filepath) && filesize($filepath);
-            $isInProgress = file_exists($tempFilepath) && is_readable($tempFilepath) && filesize($tempFilepath);
+            $isInProgress = !$ready
+                && file_exists($tempFilepath) && is_readable($tempFilepath) && filesize($tempFilepath);
+
+            // Check if a derivative may be created.
+            $feasible = $ready || $isInProgress;
+            if (!$feasible) {
+                $dataMedia = $this->dataMedia($item, $type);
+                $feasible = !empty($dataMedia);
+            }
 
             $result[$type] = [
                 'mode' => Module::DERIVATIVES[$type]['mode'],
-                'ready' => $ready,
+                'feasible' => $feasible,
                 'in_progress' => $isInProgress,
+                'ready' => $ready,
                 'url' => $ready || $isInProgress
                     ? $url('derivative', ['type' => $type, 'id' => $itemId])
                     : null,
@@ -100,20 +112,5 @@ class HasDerivative extends AbstractHelper
         }
 
         return $result;
-    }
-
-    /**
-     * @see \DerivativeMedia\Mvc\Controller\Plugin\CreateDerivative::tempFilepath()
-     * @see \DerivativeMedia\View\Helper\HasDerivative::tempFilepath()
-     */
-    protected function tempFilepath(string $filepath): string
-    {
-        // Keep the original extension to manage tools like convert.
-        // Normally, all files have an extension.
-
-        $extension = pathinfo($filepath, PATHINFO_EXTENSION) ?? '';
-        return strlen($extension)
-            ? mb_substr($filepath, 0, - strlen($extension) - 1) . '.tmp' . '.' . $extension
-            : $filepath . '.tmp';
     }
 }
