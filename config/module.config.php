@@ -26,6 +26,7 @@ return [
     'controller_plugins' => [
         'invokables' => [
             'checkFfmpeg' => Mvc\Controller\Plugin\CheckFfmpeg::class,
+            'createDerivative' => Mvc\Controller\Plugin\CreateDerivative::class,
         ],
     ],
     'router' => [
