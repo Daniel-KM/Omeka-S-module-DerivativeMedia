@@ -54,6 +54,8 @@ class HasDerivative extends AbstractHelper
      * - feasible (boolean): if item can have this type of derivative.
      * - in_progress (boolean): if the derivative is currently building.
      * - ready (boolean): derivative file is available.
+     * - mediatype (string): the media type.
+     * - extension (string): the extension.
      * - size (null|integer): real size or estimation.
      * - file (string): relative filepath of the derivative.
      * - url (string): url of the derivative file.
@@ -131,9 +133,11 @@ class HasDerivative extends AbstractHelper
                 'feasible' => $feasible,
                 'in_progress' => $isInProgress,
                 'ready' => $ready,
+                'mediatype' => Module::DERIVATIVES[$type]['mediatype'],
+                'extension' => Module::DERIVATIVES[$type]['extension'],
                 'size' => $size,
                 'file' => $file,
-                'url' => $ready || $isInProgress
+                'url' => $feasible
                     ? $this->url->__invoke('derivative', ['type' => $type, 'id' => $itemId])
                     : null,
             ];

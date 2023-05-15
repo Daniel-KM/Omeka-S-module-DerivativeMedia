@@ -49,12 +49,18 @@ class IndexController extends \Omeka\Controller\IndexController
         $item = $resource;
 
         $force = !empty($this->params()->fromQuery('force'));
+        $prepare = !empty($this->params()->fromQuery('prepare'));
 
         // Quick check if the file exists when needed.
         $filepath = $this->itemFilepath($item, $type);
 
         $ready = !$force
             && file_exists($filepath) && is_readable($filepath) && filesize($filepath);
+
+        // In case a user reclicks the link.
+        if ($prepare && $ready) {
+            throw new \Omeka\Mvc\Exception\RuntimeException('This derivative is ready. Reload the page.'); // @translate
+        }
 
         if (!$ready) {
             if (Module::DERIVATIVES[$type]['mode'] === 'static') {
@@ -66,7 +72,7 @@ class IndexController extends \Omeka\Controller\IndexController
                 throw new \Omeka\Mvc\Exception\RuntimeException('This type of derivative file cannot be prepared for this item.'); // @translate
             }
 
-            if (Module::DERIVATIVES[$type]['mode'] === 'live') {
+            if (!$prepare && Module::DERIVATIVES[$type]['mode'] === 'live') {
                 $ready = $this->createDerivative($type, $filepath, $item, $dataMedia);
                 if (!$ready) {
                     throw new \Omeka\Mvc\Exception\RuntimeException('This derivative files of this item cannot be prepared.'); // @translate
