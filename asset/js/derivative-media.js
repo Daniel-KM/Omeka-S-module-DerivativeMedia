@@ -11,7 +11,10 @@ $(function () {
         const url = link.data('url');
         const size = link.data('size');
 
-        const textWarn = `Are you sure to download the file (${size} bytes)?`
+        // The size may be unknown in case of a unbuild file.
+        const textWarn = size
+            ? `Are you sure to download the file (${size} bytes)?`
+            : `Are you sure to download the file?`;
         const textNo = `No`;
         const textYes = `Yes`;
 

@@ -106,6 +106,9 @@ class HasDerivative extends AbstractHelper
             if (!$feasible) {
                 $dataMedia = $this->dataMedia($item, $type);
                 $feasible = !empty($dataMedia);
+                $size = empty(Module::DERIVATIVES[$type]['size'])
+                    ? null
+                    : array_sum(array_column($dataMedia, 'size'));
             }
 
             $result[$type] = [

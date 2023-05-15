@@ -59,6 +59,7 @@ class Module extends AbstractModule
                 'mediatype' => ['application/alto+xml'],
             ],
             'dir' => 'alto',
+            'size' => true,
         ],
         'iiif-2' => [
             'mode' => 'live',
@@ -72,6 +73,7 @@ class Module extends AbstractModule
                 'mediatype' => ['image', 'audio', 'video'],
             ],
             'dir' => 'iiif/2',
+            'size' => false,
         ],
         'iiif-3' => [
             'mode' => 'live',
@@ -83,6 +85,7 @@ class Module extends AbstractModule
                 'mediatype' => ['image', 'audio', 'video'],
             ],
             'dir' => 'iiif/3',
+            'size' => false,
         ],
         'pdf' => [
             'mode' => 'dynamic',
@@ -94,6 +97,7 @@ class Module extends AbstractModule
                 'mediatype' => ['image'],
             ],
             'dir' => 'pdf',
+            'size' => true,
         ],
         'txt' => [
             'mode' => 'live',
@@ -105,6 +109,7 @@ class Module extends AbstractModule
                 'mediatype' => ['text/plain'],
             ],
             'dir' => 'txt',
+            'size' => true,
         ],
         'text' => [
             'mode' => 'live',
@@ -116,6 +121,7 @@ class Module extends AbstractModule
                 'property' => 'extracttext:extracted_text',
             ],
             'dir' => 'text',
+            'size' => true,
         ],
         // TODO Static for > 100MB/1GB or stream output to user directly.
         'zip' => [
@@ -128,6 +134,7 @@ class Module extends AbstractModule
                 'mediatype' => [''],
             ],
             'dir' => 'zip',
+            'size' => true,
         ],
         'zipm' => [
             'mode' => 'live',
@@ -139,6 +146,7 @@ class Module extends AbstractModule
                 'mediatype' => ['image', 'audio', 'video'],
             ],
             'dir' => 'zipm',
+            'size' => true,
         ],
         'zipo' => [
             'mode' => 'live',
@@ -150,6 +158,7 @@ class Module extends AbstractModule
                 'mediatype_not' => ['image', 'audio', 'video'],
             ],
             'dir' => 'zipo',
+            'size' => true,
         ],
     ];
 
