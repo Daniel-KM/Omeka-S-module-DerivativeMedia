@@ -58,7 +58,7 @@ class IndexController extends \Omeka\Controller\IndexController
 
         if (!$ready) {
             if (Module::DERIVATIVES[$type]['mode'] === 'static') {
-                throw new \Omeka\Mvc\Exception\RuntimeException('This derivative is not ready.'); // @translate
+                throw new \Omeka\Mvc\Exception\RuntimeException('This derivative is not ready. Ask the webmaster for it.'); // @translate
             }
 
             $ready = $this->createDerivative($type, $filepath, $item);

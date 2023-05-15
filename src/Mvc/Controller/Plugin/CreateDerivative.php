@@ -306,6 +306,10 @@ TXT;
         return mkdir($dirpath, 0775, true);
     }
 
+    /**
+     * @see \DerivativeMedia\Mvc\Controller\Plugin\CreateDerivative::tempFilepath()
+     * @see \DerivativeMedia\View\Helper\HasDerivative::tempFilepath()
+     */
     protected function tempFilepath(string $filepath): string
     {
         // Keep the original extension to manage tools like convert.

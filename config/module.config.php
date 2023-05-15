@@ -9,6 +9,11 @@ return [
             'video' => Media\FileRenderer\VideoRenderer::class,
         ],
     ],
+    'view_helpers' => [
+        'factories' => [
+            'hasDerivative' => Service\ViewHelper\HasDerivativeFactory::class,
+        ],
+    ],
     'form_elements' => [
         'invokables' => [
             Form\Element\OptionalMultiCheckbox::class => Form\Element\OptionalMultiCheckbox::class,
