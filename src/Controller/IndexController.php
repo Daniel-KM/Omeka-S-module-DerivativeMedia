@@ -21,12 +21,14 @@ class IndexController extends \Omeka\Controller\IndexController
     public function indexAction()
     {
         $mediaTypes = [
+            'alto' => 'application/alto+xml',
             'txt' => 'text/plain',
             'zip' => 'application/zip',
             'zipm' => 'application/zip',
             'zipo' => 'application/zip',
         ];
         $mediaExtensions = [
+            'alto' => 'alto.xml',
             'txt' => 'txt',
             'zip' => 'zip',
             'zipm' => 'zip',
@@ -165,6 +167,11 @@ class IndexController extends \Omeka\Controller\IndexController
                 && ($mediaType !== 'text/plain' || ($extension === 'txt' && !in_array($mediaType, ['application/x-empty', 'text/plain'])))
             ) {
                 continue;
+            } elseif ($type === 'alto'
+                // Manage extracted text without content.
+                && ($mediaType !== 'application/alto+xml' || ($extension === 'xml' && !in_array($mediaType, ['application/x-empty', 'application/alto+xml'])))
+            ) {
+                continue;
             }
             $mediaData[$media->id()] = [
                 'source' => $media->source(),
@@ -193,16 +200,28 @@ class IndexController extends \Omeka\Controller\IndexController
             }
         }
 
-        if ($type === 'txt') {
-            return $this->prepareDerivativeText($item, $filepath, $mediaData, $type);
-        }
-
-        if (substr($type, 0, 3) === 'zip') {
+        if ($type === 'alto') {
+            return $this->prepareDerivativeAlto($item, $filepath, $mediaData);
+        } elseif ($type === 'txt') {
+            return $this->prepareDerivativeText($item, $filepath, $mediaData);
+        } elseif (substr($type, 0, 3) === 'zip') {
             return $this->prepareDerivativeZip($item, $filepath, $mediaData, $type);
         }
     }
 
-    protected function prepareDerivativeText(ItemRepresentation $item, string $filepath, array $mediaData, string $type): ?bool
+    protected function prepareDerivativeAlto(ItemRepresentation $item, string $filepath, array $mediaData): ?bool
+    {
+        $helpers = $this->viewHelpers();
+        if (!$helpers->has('xmlAltoSingle')) {
+            $this->logger()->err('To create xml alto, the module IiifSearch is required for now.'); // @translate
+        }
+        /** @var \IiifSearch\View\Helper\XmlAltoSingle $xmlAltoSingle */
+        $xmlAltoSingle = $helpers->get('xmlAltoSingle');
+        $result = $xmlAltoSingle($item, $filepath, $mediaData);
+        return (bool) $result;
+    }
+
+    protected function prepareDerivativeText(ItemRepresentation $item, string $filepath, array $mediaData): ?bool
     {
         $output = '';
 

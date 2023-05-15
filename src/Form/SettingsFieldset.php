@@ -36,6 +36,7 @@ class SettingsFieldset extends Fieldset
                         'zipm' => 'Zip item image/audio/video files', // @translate
                         'zipo' => 'Zip item other files', // @translate
                         'txt' => 'Single text file from by-page txt files', // @translate
+                        'alto' => 'Single xml Alto from by-page xml Alto (standard ocr format, require IiifSearch)', // @translate
                     ],
                 ],
                 'attributes' => [

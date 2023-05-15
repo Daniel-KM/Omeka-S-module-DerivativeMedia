@@ -36,7 +36,7 @@ return [
                 'options' => [
                     'route' => '/derivative/:type/:id',
                     'constraints' => [
-                        'type' => 'txt|zipm|zipo|zip',
+                        'type' => 'alto|txt|zipm|zipo|zip',
                         'id' => '\d+',
                     ],
                     'defaults' => [
