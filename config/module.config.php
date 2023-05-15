@@ -31,6 +31,11 @@ return [
             Form\ConfigForm::class => Service\Form\ConfigFormFactory::class,
         ],
     ],
+    'resource_page_block_layouts' => [
+        'invokables' => [
+            'derivativeMedia' => Site\ResourcePageBlockLayout\DerivativeMedia::class,
+        ],
+    ],
     'controllers' => [
         'invokables' => [
             'DerivativeMedia\Controller\Index' => Controller\IndexController::class,
