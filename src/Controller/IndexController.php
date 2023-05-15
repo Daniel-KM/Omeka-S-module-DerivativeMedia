@@ -162,12 +162,13 @@ class IndexController extends \Omeka\Controller\IndexController
             if (!$mediaType) {
                 continue;
             }
+            $mediaId = $media->id();
             $mainType = strtok($mediaType, '/');
             $extension = $media->extension();
             if ($type === 'alto'
                 // Manage altowithout content.
                 && ($mediaType !== 'application/alto+xml' || ($extension === 'xml' && !in_array($mediaType, ['application/x-empty', 'application/alto+xml'])))
-                ) {
+            ) {
                 continue;
             } elseif ($type === 'pdf'
                 && ($mainType !== 'image')
@@ -184,14 +185,15 @@ class IndexController extends \Omeka\Controller\IndexController
                 // This is an exception.
                 && (($extracted = (string) $media->value('extracttext:extracted_text')) && strlen($extracted))
             ) {
-                $mediaData[$media->id()] = $extracted;
+                $mediaData[$mediaId] = $extracted;
                 continue;
             } elseif ($type === 'zipm' && !in_array($mainType, ['image', 'audio', 'video'])) {
                 continue;
             } elseif ($type === 'zipo' && in_array($mainType, ['image', 'audio', 'video'])) {
                 continue;
             }
-            $mediaData[$media->id()] = [
+            $mediaData[$mediaId] = [
+                'id' => $mediaId,
                 'source' => $media->source(),
                 'filename' => $filename,
                 'filepath' => $filepath,
@@ -341,6 +343,7 @@ TXT;
         // except some txt, xml and old docs.
 
         $index = 0;
+        $filenames = [];
         foreach ($mediaData as $file) {
             $zip->addFile($file['filepath']);
             // Light and quick compress text and xml.
@@ -352,6 +355,18 @@ TXT;
             } else {
                 $zip->setCompressionIndex($index, ZipArchive::CM_STORE);
             }
+
+            // Use the source name, but check and rename for unique filename,
+            // taking care of extension.
+            $basepath = pathinfo($file['source'], PATHINFO_FILENAME);
+            $extension = pathinfo($file['source'], PATHINFO_EXTENSION);
+            $i = 0;
+            do {
+                $sourceBase = $basepath . ($i ? '.' . $i : '') . (strlen($extension) ? '.' . $extension : '');
+                ++$i;
+            } while (in_array($sourceBase, $filenames));
+            $filenames[] = $sourceBase;
+            $zip->renameName($file['filepath'], $sourceBase);
             ++$index;
         }
 
