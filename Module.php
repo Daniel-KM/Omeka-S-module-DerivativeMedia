@@ -628,7 +628,7 @@ HTML;
         }
 
         $args = [
-            'itemId' => $item->getId(),
+            'itemId' => $item->id(),
             'type' => array_keys($todo),
         ];
         $dispatcher = $services->get('Omeka\Job\Dispatcher');
