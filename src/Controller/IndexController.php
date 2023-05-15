@@ -219,16 +219,22 @@ class IndexController extends \Omeka\Controller\IndexController
         }
 
         if ($type === 'alto') {
-            return $this->prepareDerivativeAlto($item, $filepath, $mediaData);
+            $result = $this->prepareDerivativeAlto($item, $filepath, $mediaData);
         } elseif ($type === 'pdf') {
-            return $this->prepareDerivativePdf($item, $filepath, $mediaData);
+            $result = $this->prepareDerivativePdf($item, $filepath, $mediaData);
         } elseif ($type === 'text') {
-            return $this->prepareDerivativeTextExtracted($item, $filepath, $mediaData);
+            $result = $this->prepareDerivativeTextExtracted($item, $filepath, $mediaData);
         } elseif ($type === 'txt') {
-            return $this->prepareDerivativeText($item, $filepath, $mediaData);
+            $result = $this->prepareDerivativeText($item, $filepath, $mediaData);
         } elseif (in_array($type, ['zip', 'zipm', 'zipo'])) {
-            return $this->prepareDerivativeZip($item, $filepath, $mediaData, $type);
+            $result = $this->prepareDerivativeZip($item, $filepath, $mediaData, $type);
         }
+
+        if ($result) {
+            @chmod($filepath, 0664);
+        }
+
+        return $result;
     }
 
     protected function prepareDerivativeAlto(ItemRepresentation $item, string $filepath, array $mediaData): ?bool
