@@ -120,7 +120,7 @@ class CreateDerivative extends AbstractPlugin
 
         if ($type === 'alto') {
             $result = $this->prepareDerivativeAlto($tempFilepath, $dataMedia, $item);
-        } elseif ($type === 'iiif-/2') {
+        } elseif ($type === 'iiif-2') {
             $result = $this->prepareDerivativeIiif($tempFilepath, $dataMedia, $item, 2);
         } elseif ($type === 'iiif-3') {
             $result = $this->prepareDerivativeIiif($tempFilepath, $dataMedia, $item, 3);
