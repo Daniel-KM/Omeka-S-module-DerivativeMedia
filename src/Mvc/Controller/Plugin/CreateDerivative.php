@@ -126,6 +126,8 @@ class CreateDerivative extends AbstractPlugin
             $result = $this->prepareDerivativeIiif($tempFilepath, $dataMedia, $item, 3);
         } elseif ($type === 'pdf') {
             $result = $this->prepareDerivativePdf($tempFilepath, $dataMedia, $item);
+        } elseif ($type === 'pdf2xml') {
+            $result = $this->prepareDerivativePdf2Xml($tempFilepath, $dataMedia, $item);
         } elseif ($type === 'text') {
             $result = $this->prepareDerivativeTextExtracted($tempFilepath, $dataMedia, $item);
         } elseif ($type === 'txt') {
@@ -180,7 +182,22 @@ class CreateDerivative extends AbstractPlugin
         $files = array_column($dataMedia, 'filepath');
 
         // Avoid to modify quality to speed process.
-        $command = 'convert ' . implode(' ', array_map('escapeshellarg', $files)) . ' -quality 100 ' . escapeshellarg($filepath);
+        $command = sprintf('convert %s -quality 100 %s', implode(' ', array_map('escapeshellarg', $files)), escapeshellarg($filepath));
+        $result = $this->cli->execute($command);
+
+        return $result !== false;
+    }
+
+    protected function prepareDerivativePdf2Xml(string $filepath, array $dataMedia, ?ItemRepresentation $item): ?bool
+    {
+        if (count($dataMedia) > 1) {
+            $this->logger->err('Extraction can be done on a single pdf attached to an item.'); // @translate
+            return false;
+        }
+
+        $source = (reset($dataMedia))['filepath'];
+        $command = sprintf('pdftohtml -i -c -hidden -xml %s %s', escapeshellarg($source), escapeshellarg($filepath));
+
         $result = $this->cli->execute($command);
 
         return $result !== false;

@@ -59,7 +59,7 @@ return [
                     'route' => '/derivative/:id/:type',
                     'constraints' => [
                         'id' => '\d+',
-                        'type' => 'alto|iiif-2|iiif-3|pdf|text|txt|zipm|zipo|zip',
+                        'type' => 'alto|iiif-2|iiif-3|pdf2xml|pdf|text|txt|zipm|zipo|zip',
                     ],
                     'defaults' => [
                         '__NAMESPACE__' => 'DerivativeMedia\Controller',

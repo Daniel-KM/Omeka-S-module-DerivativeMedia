@@ -99,6 +99,18 @@ class Module extends AbstractModule
             'dir' => 'pdf',
             'size' => true,
         ],
+        'pdf2xml' => [
+            'mode' => 'live',
+            'level' => 'item',
+            'multiple' => false,
+            'mediatype' => 'application/vnd.pdf2xml+xml',
+            'extension' => 'pdf2xml.xml',
+            'build' => [
+                'mediatype' => ['application/pdf'],
+            ],
+            'dir' => 'pdf2xml',
+            'size' => false,
+        ],
         'txt' => [
             'mode' => 'live',
             'level' => 'item',

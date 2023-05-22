@@ -41,6 +41,7 @@ class SettingsFieldset extends Fieldset
                         'alto' => 'Single xml Alto from by-page xml Alto (standard ocr format, require Iiif Search)', // @translate
                         'iiif-2' => 'Iiif manifest (version 2, require Iiif Server)', // @translate
                         'iiif-3' => 'Iiif manifest (version 3, require Iiif Server)', // @translate
+                        'pdf2xml' => 'Text as xml from a single pdf, mainly for Iiif Search', // @translate
                     ],
                 ],
                 'attributes' => [
