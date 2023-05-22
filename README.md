@@ -24,6 +24,7 @@ At item level, some more formats are supported:
 - `text`: If text is available in media values "extracttext:extracted_text", they
   can be gathered in a single one.
 - `pdf`: concatenate all images in a single pdf file (require ImageMagick).
+- `pdf2xml`: extract text layer from pdf and create an xml for iiif search.
 - `zip`: zip all files.
 - `zip media`: zip all media files (audio, video, images).
 - `zip other`: zip all other files.
@@ -39,9 +40,13 @@ generally smaller for the same quality.
 Installation
 ------------
 
-This module requires the server packages `ffmpeg` (for audio and video) and
-`ghostscript` (command `gs` for pdf, not supported yet) installed on the server
-and available in the path.
+Some formats used by this module requires server packages:
+- `ffmpeg` for audio and video
+- `ghostscript` with command `gs` for pdf
+- `pdftotext` from package poppler-utils for format pdf2xml
+
+If you use them, they should be installed on the server and available in the
+path.
 
 First, install the required module [Log] and the optional module [Generic].
 
