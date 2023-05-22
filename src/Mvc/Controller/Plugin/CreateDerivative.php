@@ -132,6 +132,8 @@ class CreateDerivative extends AbstractPlugin
             $result = $this->prepareDerivativeText($tempFilepath, $dataMedia, $item);
         } elseif (in_array($type, ['zip', 'zipm', 'zipo'])) {
             $result = $this->prepareDerivativeZip($type, $tempFilepath, $dataMedia, $item);
+        } else {
+            $result = null;
         }
 
         if ($result) {
