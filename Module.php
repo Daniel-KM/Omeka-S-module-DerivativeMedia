@@ -362,10 +362,10 @@ class Module extends AbstractModule
         unset($params['process_derivative']);
         unset($params['process_metadata']);
 
-        $params['item_sets'] = $params['item_sets'] ?: [];
-        $params['ingesters'] = $params['ingesters'] ?: [];
-        $params['renderers'] = $params['renderers'] ?: [];
-        $params['media_types'] = $params['media_types'] ?: [];
+        $params['item_sets'] = $params['item_sets'] ?? [];
+        $params['ingesters'] = $params['ingesters'] ?? [];
+        $params['renderers'] = $params['renderers'] ?? [];
+        $params['media_types'] = $params['media_types'] ?? [];
 
         $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
 
