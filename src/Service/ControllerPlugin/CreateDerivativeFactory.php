@@ -12,13 +12,14 @@ class CreateDerivativeFactory implements FactoryInterface
     {
         $config = $services->get('Config');
         $basePath = $config['file_store']['local']['base_path'] ?: (OMEKA_PATH . '/files');
-        $controllerPlugins = $services->get('ControllerPluginManager');
         $viewHelpers = $services->get('ViewHelperManager');
         return new CreateDerivative(
             $services->get('Omeka\Cli'),
             $services->get('Omeka\Logger'),
             $services->get('Omeka\Settings'),
-            $controllerPlugins->get('url'),
+            // Don't use controller plugin "url", an exception occurs:
+            // Laminas\Mvc\Exception\DomainException: Url plugin requires a controller that implements InjectApplicationEventInterface
+            $viewHelpers->get('url'),
             $basePath,
             $viewHelpers->has('iiifManifest') ? $viewHelpers->get('iiifManifest') : null,
             $viewHelpers->has('xmlAltoSingle') ? $viewHelpers->get('xmlAltoSingle') : null

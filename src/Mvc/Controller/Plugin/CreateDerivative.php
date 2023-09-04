@@ -6,7 +6,7 @@ use IiifSearch\View\Helper\XmlAltoSingle;
 use IiifServer\View\Helper\IiifManifest;
 use Laminas\Log\Logger;
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
-use Laminas\Mvc\Controller\Plugin\Url;
+use Laminas\View\Helper\Url;
 use Omeka\Api\Representation\ItemRepresentation;
 use Omeka\Settings\Settings;
 use Omeka\Stdlib\Cli;
@@ -32,7 +32,7 @@ class CreateDerivative extends AbstractPlugin
     protected $settings;
 
     /**
-     * @var \Laminas\Mvc\Controller\Plugin\Url
+     * @var \Laminas\View\Helper\Url
      */
     protected $url;
 
@@ -278,7 +278,7 @@ TXT;
         }
 
         // Here, the site may not be available, so can't store item site url.
-        $comment = $this->settings->get('installation_title') . ' [' . $this->url->fromRoute('top', [], ['force_canonical' => true]) . ']';
+        $comment = $this->settings->get('installation_title') . ' [' . $this->url->__invoke('top', [], ['force_canonical' => true]) . ']';
         $zip->setArchiveComment($comment);
 
         // Store files: they are all already compressed (image, video, pdf...),
