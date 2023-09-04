@@ -1,5 +1,15 @@
 $(function () {
 
+    // https://stackoverflow.com/a/39906526
+    var units = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    function niceBytes(x) {
+        let l = 0, n = parseInt(x, 10) || 0;
+        while(n >= 1000 && ++l){
+            n = n / 1000;
+        }
+        return(n.toFixed(n < 10 && l > 0 ? 1 : 0) + ' ' + units[l]);
+    }
+
     $('a.derivative-media:not(.demand-confirmed)').on('click', (e) => {
         const link = $(e.target);
         const url = link.data('url');
@@ -16,8 +26,10 @@ $(function () {
         const derivativeList = $(link).closest('.derivative-list');
 
         // The size may be unknown in case of a unbuild file.
+        units = derivativeList.data('text-units') ? derivativeList.data('text-units') : units;
+        const niceSize = size ? niceBytes(size) : size;
         const textWarn = size
-            ? (derivativeList.data('text-warn-size') ? derivativeList.data('text-warn-size').replace('{size}', size) : `Are you sure to download the file (${size} bytes)?`)
+            ? (derivativeList.data('text-warn-size') ? derivativeList.data('text-warn-size').replace('{size}', niceSize) : `Are you sure to download the file (${niceSize})?`)
             : (derivativeList.data('text-warn') ? derivativeList.data('text-warn') : 'Are you sure to download this file?');
         const textNo = derivativeList.data('text-no') ? derivativeList.data('text-no') : 'No';
         const textYes = derivativeList.data('text-yes') ? derivativeList.data('text-yes') : 'Yes';
@@ -25,19 +37,19 @@ $(function () {
         const textOk = derivativeList.data('text-ok') ? derivativeList.data('text-ok') : 'Ok';
 
         const html=`
-<dialog id="derivative-on-demand">
+<dialog id="derivative-on-demand" class="derivative-dialog">
     <form id="derivative-form" method="dialog" action="#">
         <p>${textWarn}</p>
-        <div class="drivative-actions" style="display: flex; justify-content: space-evenly;">
+        <div class="derivative-actions" style="display: flex; justify-content: space-evenly;">
             <button type="button" id="derivative-no" class="derivative-no" value="no" formmethod="dialog">${textNo}</button>
             <button type="button" id="derivative-yes" class="derivative-yes" value="yes" formmethod="dialog">${textYes}</button>
         </div>
     </form>
 </dialog>
-<dialog id="derivative-queued">
+<dialog id="derivative-queued" class="derivative-dialog">
     <form id="derivative-form-queud" method="dialog" action="#">
         <p>${textQueued}</p>
-        <div class="drivative-actions" style="display: flex; justify-content: space-evenly;">
+        <div class="derivative-actions" style="display: flex; justify-content: space-evenly;">
             <button type="button" id="derivative-ok" class="derivative-ok" value="yes" formmethod="dialog">${textOk}</button>
         </div>
     </form>
@@ -58,7 +70,7 @@ $(function () {
 
         dialog.showModal();
 
-        no.addEventListener('click', () => {
+        no.addEventListener('click', (e) => {
             dialog.close();
             e.preventDefault();
             link.attr('href', '#');

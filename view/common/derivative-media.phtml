@@ -7,6 +7,7 @@
 
 $plugins = $this->getHelperPluginManager();
 $translate = $plugins->get('translate');
+$escapeAttr = $plugins->get('escapeHtmlAttr');
 $hasDerivative = $plugins->get('hasDerivative');
 
 $derivatives = $hasDerivative($resource);
@@ -30,7 +31,7 @@ $labels = [
 <?php if ($derivatives): ?>
 
 <div class="derivative-medias">
-    <aside class="derivative-list" data-text-warn="<?= $translate('Are you sure to download this file?') ?>" data-text-warn-size="<?= $translate('Are you sure to download the file of {size} bytes?') ?>" data-text-no="<?= $translate('No') ?>" data-text-yes="<?= $translate('Yes') ?>" data-text-ok="<?= $translate('Ok') ?>" data-text-queued="<?= $translate('The file is in queue. Reload the page later.') ?>">
+    <aside class="derivative-list" data-text-warn="<?= $translate('Are you sure to download this file?') ?>" data-text-warn-size="<?= $translate('Are you sure to download the file of {size}?') ?>" data-text-no="<?= $translate('No') ?>" data-text-yes="<?= $translate('Yes') ?>" data-text-ok="<?= $translate('Ok') ?>" data-text-queued="<?= $translate('The file is in queue. Reload the page later.') ?>" data-text-units="<?= $escapeAttr($translate('["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]')) ?>">
         <ul>
             <?php foreach ($derivatives as $type => $derivative): ?>
             <?php if (!empty($derivative['feasible'])): ?>
