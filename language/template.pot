@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-15 00:00+0000\n"
+"POT-Creation-Date: 2023-09-04 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,12 +17,44 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: Module.php:235
+#: Module.php:246
 msgid "WARNING:"
 msgstr ""
 
-#: Module.php:415
+#: Module.php:426
 msgid "Derivative medias"
+msgstr ""
+
+#: src/Controller/IndexController.php:32
+msgid "This type is not supported."
+msgstr ""
+
+#: src/Controller/IndexController.php:41
+msgid "This type is not available."
+msgstr ""
+
+#: src/Controller/IndexController.php:58
+msgid "Resource is not an item."
+msgstr ""
+
+#: src/Controller/IndexController.php:80
+msgid "This derivative is ready. Reload the page."
+msgstr ""
+
+#: src/Controller/IndexController.php:90
+msgid "This derivative is not ready. Ask the webmaster for it."
+msgstr ""
+
+#: src/Controller/IndexController.php:99
+msgid "This type of derivative file cannot be prepared for this item."
+msgstr ""
+
+#: src/Controller/IndexController.php:117
+msgid "This derivative files of this item cannot be prepared."
+msgstr ""
+
+#: src/Controller/IndexController.php:133
+msgid "This derivative is being created. Come back later."
 msgstr ""
 
 #: src/Generic/AbstractModule.php:80 src/Generic/AbstractModule.php:88
@@ -73,20 +105,25 @@ msgstr ""
 msgid "Your browser does not support HTML5 video, but you can download it: %s."
 msgstr ""
 
-#: view/common/derivative-media.phtml:32
+#: view/common/derivative-media.phtml:34
 msgid "Are you sure to download this file?"
 msgstr ""
 
-#: view/common/derivative-media.phtml:32
-msgid "Are you sure to download the file of {size} bytes?"
+#: view/common/derivative-media.phtml:34
+msgid "Are you sure to download the file of {size}?"
 msgstr ""
 
-#: view/common/derivative-media.phtml:32
+#: view/common/derivative-media.phtml:34
 msgid "Ok"
 msgstr ""
 
-#: view/common/derivative-media.phtml:32
+#: view/common/derivative-media.phtml:34
 msgid "The file is in queue. Reload the page later."
+msgstr ""
+
+#: view/common/derivative-media.phtml:34
+msgid ""
+"[\"Bytes\", \"KB\", \"MB\", \"GB\", \"TB\", \"PB\", \"EB\", \"ZB\", \"YB\"]"
 msgstr ""
 
 #: data/scripts/upgrade.php:31
@@ -114,94 +151,98 @@ msgstr ""
 msgid "Check %1$snew settings%2$s."
 msgstr ""
 
-#: Module.php:187
+#: Module.php:198
 msgid "The directory \"{path}\" is not writeable."
 msgstr ""
 
-#: Module.php:197
+#: Module.php:208
 msgid ""
 "The extension \"php-zip\" should be installed on the server to create Zip "
 "files."
 msgstr ""
 
-#: Module.php:210
+#: Module.php:221
 msgid ""
 "Before compressing files with config tasks, the settings should be set in "
 "{anchor}main settings{anchor_end}."
 msgstr ""
 
-#: Module.php:242
+#: Module.php:253
 msgid ""
 "All derivative files will be kept in the folders specified in the config "
 "inside {path}."
 msgstr ""
 
-#: Module.php:310
+#: Module.php:321
 msgid ""
 "This page allows to launch background job to prepare static derivative files "
 "according to parameters set in main settings."
 msgstr ""
 
-#: Module.php:343
+#: Module.php:354
 msgid "No job launched."
 msgstr ""
 
-#: Module.php:363 Module.php:372
+#: Module.php:374 Module.php:383
 msgid "The task requires \"ffmpeg\"."
 msgstr ""
 
-#: Module.php:369
+#: Module.php:380
 msgid ""
 "Storing metadata for existing files ({link}job #{job_id}{link_end}, "
 "{link_log}logs{link_end})"
 msgstr ""
 
-#: Module.php:378
+#: Module.php:389
 msgid ""
 "Creating derivative media ({link}job #{job_id}{link_end}, {link_log}"
 "logs{link_end})"
 msgstr ""
 
-#: Module.php:651
+#: Module.php:664
 msgid "[Derivative Media] This module requires a local store currently."
 msgstr ""
 
-#: Module.php:707 src/Job/DerivativeMediaTrait.php:59
+#: Module.php:720 src/Job/DerivativeMediaTrait.php:59
 msgid ""
 "The command-line utility \"ffmpeg\" should be installed and should be "
 "available in the cli path to make derivatives."
 msgstr ""
 
-#: view/common/derivative-media.phtml:17
+#: view/common/derivative-media.phtml:18
 msgid "Zip of all files"
 msgstr ""
 
-#: view/common/derivative-media.phtml:18
+#: view/common/derivative-media.phtml:19
 msgid "Zip of media files"
 msgstr ""
 
-#: view/common/derivative-media.phtml:19
+#: view/common/derivative-media.phtml:20
 msgid "Zip of other files"
 msgstr ""
 
-#: view/common/derivative-media.phtml:20
+#: view/common/derivative-media.phtml:21
 msgid "Pdf"
 msgstr ""
 
-#: view/common/derivative-media.phtml:22
+#: view/common/derivative-media.phtml:23
 msgid "Extracted text"
 msgstr ""
 
-#: view/common/derivative-media.phtml:23
+#: view/common/derivative-media.phtml:24
 msgid "Ocr Xml Alto"
 msgstr ""
 
-#: view/common/derivative-media.phtml:24
+#: view/common/derivative-media.phtml:25
 msgid "Iiif manifest v2"
 msgstr ""
 
-#: view/common/derivative-media.phtml:25
+#: view/common/derivative-media.phtml:26
 msgid "Iiif manifest v3"
+msgstr ""
+
+#: view/common/derivative-media.phtml:27
+msgid "Text from pdf as xml"
 msgstr ""
 
 #: src/Mvc/Controller/Plugin/CreateDerivative.php:101
@@ -216,19 +257,23 @@ msgstr ""
 msgid "The derivative is currently beeing created."
 msgstr ""
 
-#: src/Mvc/Controller/Plugin/CreateDerivative.php:150
+#: src/Mvc/Controller/Plugin/CreateDerivative.php:154
 msgid "To create xml alto, the module IiifSearch is required for now."
 msgstr ""
 
-#: src/Mvc/Controller/Plugin/CreateDerivative.php:162
+#: src/Mvc/Controller/Plugin/CreateDerivative.php:166
 msgid "To create iiif manifest, the module IiifServer is required for now."
 msgstr ""
 
-#: src/Mvc/Controller/Plugin/CreateDerivative.php:250
+#: src/Mvc/Controller/Plugin/CreateDerivative.php:197
+msgid "Extraction can be done on a single pdf attached to an item."
+msgstr ""
+
+#: src/Mvc/Controller/Plugin/CreateDerivative.php:272
 msgid "The php extension \"php-zip\" must be installed."
 msgstr ""
 
-#: src/Mvc/Controller/Plugin/CreateDerivative.php:257
+#: src/Mvc/Controller/Plugin/CreateDerivative.php:279
 msgid "Unable to create the zip file."
 msgstr ""
 
@@ -418,7 +463,7 @@ msgid "Derivative Media"
 msgstr ""
 
 #: src/Form/SettingsFieldset.php:31
-msgid "Enabled conversion for audio"
+msgid "Formats to convert"
 msgstr ""
 
 #: src/Form/SettingsFieldset.php:33
@@ -467,12 +512,16 @@ msgstr ""
 msgid "Iiif manifest (version 3, require Iiif Server)"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:55
+#: src/Form/SettingsFieldset.php:44
+msgid "Text as xml from a single pdf, mainly for Iiif Search"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:56
 msgid ""
 "Create or update derivative files on individual save (not batch process)"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:56
+#: src/Form/SettingsFieldset.php:57
 msgid ""
 "Quick processes can be done during a web request (30 seconds); heavy "
 "processes are audio, video, pdf and zip with many big files and require a "
@@ -480,47 +529,51 @@ msgid ""
 "original cannot change."
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:59
+#: src/Form/SettingsFieldset.php:60
 msgid "No (may need manual process)"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:60
+#: src/Form/SettingsFieldset.php:61
 msgid "Update only existing derivative files (quick processes only)"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:61
+#: src/Form/SettingsFieldset.php:62
 msgid "Update only existing derivative files"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:62
+#: src/Form/SettingsFieldset.php:63
 msgid "Create and update all quick derivatives"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:63
+#: src/Form/SettingsFieldset.php:64
 msgid ""
 "Create and update all derivatives (take care of disk space and server "
 "overload)"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:75
+#: src/Form/SettingsFieldset.php:76
+msgid "Max total media size in megabytes to prepare a derivative file live"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:87
 msgid "Audio converters"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:76 src/Form/SettingsFieldset.php:102
+#: src/Form/SettingsFieldset.php:88 src/Form/SettingsFieldset.php:114
 msgid ""
 "Each converter is one row with a filepath pattern, a \"=\", and the ffmpeg "
 "command (without file)."
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:90
+#: src/Form/SettingsFieldset.php:102
 msgid "Append original audio"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:101
+#: src/Form/SettingsFieldset.php:113
 msgid "Video converters"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:116
+#: src/Form/SettingsFieldset.php:128
 msgid "Append original video"
 msgstr ""
 
@@ -581,38 +634,6 @@ msgstr ""
 
 #: src/Form/ConfigForm.php:124
 msgid "Update metadata"
-msgstr ""
-
-#: src/Controller/IndexController.php:27
-msgid "This type is not supported."
-msgstr ""
-
-#: src/Controller/IndexController.php:32
-msgid "This type is not available."
-msgstr ""
-
-#: src/Controller/IndexController.php:45
-msgid "Resource is not an item."
-msgstr ""
-
-#: src/Controller/IndexController.php:62
-msgid "This derivative is ready. Reload the page."
-msgstr ""
-
-#: src/Controller/IndexController.php:67
-msgid "This derivative is not ready. Ask the webmaster for it."
-msgstr ""
-
-#: src/Controller/IndexController.php:72
-msgid "This type of derivative file cannot be prepared for this item."
-msgstr ""
-
-#: src/Controller/IndexController.php:78
-msgid "This derivative files of this item cannot be prepared."
-msgstr ""
-
-#: src/Controller/IndexController.php:89
-msgid "This derivative is being created. Come back later."
 msgstr ""
 
 #: src/Site/ResourcePageBlockLayout/DerivativeMedia.php:13

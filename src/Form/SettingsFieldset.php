@@ -28,7 +28,7 @@ class SettingsFieldset extends Fieldset
                 'type' => DerivativeMediaElement\OptionalMultiCheckbox::class,
                 'options' => [
                     'element_group' => 'derivative_media',
-                    'label' => 'Enabled conversion for audio', // @translate
+                    'label' => 'Formats to convert', // @translate
                     'value_options' => [
                         'audio' => 'Audio', // @translate
                         'video' => 'Video', // @translate
