@@ -170,6 +170,9 @@ class CreateDerivative extends AbstractPlugin
         $manifest = $this->iiifManifest->__invoke($item, $version);
 
         if ($manifest) {
+            if (!is_string($manifest)) {
+                $manifest = json_encode($manifest, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            }
             $result = file_put_contents($filepath, $manifest);
             return (bool) $result;
         }
