@@ -135,9 +135,8 @@ class Module extends AbstractModule
             'dir' => 'text',
             'size' => true,
         ],
-        // TODO Static for > 100MB/1GB or stream output to user directly.
         'zip' => [
-            'mode' => 'live',
+            'mode' => 'dynamic_live',
             'level' => 'item',
             'multiple' => false,
             'mediatype' => 'application/zip',
@@ -149,7 +148,7 @@ class Module extends AbstractModule
             'size' => true,
         ],
         'zipm' => [
-            'mode' => 'live',
+            'mode' => 'dynamic_live',
             'level' => 'item',
             'multiple' => false,
             'mediatype' => 'application/zip',
@@ -161,7 +160,7 @@ class Module extends AbstractModule
             'size' => true,
         ],
         'zipo' => [
-            'mode' => 'live',
+            'mode' => 'dynamic_live',
             'level' => 'item',
             'multiple' => false,
             'mediatype' => 'application/zip',
@@ -609,13 +608,15 @@ HTML;
         /** @var \DerivativeMedia\View\Helper\HasDerivative $hasDerivative */
         $hasDerivative = $services->get('ViewHelperManager')->get('hasDerivative');
 
+        // hasDerivative() checks for "dynamic_live", so no need to check here.
+
         $derivatives = $hasDerivative($item);
 
         switch ($derivativeUpdate) {
             case 'existing_live':
                 $todo = array_filter($derivatives, function($v) {
                     return $v['ready']
-                    && $v['mode'] === 'live';
+                        && $v['mode'] === 'live';
                 });
                     break;
             case 'existing':

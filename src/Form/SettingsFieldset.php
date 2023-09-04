@@ -69,6 +69,17 @@ class SettingsFieldset extends Fieldset
                 ],
             ])
             ->add([
+                'name' => 'derivativemedia_max_size_live',
+                'type' => Element\Number::class,
+                'options' => [
+                    'element_group' => 'derivative_media',
+                    'label' => 'Max total media size in megabytes to prepare a derivative file live', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'derivativemedia_max_size_live',
+                ],
+            ])
+            ->add([
                 'name' => 'derivativemedia_converters_audio',
                 'type' => OmekaElement\ArrayTextarea::class,
                 'options' => [

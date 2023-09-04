@@ -25,13 +25,20 @@ class HasDerivative extends AbstractHelper
     protected $enabled;
 
     /**
+     * @var array
+     */
+    protected $maxSizeLive;
+
+    /**
      * @var \Laminas\View\Helper\Url
      */
+    protected $url;
 
-    public function __construct(string $basePath, array $enabled, Url $url)
+    public function __construct(string $basePath, array $enabled, int $maxSizeLive, Url $url)
     {
         $this->basePath = $basePath;
         $this->enabled = $enabled;
+        $this->maxSizeLive = $maxSizeLive;
         $this->url = $url;
     }
 
@@ -128,8 +135,18 @@ class HasDerivative extends AbstractHelper
                     : array_sum(array_column($dataMedia, 'size'));
             }
 
+            // TODO Output zip file directly as stream to avoid limit issue.
+
+            if (Module::DERIVATIVES[$type]['mode'] === 'dynamic_live') {
+                $derivativeMode = !$size || $size >= $this->maxSizeLive
+                    ? 'dynamic'
+                    : 'live';
+            } else {
+                $derivativeMode = Module::DERIVATIVES[$type]['mode'];
+            }
+
             $result[$type] = [
-                'mode' => Module::DERIVATIVES[$type]['mode'],
+                'mode' => $derivativeMode,
                 'feasible' => $feasible,
                 'in_progress' => $isInProgress,
                 'ready' => $ready,

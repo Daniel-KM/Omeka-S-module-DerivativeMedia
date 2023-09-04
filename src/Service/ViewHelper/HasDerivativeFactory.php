@@ -17,9 +17,11 @@ class HasDerivativeFactory implements FactoryInterface
     {
         $config = $services->get('Config');
         $basePath = $config['file_store']['local']['base_path'] ?: (OMEKA_PATH . '/files');
+        $settings = $services->get('Omeka\Settings');
         return new HasDerivative(
             $basePath,
-            $services->get('Omeka\Settings')->get('derivativemedia_enable', []),
+            $settings->get('derivativemedia_enable', []),
+            (int) $settings->get('derivativemedia_max_size_live', 30),
             $services->get('ViewHelperManager')->get('Url')
         );
     }

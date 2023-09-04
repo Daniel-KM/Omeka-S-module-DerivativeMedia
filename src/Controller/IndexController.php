@@ -72,7 +72,15 @@ class IndexController extends \Omeka\Controller\IndexController
                 throw new \Omeka\Mvc\Exception\RuntimeException('This type of derivative file cannot be prepared for this item.'); // @translate
             }
 
-            if (!$prepare && Module::DERIVATIVES[$type]['mode'] === 'live') {
+            if (!$prepare
+                && (
+                    Module::DERIVATIVES[$type]['mode'] === 'live'
+                    || (Module::DERIVATIVES[$type]['mode'] === 'dynamic_live'
+                        && Module::DERIVATIVES[$type]['size']
+                        && Module::DERIVATIVES[$type]['size'] < (int) $this->settings()->get('derivativemedia_max_size_live', 30)
+                    )
+                )
+            ) {
                 $ready = $this->createDerivative($type, $filepath, $item, $dataMedia);
                 if (!$ready) {
                     throw new \Omeka\Mvc\Exception\RuntimeException('This derivative files of this item cannot be prepared.'); // @translate
