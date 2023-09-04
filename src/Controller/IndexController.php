@@ -4,6 +4,8 @@ namespace DerivativeMedia\Controller;
 
 use DerivativeMedia\Module;
 use DerivativeMedia\Mvc\Controller\Plugin\TraitDerivative;
+use Laminas\Http\Response;
+use Laminas\View\Model\JsonModel;
 
 class IndexController extends \Omeka\Controller\IndexController
 {
@@ -24,12 +26,20 @@ class IndexController extends \Omeka\Controller\IndexController
         if (!isset(Module::DERIVATIVES[$type])
             || Module::DERIVATIVES[$type]['level'] === 'media'
         ) {
-            throw new \Omeka\Mvc\Exception\RuntimeException('This type is not supported.'); // @translate
+            $this->getResponse()->setStatusCode(Response::STATUS_CODE_400);
+            return new JsonModel([
+                'status' => 'error',
+                'message' => $this->translate('This type is not supported.'), // @translate
+            ]);
         }
 
         $derivativeEnabled = $this->settings()->get('derivativemedia_enable', []);
         if (!in_array($type, $derivativeEnabled)) {
-            throw new \Omeka\Mvc\Exception\RuntimeException('This type is not available.'); // @translate
+            $this->getResponse()->setStatusCode(Response::STATUS_CODE_400);
+            return new JsonModel([
+                'status' => 'error',
+                'message' => $this->translate('This type is not available.'), // @translate
+            ]);
         }
 
         $id = $this->params('id');
@@ -42,7 +52,11 @@ class IndexController extends \Omeka\Controller\IndexController
 
         // Check if resource contains files.
         if ($resource->resourceName() !== 'items') {
-            throw new \Omeka\Mvc\Exception\RuntimeException('Resource is not an item.'); // @translate
+            $this->getResponse()->setStatusCode(Response::STATUS_CODE_400);
+            return new JsonModel([
+                'status' => 'error',
+                'message' => $this->translate('Resource is not an item.'), // @translate
+            ]);
         }
 
         /** @var \Omeka\Api\Representation\ItemRepresentation $item */
@@ -59,17 +73,31 @@ class IndexController extends \Omeka\Controller\IndexController
 
         // In case a user reclicks the link.
         if ($prepare && $ready) {
-            throw new \Omeka\Mvc\Exception\RuntimeException('This derivative is ready. Reload the page.'); // @translate
+            $this->getResponse()->setStatusCode(Response::STATUS_CODE_500);
+            return new JsonModel([
+                'status' => 'fail',
+                'data' => [
+                    'id' => $this->translate('This derivative is ready. Reload the page.'), // @translate
+                ],
+            ]);
         }
 
         if (!$ready) {
             if (Module::DERIVATIVES[$type]['mode'] === 'static') {
-                throw new \Omeka\Mvc\Exception\RuntimeException('This derivative is not ready. Ask the webmaster for it.'); // @translate
+                $this->getResponse()->setStatusCode(Response::STATUS_CODE_500);
+                return new JsonModel([
+                    'status' => 'error',
+                    'message' => $this->translate('This derivative is not ready. Ask the webmaster for it.'), // @translate
+                ]);
             }
 
             $dataMedia = $this->dataMedia($item, $type);
             if (!$dataMedia) {
-                throw new \Omeka\Mvc\Exception\RuntimeException('This type of derivative file cannot be prepared for this item.'); // @translate
+                $this->getResponse()->setStatusCode(Response::STATUS_CODE_500);
+                return new JsonModel([
+                    'status' => 'error',
+                    'message' => $this->translate('This type of derivative file cannot be prepared for this item.'), // @translate
+                ]);
             }
 
             if (!$prepare
@@ -83,7 +111,11 @@ class IndexController extends \Omeka\Controller\IndexController
             ) {
                 $ready = $this->createDerivative($type, $filepath, $item, $dataMedia);
                 if (!$ready) {
-                    throw new \Omeka\Mvc\Exception\RuntimeException('This derivative files of this item cannot be prepared.'); // @translate
+                    $this->getResponse()->setStatusCode(Response::STATUS_CODE_500);
+                    return new JsonModel([
+                        'status' => 'error',
+                        'message' => $this->translate('This derivative files of this item cannot be prepared.'), // @translate
+                    ]);
                 }
             } else {
                 $args = [
@@ -94,7 +126,13 @@ class IndexController extends \Omeka\Controller\IndexController
                 /** @var \Omeka\Job\Dispatcher $dispatcher */
                 $dispatcher = $this->jobDispatcher();
                 $dispatcher->dispatch(\DerivativeMedia\Job\CreateDerivatives::class, $args);
-                throw new \Omeka\Mvc\Exception\RuntimeException('This derivative is being created. Come back later.'); // @translate
+                $this->getResponse()->setStatusCode(Response::STATUS_CODE_500);
+                return new JsonModel([
+                    'status' => 'fail',
+                    'data' => [
+                        'id' => $this->translate('This derivative is being created. Come back later.'), // @translate
+                    ],
+                ]);
             }
         }
 
