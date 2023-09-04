@@ -12,7 +12,7 @@ class IndexController extends \Omeka\Controller\IndexController
     use TraitDerivative;
 
     /**
-     * @todo Manage other storage type. See module AccessResource.
+     * @todo Manage other storage type. See module Access.
      * @todo Some formats don't really need storage (text…), so make them truly dynamic.
      *
      * @todo Dynamic files cannot be stored in media data because of rights.
@@ -144,9 +144,11 @@ class IndexController extends \Omeka\Controller\IndexController
      * This is the 'file' action that is invoked when a user wants to download
      * the given file.
      *
-     * @see \AccessResource\Controller\AccessResourceController::sendFile()
+     * @see \AccessResource\Controller\AccessFileController::sendFile()
      * @see \DerivativeMedia\Controller\IndexController::sendFile()
      * @see \Statistics\Controller\DownloadController::sendFile()
+     * and
+     * @see \ImageServer\Controller\ImageController::fetchAction()
      */
     protected function sendFile(
         string $filepath,
@@ -177,8 +179,14 @@ class IndexController extends \Omeka\Controller\IndexController
                 ->addHeaderLine(sprintf('Expires: %s', gmdate('D, d M Y H:i:s', time() + (30 * 24 * 60 * 60)) . ' GMT'));
         }
 
+        // Fix deprecated warning in \Laminas\Http\PhpEnvironment\Response::sendHeaders() (l. 113).
+        $errorReporting = error_reporting();
+        error_reporting($errorReporting & ~E_DEPRECATED);
+
         // Send headers separately to handle large files.
         $response->sendHeaders();
+
+        error_reporting($errorReporting);
 
         // TODO Use Laminas stream response.
 
