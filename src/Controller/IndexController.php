@@ -144,7 +144,7 @@ class IndexController extends \Omeka\Controller\IndexController
      * This is the 'file' action that is invoked when a user wants to download
      * the given file.
      *
-     * @see \AccessResource\Controller\AccessFileController::sendFile()
+     * @see \Access\Controller\AccessFileController::sendFile()
      * @see \DerivativeMedia\Controller\IndexController::sendFile()
      * @see \Statistics\Controller\DownloadController::sendFile()
      * and

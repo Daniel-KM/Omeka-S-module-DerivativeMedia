@@ -13,7 +13,7 @@ class DerivativeMedia extends AbstractHelper
     const PARTIAL_NAME = 'common/derivative-media';
 
     /**
-     * Get the list of derivative media of a resource.
+     * Get the list of derivative media of a resource as html.
      *
      * Managed options:
      * - template
