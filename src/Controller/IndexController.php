@@ -179,6 +179,44 @@ class IndexController extends \Omeka\Controller\IndexController
                 ->addHeaderLine(sprintf('Expires: %s', gmdate('D, d M Y H:i:s', time() + (30 * 24 * 60 * 60)) . ' GMT'));
         }
 
+        $headers
+            ->addHeaderLine('Accept-Ranges: bytes');
+
+        // TODO Check for Apache XSendFile or Nginx: https://stackoverflow.com/questions/4022260/how-to-detect-x-accel-redirect-nginx-x-sendfile-apache-support-in-php
+        // TODO Use Laminas stream response?
+        // $response = new \Laminas\Http\Response\Stream();
+
+        // Adapted from https://stackoverflow.com/questions/15797762/reading-mp4-files-with-php.
+        $hasRange = !empty($_SERVER['HTTP_RANGE']);
+        if ($hasRange) {
+            // Start/End are pointers that are 0-based.
+            $start = 0;
+            $end = $filesize - 1;
+            $matches = [];
+            $result = preg_match('/bytes=\h*(?<start>\d+)-(?<end>\d*)[\D.*]?/i', $_SERVER['HTTP_RANGE'], $matches);
+            if ($result) {
+                $start = (int) $matches['start'];
+                if (!empty($matches['end'])) {
+                    $end = (int) $matches['end'];
+                }
+            }
+            // Check valid range to avoid hack.
+            $hasRange = ($start < $filesize && $end < $filesize && $start < $end)
+                && ($start > 0 || $end < ($filesize - 1));
+        }
+
+        if ($hasRange) {
+            // Set partial content.
+            $response
+                ->setStatusCode($response::STATUS_CODE_206);
+            $headers
+                ->addHeaderLine('Content-Length: ' . ($end - $start + 1))
+                ->addHeaderLine("Content-Range: bytes $start-$end/$filesize");
+        } else {
+            $headers
+                ->addHeaderLine('Content-Length: ' . $filesize);
+        }
+
         // Fix deprecated warning in \Laminas\Http\PhpEnvironment\Response::sendHeaders() (l. 113).
         $errorReporting = error_reporting();
         error_reporting($errorReporting & ~E_DEPRECATED);
@@ -188,14 +226,30 @@ class IndexController extends \Omeka\Controller\IndexController
 
         error_reporting($errorReporting);
 
-        // TODO Use Laminas stream response.
-
         // Clears all active output buffers to avoid memory overflow.
         $response->setContent('');
         while (ob_get_level()) {
             ob_end_clean();
         }
-        readfile($filepath);
+
+        if ($hasRange) {
+            $fp = @fopen($filepath, 'rb');
+            $buffer = 1024 * 8;
+            $pointer = $start;
+            fseek($fp, $start, SEEK_SET);
+            while (!feof($fp)
+                && $pointer <= $end
+                && connection_status() === CONNECTION_NORMAL
+            ) {
+                set_time_limit(0);
+                echo fread($fp, min($buffer, $end - $pointer + 1));
+                flush();
+                $pointer += $buffer;
+            }
+            fclose($fp);
+        } else {
+            readfile($filepath);
+        }
 
         // TODO Fix issue with session. See readme of module XmlViewer.
         ini_set('display_errors', '0');
