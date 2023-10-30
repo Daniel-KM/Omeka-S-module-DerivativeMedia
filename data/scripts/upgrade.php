@@ -55,3 +55,10 @@ if (version_compare($oldVersion, '3.4.4', '<')) {
     $message->setEscapeHtml(false);
     $messenger->addSuccess($message);
 }
+
+if (version_compare($oldVersion, '3.4.8', '<')) {
+    $message = new Message(
+        'The module manages now http requests "Content Range" that allow to read files faster.' // @translate
+    );
+    $messenger->addSuccess($message);
+}
