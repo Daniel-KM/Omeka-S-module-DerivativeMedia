@@ -114,10 +114,10 @@ class HasDerivative extends AbstractHelper
             }
 
             // Don't make the full filepath available in view.
-            $filepath =$this->itemFilepath($item, $type);
+            $filepath = $this->itemFilepath($item, $type);
             $file = mb_substr($filepath, mb_strlen($this->basePath) + 1);
 
-            $tempFilepath =$this->tempFilepath($filepath);
+            $tempFilepath = $this->tempFilepath($filepath);
 
             $size = null;
 

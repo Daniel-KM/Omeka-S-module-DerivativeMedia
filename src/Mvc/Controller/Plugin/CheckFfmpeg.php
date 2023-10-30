@@ -6,7 +6,6 @@ use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 
 class CheckFfmpeg extends AbstractPlugin
 {
-
     /**
      * Check if ffmpeg is available.
      *

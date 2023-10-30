@@ -3,9 +3,9 @@
 namespace DerivativeMedia\Form;
 
 use DerivativeMedia\Form\Element as DerivativeMediaElement;
-use Omeka\Form\Element as OmekaElement;
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
+use Omeka\Form\Element as OmekaElement;
 
 class SettingsFieldset extends Fieldset
 {

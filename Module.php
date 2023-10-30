@@ -362,10 +362,11 @@ class Module extends AbstractModule
         unset($params['process_derivative']);
         unset($params['process_metadata']);
 
-        $params['item_sets'] = $params['item_sets'] ?? [];
-        $params['ingesters'] = $params['ingesters'] ?? [];
-        $params['renderers'] = $params['renderers'] ?? [];
-        $params['media_types'] = $params['media_types'] ?? [];
+        $params['item_sets'] ??= [];
+        $params['ingesters'] ??= [];
+        $params['renderers'] ??= [];
+        $params['media_types'] ??= [];
+        $params['media_ids'] ??= '';
 
         $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
 
@@ -614,21 +615,21 @@ HTML;
 
         switch ($derivativeUpdate) {
             case 'existing_live':
-                $todo = array_filter($derivatives, function($v) {
+                $todo = array_filter($derivatives, function ($v) {
                     return $v['ready']
                         && $v['mode'] === 'live';
                 });
-                    break;
+                break;
             case 'existing':
-                $todo = array_filter($derivatives, function($v) {
+                $todo = array_filter($derivatives, function ($v) {
                     return $v['ready'];
                 });
-                    break;
+                break;
             case 'all_live':
-                $todo = array_filter($derivatives, function($v) {
+                $todo = array_filter($derivatives, function ($v) {
                     return $v['mode'] === 'live';
                 });
-                    break;
+                break;
             case 'all':
                 $todo = $derivatives;
                 break;
