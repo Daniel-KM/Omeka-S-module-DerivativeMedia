@@ -8,14 +8,24 @@ use Omeka\Entity\Media;
 trait DerivativeMediaTrait
 {
     /**
-     * @var \Laminas\Log\Logger
-     */
-    protected $logger;
-
-    /**
      * @var string
      */
     protected $basePath;
+
+    /**
+     * @var \Omeka\Stdlib\Cli
+     */
+    protected $cli;
+
+    /**
+     * @var \Doctrine\ORM\EntityManager
+     */
+    protected $entityManager;
+
+    /**
+     * @var \Laminas\Log\Logger
+     */
+    protected $logger;
 
     /**
      * @var \Omeka\File\Store\StoreInterface
@@ -28,14 +38,14 @@ trait DerivativeMediaTrait
     protected $tempFileFactory;
 
     /**
-     * @var \Doctrine\ORM\EntityManager
+     * @var bool
      */
-    protected $entityManager;
+    protected $hasFfmpeg;
 
     /**
-     * @var \Omeka\Stdlib\Cli
+     * @var bool
      */
-    protected $cli;
+    protected $hasGhostscript;
 
     /**
      * @var array
@@ -53,10 +63,13 @@ trait DerivativeMediaTrait
 
         $plugins = $services->get('ControllerPluginManager');
         $checkFfmpeg = $plugins->get('checkFfmpeg');
-        $checkFfmpeg = $checkFfmpeg();
-        if (!$checkFfmpeg) {
+        $checkGhostscript = $plugins->get('checkGhostscript');
+        $this->hasFfmpeg = $checkFfmpeg();
+        $this->hasGhostscript = $checkGhostscript();
+
+        if (!$this->hasFfmpeg && !$this->hasGhostscript) {
             $message = new \Omeka\Stdlib\Message(
-                'The command-line utility "ffmpeg" should be installed and should be available in the cli path to make derivatives.' // @translate
+                'The command-line utility "ffmpeg" and/or "gs" (ghostscript) should be installed and should be available in the cli path to make derivatives.' // @translate
             );
             $this->logger->err($message);
             return;
@@ -68,6 +81,7 @@ trait DerivativeMediaTrait
         $settings = $services->get('Omeka\Settings');
         $this->converters['audio'] = array_filter($settings->get('derivativemedia_converters_audio', []), $removeCommented, ARRAY_FILTER_USE_BOTH);
         $this->converters['video'] = array_filter($settings->get('derivativemedia_converters_video', []), $removeCommented, ARRAY_FILTER_USE_BOTH);
+        $this->converters['pdf'] = array_filter($settings->get('derivativemedia_converters_pdf', []), $removeCommented, ARRAY_FILTER_USE_BOTH);
         if (empty(array_filter($this->converters))) {
             return false;
         }
@@ -132,8 +146,38 @@ trait DerivativeMediaTrait
 
     protected function derivateMedia(Media $media): bool
     {
-        $mainMediaType = strtok((string) $media->getMediaType(), '/');
-        if (empty($this->converters[$mainMediaType])) {
+        static $errorFfmpeg = false;
+        static $errorGhostscript = false;
+
+        $mediaType = (string) $media->getMediaType();
+        $mainMediaType = strtok($mediaType, '/');
+        $commonType = in_array($mainMediaType, ['audio', 'video'])
+            ? $mainMediaType
+            : ($mediaType === 'application/pdf' ? 'pdf' : null);
+
+        if (empty($this->converters[$commonType])) {
+            return false;
+        }
+
+        if (in_array($commonType, ['audio', 'video']) && !$this->hasFfmpeg) {
+            if (!$errorFfmpeg) {
+                $errorFfmpeg = true;
+                $message = new \Omeka\Stdlib\Message(
+                    'The command-line utility "ffmpeg" should be installed and should be available in the cli path to make derivatives.' // @translate
+                );
+                $this->logger->err($message);
+            }
+            return false;
+        }
+
+        if ($commonType === 'pdf' && !$this->hasGhostscript) {
+            if (!$errorGhostscript) {
+                $errorGhostscript = true;
+                $message = new \Omeka\Stdlib\Message(
+                    'The command-line utility "gs" (ghostscript) should be installed and should be available in the cli path to make derivatives.' // @translate
+                );
+                $this->logger->err($message);
+            }
             return false;
         }
 
@@ -159,7 +203,7 @@ trait DerivativeMediaTrait
         $realpath = new RealPath(false);
 
         $storageId = $media->getStorageId();
-        foreach ($this->converters[$mainMediaType] as $pattern => $command) {
+        foreach ($this->converters[$commonType] as $pattern => $command) {
             if ($this->shouldStop()) {
                 $this->logger->warn(
                     'Media #{media_id}: Process stopped.', // @translate
@@ -253,7 +297,9 @@ trait DerivativeMediaTrait
             $tempFile->delete();
             $tempFile->setTempPath($tempPath);
 
-            $command = 'ffmpeg -i ' . escapeshellarg($sourcePath) . ' ' . $command . ' ' . escapeshellarg($tempPath);
+            $command = $commonType === 'pdf'
+                ? sprintf('gs -sDEVICE=pdfwrite -dNOPAUSE -dQUIET -dBATCH %1$s -o %2$s %3$s', $command, escapeshellarg($tempPath), escapeshellarg($sourcePath))
+                : sprintf('ffmpeg -i %1$s %2$s %3$s', escapeshellarg($sourcePath), $command, escapeshellarg($tempPath));
 
             $output = $this->cli->execute($command);
 
@@ -285,9 +331,11 @@ trait DerivativeMediaTrait
             }
 
             $mediaType = $tempFile->getMediaType();
-            if (!in_array(strtok($mediaType, '/'), ['audio', 'video'])) {
+            if ((in_array($commonType, ['audio', 'video']) && !in_array(strtok($mediaType, '/'), ['audio', 'video']))
+                || ($commonType === 'pdf' && $mediaType !== 'application/pdf')
+            ) {
                 $this->logger->err(
-                    'Media #{media_id}: derivative media is not audio or video, but "{mediatype}" ({filename}).', // @translate
+                    'Media #{media_id}: derivative media is not audio, video, or pdf, but "{mediatype}" ({filename}).', // @translate
                     ['media_id' => $media->getId(), 'mediatype' => $mediaType, 'filename' => $storageName]
                 );
                 $tempFile->delete();
@@ -322,9 +370,6 @@ trait DerivativeMediaTrait
         return true;
     }
 
-    /**
-     * @todo Factorize with derivativeMedia()
-     */
     protected function checkFilesAndStoreMetadata(Media $media): bool
     {
         $mainMediaType = strtok((string) $media->getMediaType(), '/');
@@ -423,12 +468,12 @@ trait DerivativeMediaTrait
             $tempFile->setTempPath($derivativePath);
             $mediaType = $tempFile->getMediaType();
 
-            if (!in_array(strtok($mediaType, '/'), ['audio', 'video'])) {
+            if (!in_array(strtok($mediaType, '/'), ['audio', 'video']) && $mediaType !== 'application/pdf') {
                 $this->storeMetadata($media, $folder, null, null);
                 $this->entityManager->persist($media);
                 $this->entityManager->flush();
                 $this->logger->err(
-                    'Media #{media_id}: derivative media is not audio or video, but "{mediatype}" ({filename}).', // @translate
+                    'Media #{media_id}: derivative media is not audio, video, or pdf, but "{mediatype}" ({filename}).', // @translate
                     ['media_id' => $media->getId(), 'mediatype' => $mediaType, 'filename' => $storageName]
                 );
                 continue;
@@ -478,8 +523,13 @@ trait DerivativeMediaTrait
 
     protected function isManaged(Media $media)
     {
-        return $media->hasOriginal()
+        $mediaType = $media->getMediaType();
+        return $mediaType
+            && $media->hasOriginal()
             && $media->getRenderer() === 'file'
-            && in_array(strtok((string) $media->getMediaType(), '/'), ['audio', 'video']);
+            && (
+                in_array(strtok($mediaType, '/'), ['audio', 'video'])
+                || $mediaType === 'application/pdf'
+            );
     }
 }

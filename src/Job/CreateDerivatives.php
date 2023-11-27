@@ -52,7 +52,7 @@ class CreateDerivatives extends AbstractJob
 
         $types = array_intersect($types, array_keys(Module::DERIVATIVES), $enabled);
         $types = array_combine($types, $types);
-        unset($types['audio'], $types['video']);
+        unset($types['audio'], $types['video'], $types['pdf_media']);
 
         if (empty($types)) {
             $this->logger->err(

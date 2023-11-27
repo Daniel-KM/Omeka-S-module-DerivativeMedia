@@ -145,7 +145,7 @@ DQL;
                         : ++$totalFailed;
                 } else {
                     $this->logger->info(
-                        'Media #{media_id} ({count}/{total}): The media is not an audio or video file.', // @translate
+                        'Media #{media_id} ({count}/{total}): The media is not an audio, a video or a pdf file.', // @translate
                         ['media_id' => $media->getId(), 'count' => $offset + $key + 1, 'total' => $totalToProcess]
                     );
                 }

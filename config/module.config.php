@@ -53,6 +53,7 @@ return [
     'controller_plugins' => [
         'invokables' => [
             'checkFfmpeg' => Mvc\Controller\Plugin\CheckFfmpeg::class,
+            'checkGhostscript' => Mvc\Controller\Plugin\CheckGhostscript::class,
         ],
         'factories' => [
             'createDerivative' => Service\ControllerPlugin\CreateDerivativeFactory::class,
@@ -102,6 +103,12 @@ return [
                 'webm/{filename}.webm' => '-c copy -c:v libvpx-vp9 -crf 30 -b:v 0 -deadline realtime -pix_fmt yuv420p -c:a libopus',
                 '# This format keeps the original quality and is compatible with almost all browsers.' => '',
                 'mp4/{filename}.mp4' => "-c copy -c:v libx264 -movflags +faststart -filter:v crop='floor(in_w/2)*2:floor(in_h/2)*2' -crf 22 -level 3 -preset medium -tune film -pix_fmt yuv420p -c:a libmp3lame -qscale:a 2",
+            ],
+            'derivativemedia_converters_pdf' => [
+                '# The default setting "/screen" output the smallest pdf readable on a screen.' => '',
+                'pdfs/{filename}.pdf' => '-dCompatibilityLevel=1.7 -dPDFSETTINGS=/screen',
+                '# The default setting "/ebook" output a medium size pdf readable on any device.' => '',
+                'pdfe/{filename}.pdf' => '-dCompatibilityLevel=1.7 -dPDFSETTINGS=/ebook',
             ],
             'derivativemedia_append_original_audio' => false,
             'derivativemedia_append_original_video' => false,

@@ -66,6 +66,11 @@ class Module extends AbstractModule
             'level' => 'media',
             'multiple' => true,
         ],
+        'pdf_media' => [
+            'mode' => 'static',
+            'level' => 'media',
+            'multiple' => true,
+        ],
 
         // Item level.
         'alto' => [
@@ -376,6 +381,7 @@ class Module extends AbstractModule
         $messenger->addSuccess($message);
 
         $this->checkFfmpeg(true);
+        $this->checkGhostscript(true);
 
         $form = $services->get('FormElementManager')->get(ConfigForm::class);
         $form->init();
@@ -409,6 +415,20 @@ class Module extends AbstractModule
             return true;
         }
 
+        $hasFfmpeg = $this->checkFfmpeg(false);
+        if (!$hasFfmpeg) {
+            $message = 'The task requires command "ffmpeg".'; // @translate
+            $controller->messenger()->addWarning($message);
+            return true;
+        }
+
+        $hasGhostscript = $this->checkGhostscript(false);
+        if (!$hasGhostscript) {
+            $message = 'The task requires command "gs" (ghostscript).'; // @translate
+            $controller->messenger()->addWarning($message);
+            return true;
+        }
+
         $process = $params;
 
         unset($params['csrf']);
@@ -424,24 +444,15 @@ class Module extends AbstractModule
         $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
 
         if (!empty($process['process_metadata'])) {
-            if (!$this->checkFfmpeg(false)) {
-                $message = 'The task requires "ffmpeg".'; // @translate
-                $controller->messenger()->addWarning($message);
-                return true;
-            }
             unset($params['query']);
             $job = $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMediaMetadata::class, $params);
             $message = 'Storing metadata for existing files ({link}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
         } elseif (!empty($process['process_derivative'])) {
-            if (!$this->checkFfmpeg(false)) {
-                $message = 'The task requires "ffmpeg".'; // @translate
-                $controller->messenger()->addWarning($message);
-                return true;
-            }
             unset($params['query']);
             $job = $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMediaFile::class, $params);
             $message = 'Creating derivative media ({link}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
         }
+
         $message = new PsrMessage(
             $message,
             [
@@ -457,6 +468,7 @@ class Module extends AbstractModule
         );
         $message->setEscapeHtml(false);
         $controller->messenger()->addSuccess($message);
+
         return true;
     }
 
@@ -528,12 +540,20 @@ HTML;
         $enabled = $settings->get('derivativemedia_enable', []);
         $derivativeUpdate = $settings->get('derivativemedia_update', 'existing');
 
+        $mediaLevel = ['audio', 'video', 'pdf_media'];
+
         $processUpdate = in_array($derivativeUpdate, ['existing_live', 'existing', 'all_live', 'all']);
-        $processItemDerivative = !empty(array_diff($enabled, ['audio', 'video']));
-        $processMediaDerivative = in_array('audio', $enabled) || in_array('video', $enabled);
+        $processItemDerivative = (bool) array_diff($enabled, $mediaLevel);
+        $processMediaAudioVideo = (bool) array_intersect(['audio', 'video'], $enabled);
+        $processMediaPdf = in_array('pdf_media', $mediaLevel);
+        $processMediaDerivative = $processMediaAudioVideo || $processMediaPdf;
 
         $processItem = $processItemDerivative && $processUpdate;
-        $processMedia = $processMediaDerivative && $this->checkFfmpeg();
+        $processMedia = $processMediaDerivative
+            && (
+                ($processMediaAudioVideo && $this->checkFfmpeg())
+                || ($processMediaPdf && $this->checkGhostscript())
+            );
 
         if (!$processItem && !$processMedia) {
             return;
@@ -591,12 +611,20 @@ HTML;
         $enabled = $settings->get('derivativemedia_enable', []);
         $derivativeUpdate = $settings->get('derivativemedia_update', 'existing');
 
+        $mediaLevel = ['audio', 'video', 'pdf_media'];
+
         $processUpdate = in_array($derivativeUpdate, ['existing_live', 'existing', 'all_live', 'all']);
-        $processItemDerivative = !empty(array_diff($enabled, ['audio', 'video']));
-        $processMediaDerivative = in_array('audio', $enabled) || in_array('video', $enabled);
+        $processItemDerivative = (bool) array_diff($enabled, $mediaLevel);
+        $processMediaAudioVideo = (bool) array_intersect(['audio', 'video'], $enabled);
+        $processMediaPdf = in_array('pdf_media', $mediaLevel);
+        $processMediaDerivative = $processMediaAudioVideo || $processMediaPdf;
 
         $processItem = $processItemDerivative && $processUpdate;
-        $processMedia = $processMediaDerivative && $this->checkFfmpeg();
+        $processMedia = $processMediaDerivative
+            && (
+                ($processMediaAudioVideo && $this->checkFfmpeg())
+                || ($processMediaPdf && $this->checkGhostscript())
+            );
 
         if (!$processItem && !$processMedia) {
             return;
@@ -709,6 +737,7 @@ HTML;
         static $hasLocalStore;
         static $convertersAudio;
         static $convertersVideo;
+        static $convertersPdf;
 
         if (is_null($hasLocalStore)) {
             $services = $this->getServiceLocator();
@@ -733,6 +762,9 @@ HTML;
             $convertersVideo = in_array('video', $enabled)
                 ? array_filter($settings->get('derivativemedia_converters_video', []), $removeCommented, ARRAY_FILTER_USE_BOTH)
                 : [];
+            $convertersPdf = in_array('pdf_media', $enabled)
+                ? array_filter($settings->get('derivativemedia_converters_pdf', []), $removeCommented, ARRAY_FILTER_USE_BOTH)
+                : [];
         }
 
         if (!$hasLocalStore) {
@@ -747,11 +779,13 @@ HTML;
             return false;
         }
 
-        $mainMediaType = strtok((string) $media->getMediaType(), '/');
-        if ($mainMediaType === 'audio' && $convertersAudio) {
+        $mediaType = (string) $media->getMediaType();
+        $mainMediaType = strtok($mediaType, '/');
+        if ($convertersAudio && $mainMediaType === 'audio') {
             return true;
-        }
-        if ($mainMediaType === 'video' && $convertersVideo) {
+        } elseif ($convertersVideo && $mainMediaType === 'video') {
+            return true;
+        } elseif ($convertersPdf && $mediaType === 'application/pdf') {
             return true;
         }
 
@@ -760,9 +794,14 @@ HTML;
 
     protected function isManaged(Media $media)
     {
-        return $media->hasOriginal()
+        $mediaType = $media->getMediaType();
+        return $mediaType
+            && $media->hasOriginal()
             && $media->getRenderer() === 'file'
-            && in_array(strtok((string) $media->getMediaType(), '/'), ['audio', 'video']);
+            && (
+                in_array(strtok($mediaType, '/'), ['audio', 'video'])
+                || $mediaType === 'application/pdf'
+            );
     }
 
     protected function checkFfmpeg(bool $warnMessage = false): bool
@@ -778,5 +817,20 @@ HTML;
             $messenger->addWarning($message);
         }
         return $checkFfmpeg;
+    }
+
+    protected function checkGhostscript(bool $warnMessage = false): bool
+    {
+        $plugins = $this->getServiceLocator()->get('ControllerPluginManager');
+        $checkGhostcript = $plugins->get('checkGhostscript');
+        $checkGhostcript = $checkGhostcript();
+        if (!$checkGhostcript && $warnMessage) {
+            $messenger = $plugins->get('messenger');
+            $message = new \Omeka\Stdlib\Message(
+                'The command-line utility "gs" (ghoscript) should be installed and should be available in the cli path to make derivatives.' // @translate
+            );
+            $messenger->addWarning($message);
+        }
+        return $checkGhostcript;
     }
 }

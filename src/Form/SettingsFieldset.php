@@ -32,6 +32,7 @@ class SettingsFieldset extends Fieldset
                     'value_options' => [
                         'audio' => 'Audio', // @translate
                         'video' => 'Video', // @translate
+                        'pdf_media' => 'Pdf', // @translate
                         'zip' => 'Zip item files', // @translate
                         'zipm' => 'Zip item image/audio/video files', // @translate
                         'zipo' => 'Zip item other files', // @translate
@@ -79,6 +80,7 @@ class SettingsFieldset extends Fieldset
                     'id' => 'derivativemedia_max_size_live',
                 ],
             ])
+
             ->add([
                 'name' => 'derivativemedia_converters_audio',
                 'type' => OmekaElement\ArrayTextarea::class,
@@ -105,6 +107,7 @@ class SettingsFieldset extends Fieldset
                     'id' => 'derivativemedia_append_original_audio',
                 ],
             ])
+
             ->add([
                 'name' => 'derivativemedia_converters_video',
                 'type' => OmekaElement\ArrayTextarea::class,
@@ -129,6 +132,22 @@ class SettingsFieldset extends Fieldset
                 ],
                 'attributes' => [
                     'id' => 'derivativemedia_append_original_video',
+                ],
+            ])
+
+            ->add([
+                'name' => 'derivativemedia_converters_pdf',
+                'type' => OmekaElement\ArrayTextarea::class,
+                'options' => [
+                    'element_group' => 'derivative_media',
+                    'label' => 'Pdf converters', // @translate
+                    'info' => 'Each converter is one row with a filepath pattern, a "=", and the gs command (ghostscript, without file).', // @translate
+                    'documentation' => 'https://gitlab.com/Daniel-KM/Omeka-S-module-DerivativeMedia#usage',
+                    'as_key_value' => true,
+                ],
+                'attributes' => [
+                    'id' => 'derivativemedia_converters_pdf',
+                    'rows' => 5,
                 ],
             ])
         ;
