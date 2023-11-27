@@ -25,6 +25,8 @@ $connection = $services->get('Omeka\Connection');
 $messenger = $plugins->get('messenger');
 $entityManager = $services->get('Omeka\EntityManager');
 
+$configLocal = require dirname(__DIR__, 2) . '/config/module.config.php';
+
 if (version_compare($oldVersion, '3.4.4', '<')) {
     $settings->set('derivativemedia_enable', []);
     $message = new Message(
@@ -49,7 +51,7 @@ if (version_compare($oldVersion, '3.4.4', '<')) {
     $messenger->addSuccess($message);
     $message = new Message(
         'Check %1$snew settings%2$s.', // @translate
-        sprintf('<a href="%s">', $url('admin/default', ['controller' => 'setting'], ['fragment' => 'derivative-media'])),
+        sprintf('<a href="%s">', $url('admin/default', ['controller' => 'setting'], ['fragment' => 'derivativemedia_enable'])),
         '</a>'
     );
     $message->setEscapeHtml(false);
@@ -60,5 +62,23 @@ if (version_compare($oldVersion, '3.4.8', '<')) {
     $message = new Message(
         'The module manages now http requests "Content Range" that allow to read files faster.' // @translate
     );
+    $messenger->addSuccess($message);
+}
+
+if (version_compare($oldVersion, '3.4.9', '<')) {
+    $settings->set('derivativemedia_converters_pdf', $configLocal['derivativemedia']['settings']['derivativemedia_converters_pdf']);
+    $settings->set('derivativemedia_append_original_pdf', $configLocal['derivativemedia']['settings']['derivativemedia_append_original_pdf']);
+
+    $message = new Message(
+        'Helpers "derivativeMedia" and "hasDerivative" were renamed "derivatives" and "derivativeList".' // @translate
+    );
+    $messenger->addNotice($message);
+
+    $message = new Message(
+        'The module manages now pdf files. Check %1$snew settings%2$s.', // @translate
+        sprintf('<a href="%s">', $url('admin/default', ['controller' => 'setting'], ['fragment' => 'derivativemedia_enable'])),
+        '</a>'
+    );
+    $message->setEscapeHtml(false);
     $messenger->addSuccess($message);
 }
