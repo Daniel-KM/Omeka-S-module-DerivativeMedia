@@ -5,6 +5,7 @@
  * @var array $derivatives
  * @var string $heading
  * @var string $divclass
+ * @var bool $warn
  */
 
 if (!$derivatives) return;
@@ -28,21 +29,26 @@ $labels = [
     'pdf2xml' => 'Text from pdf as xml', // @translate
 ];
 
-$texts = [
-    'data-text-warn' => $translate('Are you sure to download this file?'),
-    'data-text-warn-size' => $translate('Are you sure to download the file of {size}?'),
-    'data-text-no' => $translate('No'),
-    'data-text-yes' => $translate('Yes'),
-    'data-text-ok' => $translate('Ok'),
-    'data-text-queued' => $translate('The file is in queue. Reload the page later.'),
-    'data-text-units' => $translate('["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]'),
-];
-$textsAttrs = array_map(function($key, $value) use ($escapeAttr): string {
+$escapeAttrs = function($key, $value) use ($escapeAttr): string {
     return $key . '="' . $escapeAttr($value) . '"';
-}, array_keys($texts), $texts);
+};
 
-$this->headLink()->prependStylesheet($assetUrl('css/derivative-media.css', 'DerivativeMedia'));
-$this->headScript()->appendFile($assetUrl('js/derivative-media.js', 'DerivativeMedia'), 'text/javascript', ['defer' => 'defer']);
+$textsAttrs = '';
+if ($warn) {
+    $texts = [
+        'data-text-warn' => $translate('Are you sure to download this file?'),
+        'data-text-warn-size' => $translate('Are you sure to download the file of {size}?'),
+        'data-text-no' => $translate('No'),
+        'data-text-yes' => $translate('Yes'),
+        'data-text-ok' => $translate('Ok'),
+        'data-text-queued' => $translate('The file is in queue. Reload the page later.'),
+        'data-text-units' => $translate('["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]'),
+    ];
+    $textsAttrs = implode(' ', array_map($escapeAttrs, array_keys($texts), $texts));
+
+    $this->headLink()->prependStylesheet($assetUrl('css/derivative-media.css', 'DerivativeMedia'));
+    $this->headScript()->appendFile($assetUrl('js/derivative-media.js', 'DerivativeMedia'), 'text/javascript', ['defer' => 'defer']);
+}
 
 $resourceId = $resource->id();
 $isMedia = $resource->getControllerName() === 'media';
@@ -52,12 +58,27 @@ $isMedia = $resource->getControllerName() === 'media';
     <?php if ($heading): ?>
     <h4><?= $escape($heading) ?></h4>
     <?php endif; ?>
-    <aside class="derivative-list value" <?= implode(' ', $textsAttrs) ?>>
+    <aside class="derivative-list value" <?= $textsAttrs ?>>
         <ul class="derivatives">
             <?php foreach ($derivatives as $type => $derivative): ?>
             <?php if (!empty($derivative['feasible'])): ?>
-            <li class="derivatives-<?= $type ?>">
-                <a href="#" data-url="<?= $derivative['url'] ?>" data-size="<?= $derivative['size'] ?>" class="derivative-media<?= $derivative['ready'] || $derivative['mode'] === 'live' ? '' : ' on-demand' ?>" download="<?= $resourceId . '.' . $derivative['extension'] ?>">
+            <?php if ($warn) {
+                $attrs = [
+                    'href' => '#',
+                    'data-url' => $derivative['url'],
+                    'data-size' => $derivative['size'],
+                    'class' => 'derivative-media' . ($derivative['ready'] || $derivative['mode'] === 'live' ? '' : ' on-demand'),
+                    'download' => $resourceId . '.' . $derivative['extension'],
+                ];
+            } else {
+                $attrs = [
+                    'href' => $derivative['url'],
+                    'class' => 'derivative-media',
+                ];
+            }
+            ?>
+            <li class="derivative-<?= $type ?>">
+                <a <?= implode(' ', array_map($escapeAttrs, array_keys($attrs), $attrs)) ?>>
                     <?= $isMedia ? $derivative['extension'] : $translate($labels[$type]) ?>
                 </a>
             </li>

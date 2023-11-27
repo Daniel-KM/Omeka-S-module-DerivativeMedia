@@ -460,9 +460,35 @@ class Module extends AbstractModule
             return;
         }
 
+        echo <<<'HTML'
+<style>
+@media screen {
+    .browse .derivative-medias h4 {
+        display: inline-block;
+    }
+    .browse .derivative-medias ul {
+        display: inline-block;
+        padding-left: 6px;
+    }
+    .browse .sidebar .derivative-medias ul,
+    .show .derivative-medias ul {
+        padding-left: 0;
+    }
+    .derivative-medias ul li {
+        list-style: none;
+        display: inline-block;
+    }
+    .derivative-medias ul li:not(:last-child):after {
+        content: ' · ';
+    }
+}
+</style>
+HTML;
+
         echo $view->derivatives($media, [
             'heading' => $view->translate('Derivative files'), // @translate
             'divclass' => 'meta-group',
+            'warn' => false,
         ]);
     }
 

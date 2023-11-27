@@ -18,6 +18,7 @@ class Derivatives extends AbstractHelper
      *@param array $options Managed options:
      * - heading (string): the title in the output.
      * - divclass (string): a class to add to the main div.
+     * - warn (bool): add css/js to warn user before download.
      * - template (string): the template to use instead of the default one.
      * Other options are passed to the template.
      */
@@ -30,6 +31,7 @@ class Derivatives extends AbstractHelper
             'derivatives' => $view->derivativeList($resource),
             'heading' => '',
             'divclass' => '',
+            'warn' => false,
             'template' => self::PARTIAL_NAME,
         ];
 
