@@ -199,7 +199,8 @@ class CreateDerivative extends AbstractPlugin
         }
 
         $source = (reset($dataMedia))['filepath'];
-        $command = sprintf('pdftohtml -i -c -hidden -xml %s %s', escapeshellarg($source), escapeshellarg($filepath));
+        $command = sprintf('pdftohtml -i -c -hidden -nodrm -enc "UTF-8" -xml %1$s %2$s',
+            escapeshellarg($source), escapeshellarg($filepath));
 
         $result = $this->cli->execute($command);
 
