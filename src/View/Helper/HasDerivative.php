@@ -57,7 +57,7 @@ class HasDerivative extends AbstractHelper
      * the resource id (item and medias) as key and an array of derivative types
      * as value.
      * This array is a list of derivative types as key and an array with:
-     * - mode (string): file can be build as "static", "dynamic" or "live".
+     * - mode (string): build file as "static", "dynamic", "live" or "dynamic_live".
      * - feasible (boolean): if item can have this type of derivative.
      * - in_progress (boolean): if the derivative is currently building.
      * - ready (boolean): derivative file is available.

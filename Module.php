@@ -35,6 +35,24 @@ class Module extends AbstractModule
         'Log',
     ];
 
+    /**
+     * Info about the process managed by the module.
+     *
+     * For all resources (media and item):
+     * - mode (string): build file as "static", "dynamic", "live" or "dynamic_live".
+     * - level (string): "item" or "media".
+     * - multiple (bool): can create multiple derivatives specified in config.
+     * For resource "item":
+     * - mediatype (string): the media type of the destination.
+     * - extension (string): the extension of the destination.
+     * - size (null|integer): real size or estimation.
+     * - build (array): the config to create the destination. Currently not used.
+     * - dir (string): the destination dir of the type.
+     * - size (bool): check the size to create the file dynamically or not for
+     *   modes "live" and "dynamic_live".
+     *
+     * @var array
+     */
     const DERIVATIVES = [
         // Media level.
         'audio' => [
@@ -55,9 +73,11 @@ class Module extends AbstractModule
             'multiple' => false,
             'mediatype' => 'application/alto+xml',
             'extension' => 'alto.xml',
+            /*
             'build' => [
                 'mediatype' => ['application/alto+xml'],
             ],
+            */
             'dir' => 'alto',
             'size' => true,
         ],
@@ -69,9 +89,11 @@ class Module extends AbstractModule
             // except if client asks json-ld.
             'mediatype' => 'application/json',
             'extension' => 'manifest.json',
+            /*
             'build' => [
                 'mediatype' => ['image', 'audio', 'video'],
             ],
+            */
             'dir' => 'iiif/2',
             'size' => false,
         ],
@@ -81,9 +103,11 @@ class Module extends AbstractModule
             'multiple' => false,
             'mediatype' => 'application/ld+json;profile="http://iiif.io/api/presentation/3/context.json"',
             'extension' => 'manifest.json',
+            /*
             'build' => [
                 'mediatype' => ['image', 'audio', 'video'],
             ],
+            */
             'dir' => 'iiif/3',
             'size' => false,
         ],
@@ -93,9 +117,11 @@ class Module extends AbstractModule
             'multiple' => false,
             'mediatype' => 'application/pdf',
             'extension' => 'pdf',
+            /*
             'build' => [
                 'mediatype' => ['image'],
             ],
+            */
             'dir' => 'pdf',
             'size' => true,
         ],
@@ -105,9 +131,11 @@ class Module extends AbstractModule
             'multiple' => false,
             'mediatype' => 'application/vnd.pdf2xml+xml',
             'extension' => 'pdf2xml.xml',
+            /*
             'build' => [
                 'mediatype' => ['application/pdf'],
             ],
+            */
             'dir' => 'pdf2xml',
             'size' => false,
         ],
@@ -117,9 +145,11 @@ class Module extends AbstractModule
             'multiple' => false,
             'mediatype' => 'text/plain',
             'extension' => 'txt',
+            /*
             'build' => [
                 'mediatype' => ['text/plain'],
             ],
+            */
             'dir' => 'txt',
             'size' => true,
         ],
@@ -129,9 +159,11 @@ class Module extends AbstractModule
             'multiple' => false,
             'mediatype' => 'text/plain',
             'extension' => 'txt',
+            /*
             'build' => [
                 'property' => 'extracttext:extracted_text',
             ],
+            */
             'dir' => 'text',
             'size' => true,
         ],
@@ -141,9 +173,11 @@ class Module extends AbstractModule
             'multiple' => false,
             'mediatype' => 'application/zip',
             'extension' => 'zip',
+            /*
             'build' => [
                 'mediatype' => [''],
             ],
+            */
             'dir' => 'zip',
             'size' => true,
         ],
@@ -153,9 +187,11 @@ class Module extends AbstractModule
             'multiple' => false,
             'mediatype' => 'application/zip',
             'extension' => 'zip',
+            /*
             'build' => [
                 'mediatype' => ['image', 'audio', 'video'],
             ],
+            */
             'dir' => 'zipm',
             'size' => true,
         ],
@@ -165,9 +201,11 @@ class Module extends AbstractModule
             'multiple' => false,
             'mediatype' => 'application/zip',
             'extension' => 'zip',
+            /*
             'build' => [
                 'mediatype_not' => ['image', 'audio', 'video'],
             ],
+            */
             'dir' => 'zipo',
             'size' => true,
         ],
@@ -316,10 +354,14 @@ class Module extends AbstractModule
     {
         $services = $this->getServiceLocator();
 
+        $urlPlugin = $services->get('ControllerPluginManager')->get('url');
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
         $message = new \Omeka\Stdlib\Message(
-            'This page allows to launch background job to prepare static derivative files according to parameters set in main settings.', // @translate
+            'This page allows to launch background job to prepare static derivative files according to parameters set in %1$smain settings%2$s.', // @translate
+            sprintf('<a href="%s">', htmlspecialchars($urlPlugin->fromRoute('admin/default', ['controller' => 'setting'])) . '#derivativemedia_enable'),
+            '</a>'
         );
+        $message->setEscapeHtml(false);
         $messenger->addSuccess($message);
 
         $this->checkFfmpeg(true);
