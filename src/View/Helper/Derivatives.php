@@ -16,6 +16,8 @@ class Derivatives extends AbstractHelper
      * Get the list of derivatives of a resource as html.
      *
      *@param array $options Managed options:
+     * - heading (string): the title in the output.
+     * - divclass (string): a class to add to the main div.
      * - template (string): the template to use instead of the default one.
      * Other options are passed to the template.
      */
@@ -26,18 +28,12 @@ class Derivatives extends AbstractHelper
         $options += [
             'site' => null,
             'derivatives' => $view->derivativeList($resource),
+            'heading' => '',
+            'divclass' => '',
             'template' => self::PARTIAL_NAME,
         ];
 
         $vars = ['resource' => $resource] + $options;
-
-        $assetUrl = $view->plugin('assetUrl');
-        /*
-        $view->headLink()
-            ->prependStylesheet($assetUrl('css/derivative-media.css', 'DerivativeMedia'));
-        */
-        $view->headScript()
-            ->appendFile($assetUrl('js/derivative-media.js', 'DerivativeMedia'), 'text/javascript', ['defer' => 'defer']);
 
         $template = $options['template'] ?? self::PARTIAL_NAME;
         return $template !== self::PARTIAL_NAME && $view->resolver($template)

@@ -460,44 +460,10 @@ class Module extends AbstractModule
             return;
         }
 
-        $hyperlink = $view->plugin('hyperlink');
-        $basePath = $view->serverUrl($view->basePath('/files'));
-
-        $links = '';
-        foreach ($data['derivative'] as $folder => $derivative) {
-            $links .= '<li>' . $hyperlink($folder, $basePath . '/' . $folder . '/' . $derivative['filename']) . "</li>\n";
-        }
-        $title = $view->escapeHtml($view->translate('Derivative medias')); // @translate
-        echo <<<HTML
-<style>
-@media screen {
-    .browse .derivative-media h4 {
-        display: inline-block;
-    }
-    .browse .derivative-media ul {
-        display: inline-block;
-        padding-left: 6px;
-    }
-    .browse .sidebar .derivative-media ul,
-    .show .derivative-media ul {
-        padding-left: 0;
-    }
-    .derivative-media ul li {
-        list-style: none;
-        display: inline-block;
-    }
-    .derivative-media ul li:not(:last-child):after {
-        content: ' · ';
-    }
-}
-</style>
-<div class="meta-group derivative-media">
-    <h4>$title</h4>
-    <ul>
-        $links
-    </ul>
-</div>
-HTML;
+        echo $view->derivatives($media, [
+            'heading' => $view->translate('Derivative files'), // @translate
+            'divclass' => 'meta-group',
+        ]);
     }
 
     public function afterSaveItem(Event $event): void
@@ -649,12 +615,12 @@ HTML;
         /** @var \Omeka\Api\Representation\ItemRepresentation $item */
         $item = $adapter->getRepresentation($item);
 
-        /** @var \DerivativeMedia\View\Helper\HasDerivative $hasDerivative */
-        $hasDerivative = $services->get('ViewHelperManager')->get('hasDerivative');
+        /** @var \DerivativeMedia\View\Helper\DerivativeList $derivativeList */
+        $derivativeList = $services->get('ViewHelperManager')->get('derivativeList');
 
         // hasDerivative() checks for "dynamic_live", so no need to check here.
 
-        $derivatives = $hasDerivative($item);
+        $derivatives = $derivativeList($item);
 
         switch ($derivativeUpdate) {
             case 'existing_live':

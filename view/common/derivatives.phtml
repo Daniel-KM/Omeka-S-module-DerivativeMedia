@@ -1,18 +1,19 @@
 <?php
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
- * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
- * @var array $options
+ * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource Item or media
+ * @var array $derivatives
+ * @var string $heading
+ * @var string $divclass
  */
 
+if (!$derivatives) return;
+
 $plugins = $this->getHelperPluginManager();
+$escape = $plugins->get('escapeHtml');
+$assetUrl = $plugins->get('assetUrl');
 $translate = $plugins->get('translate');
 $escapeAttr = $plugins->get('escapeHtmlAttr');
-$hasDerivative = $plugins->get('hasDerivative');
-
-$derivatives = $hasDerivative($resource);
-
-$resourceId = $resource->id();
 
 $labels = [
     'zip' => 'Zip of all files', // @translate
@@ -26,18 +27,38 @@ $labels = [
     'iiif-3' => 'Iiif manifest v3', // @translate
     'pdf2xml' => 'Text from pdf as xml', // @translate
 ];
+
+$texts = [
+    'data-text-warn' => $translate('Are you sure to download this file?'),
+    'data-text-warn-size' => $translate('Are you sure to download the file of {size}?'),
+    'data-text-no' => $translate('No'),
+    'data-text-yes' => $translate('Yes'),
+    'data-text-ok' => $translate('Ok'),
+    'data-text-queued' => $translate('The file is in queue. Reload the page later.'),
+    'data-text-units' => $translate('["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]'),
+];
+$textsAttrs = array_map(function($key, $value) use ($escapeAttr): string {
+    return $key . '="' . $escapeAttr($value) . '"';
+}, array_keys($texts), $texts);
+
+$this->headLink()->prependStylesheet($assetUrl('css/derivative-media.css', 'DerivativeMedia'));
+$this->headScript()->appendFile($assetUrl('js/derivative-media.js', 'DerivativeMedia'), 'text/javascript', ['defer' => 'defer']);
+
+$resourceId = $resource->id();
+$isMedia = $resource->getControllerName() === 'media';
 ?>
 
-<?php if ($derivatives): ?>
-
-<div class="derivative-medias">
-    <aside class="derivative-list" data-text-warn="<?= $translate('Are you sure to download this file?') ?>" data-text-warn-size="<?= $translate('Are you sure to download the file of {size}?') ?>" data-text-no="<?= $translate('No') ?>" data-text-yes="<?= $translate('Yes') ?>" data-text-ok="<?= $translate('Ok') ?>" data-text-queued="<?= $translate('The file is in queue. Reload the page later.') ?>" data-text-units="<?= $escapeAttr($translate('["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]')) ?>">
-        <ul>
+<div class="derivative-medias <?= $divclass ?>">
+    <?php if ($heading): ?>
+    <h4><?= $escape($heading) ?></h4>
+    <?php endif; ?>
+    <aside class="derivative-list value" <?= implode(' ', $textsAttrs) ?>>
+        <ul class="derivatives">
             <?php foreach ($derivatives as $type => $derivative): ?>
             <?php if (!empty($derivative['feasible'])): ?>
-            <li class="export-<?= $type ?>">
+            <li class="derivatives-<?= $type ?>">
                 <a href="#" data-url="<?= $derivative['url'] ?>" data-size="<?= $derivative['size'] ?>" class="derivative-media<?= $derivative['ready'] || $derivative['mode'] === 'live' ? '' : ' on-demand' ?>" download="<?= $resourceId . '.' . $derivative['extension'] ?>">
-                    <?= $translate($labels[$type]) ?>
+                    <?= $isMedia ? $derivative['extension'] : $translate($labels[$type]) ?>
                 </a>
             </li>
             <?php endif; ?>
@@ -45,5 +66,3 @@ $labels = [
         </ul>
     </aside>
 </div>
-
-<?php endif; ?>

@@ -17,6 +17,7 @@ class DerivativeMedia implements ResourcePageBlockLayoutInterface
     {
         return [
             'items',
+            'media',
         ];
     }
 

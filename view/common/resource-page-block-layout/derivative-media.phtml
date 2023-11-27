@@ -4,5 +4,14 @@
  * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
  */
 
-// Display the list of derivative media for the specified resource.
-echo $this->derivativeMedia($resource);
+// Display the list of derivatives for the specified resource.
+
+$plugins = $this->getHelperPluginManager();
+$translate = $plugins->get('translate');
+$derivatives = $plugins->get('derivatives');
+?>
+
+<?= $derivatives($resource, [
+    'heading' => $translate('Derivative files'), // @translate
+    'divclass' => 'block resource-block block-derivative-media',
+]) ?>
