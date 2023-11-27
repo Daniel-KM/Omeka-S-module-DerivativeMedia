@@ -19,10 +19,15 @@ return [
     ],
     'view_helpers' => [
         'invokables' => [
-            'derivativeMedia' => View\Helper\DerivativeMedia::class,
+            'derivatives' => View\Helper\Derivatives::class,
         ],
         'factories' => [
-            'hasDerivative' => Service\ViewHelper\HasDerivativeFactory::class,
+            'derivativeList' => Service\ViewHelper\DerivativeListFactory::class,
+        ],
+        /** @deprecated Old helpers. */
+        'aliases' => [
+            'derivativeMedia' => 'derivatives',
+            'hasDerivative' => 'derivativeList',
         ],
     ],
     'form_elements' => [

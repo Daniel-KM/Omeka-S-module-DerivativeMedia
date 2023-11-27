@@ -50,6 +50,7 @@ class Module extends AbstractModule
      * - dir (string): the destination dir of the type.
      * - size (bool): check the size to create the file dynamically or not for
      *   modes "live" and "dynamic_live".
+     * For media, mode is always static.
      *
      * @var array
      */

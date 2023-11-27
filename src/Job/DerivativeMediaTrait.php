@@ -450,6 +450,8 @@ trait DerivativeMediaTrait
 
     /**
      * Store or remove data about a derivative file (no flush).
+     *
+     * @todo Store size for performance and hash for security. Or create a new table?
      */
     protected function storeMetadata(Media $media, string $folder, ?string $basename = null, ?string $mediaType = null)
     {

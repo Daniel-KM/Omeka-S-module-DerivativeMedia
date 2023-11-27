@@ -5,27 +5,31 @@ namespace DerivativeMedia\View\Helper;
 use Laminas\View\Helper\AbstractHelper;
 use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
 
-class DerivativeMedia extends AbstractHelper
+class Derivatives extends AbstractHelper
 {
     /**
      * The default partial view script.
      */
-    const PARTIAL_NAME = 'common/derivative-media';
+    const PARTIAL_NAME = 'common/derivatives';
 
     /**
-     * Get the list of derivative media of a resource as html.
+     * Get the list of derivatives of a resource as html.
      *
-     * Managed options:
-     * - template
+     *@param array $options Managed options:
+     * - template (string): the template to use instead of the default one.
+     * Other options are passed to the template.
      */
     public function __invoke(AbstractResourceEntityRepresentation $resource, array $options = []): string
     {
         $view = $this->getView();
 
-        $vars = [
-            'resource' => $resource,
-            'options' => $options,
+        $options += [
+            'site' => null,
+            'derivatives' => $view->derivativeList($resource),
+            'template' => self::PARTIAL_NAME,
         ];
+
+        $vars = ['resource' => $resource] + $options;
 
         $assetUrl = $view->plugin('assetUrl');
         /*
