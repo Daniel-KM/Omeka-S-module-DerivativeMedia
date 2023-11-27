@@ -205,10 +205,10 @@ To protect files created dynamically (alto, text, zip…), add a rule in the fil
 Use the resource block "Derivative Media List" to display the list of available
 derivative of a resource.
 
-Or use the view helper `derivativeMedia()`:
+Or use the view helper `derivatives()`:
 
 ```php
-<?= $this->derivativeMedia($resource) ?>
+<?= $this->derivatives($resource) ?>
 ```
 
 
