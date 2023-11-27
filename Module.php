@@ -327,14 +327,24 @@ class Module extends AbstractModule
         );
 
         $sharedEventManager->attach(
+            'Omeka\Controller\Admin\Item',
+            'view.details',
+            [$this, 'handleViewShowAfterAdmin']
+        );
+        $sharedEventManager->attach(
+            'Omeka\Controller\Admin\Item',
+            'view.show.sidebar',
+            [$this, 'handleViewShowAfterAdmin']
+        );
+        $sharedEventManager->attach(
             'Omeka\Controller\Admin\Media',
             'view.details',
-            [$this, 'viewDetailsMedia']
+            [$this, 'handleViewShowAfterAdmin']
         );
         $sharedEventManager->attach(
             'Omeka\Controller\Admin\Media',
             'view.show.sidebar',
-            [$this, 'viewDetailsMedia']
+            [$this, 'handleViewShowAfterAdmin']
         );
 
         $sharedEventManager->attach(
@@ -450,13 +460,27 @@ class Module extends AbstractModule
         return true;
     }
 
-    public function viewDetailsMedia(Event $event): void
+    public function handleViewShowAfterAdmin(Event $event): void
     {
         $view = $event->getTarget();
-        /** @var \Omeka\Api\Representation\MediaRepresentation $media */
-        $media = $view->resource;
-        $data = $media->mediaData();
-        if (empty($data) || empty($data['derivative'])) {
+        /** @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource */
+        $resource = $view->resource;
+        // Quick skip for media.
+        $isMedia = $resource instanceof \Omeka\Api\Representation\MediaRepresentation;
+        if ($isMedia) {
+            $data = $resource->mediaData();
+            if (empty($data) || empty($data['derivative'])) {
+                return;
+            }
+        }
+
+        $html = $view->derivatives($resource, [
+            'heading' => $view->translate('Derivative files'), // @translate
+            'divclass' => 'meta-group',
+            'warn' => true,
+        ]);
+
+        if (!$html) {
             return;
         }
 
@@ -485,11 +509,7 @@ class Module extends AbstractModule
 </style>
 HTML;
 
-        echo $view->derivatives($media, [
-            'heading' => $view->translate('Derivative files'), // @translate
-            'divclass' => 'meta-group',
-            'warn' => false,
-        ]);
+        echo $html;
     }
 
     public function afterSaveItem(Event $event): void
