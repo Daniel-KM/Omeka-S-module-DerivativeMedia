@@ -837,7 +837,7 @@ HTML;
         if (!$checkFfmpeg && $warnMessage) {
             $messenger = $plugins->get('messenger');
             $message = new \Omeka\Stdlib\Message(
-                'The command-line utility "ffmpeg" should be installed and should be available in the cli path to make derivatives.' // @translate
+                'The command-line utility "ffmpeg" should be installed and should be available in the cli path to make audio and video derivatives.' // @translate
             );
             $messenger->addWarning($message);
         }
@@ -852,7 +852,7 @@ HTML;
         if (!$checkGhostcript && $warnMessage) {
             $messenger = $plugins->get('messenger');
             $message = new \Omeka\Stdlib\Message(
-                'The command-line utility "gs" (ghoscript) should be installed and should be available in the cli path to make derivatives.' // @translate
+                'The command-line utility "gs" (ghoscript) should be installed and should be available in the cli path to make pdf derivatives.' // @translate
             );
             $messenger->addWarning($message);
         }
