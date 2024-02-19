@@ -36,6 +36,13 @@ class DerivativeMediaMetadata extends DerivativeMediaFile
         // Always true expression to simplify process.
         $criteria->where($expr->gt('id', 0));
 
+        $queryItems = $this->getArg('query_items', []);
+        $itemIds = null;
+        if ($queryItems) {
+            $itemIds = $api->search('items', $queryItems, ['returnScalar' => 'id'])->getContent();
+            $itemIds = array_map('intval', $itemIds);
+        }
+
         $itemSets = $this->getArg('item_sets', []);
         if ($itemSets) {
             // TODO Include dql as a subquery.
@@ -47,7 +54,17 @@ WHERE item_set.id IN (:item_set_ids)
 DQL;
             $query = $this->entityManager->createQuery($dql);
             $query->setParameter('item_set_ids', $itemSets, \Doctrine\DBAL\Connection::PARAM_INT_ARRAY);
-            $itemIds = array_map('intval', array_column($query->getArrayResult(), 'id'));
+            $itemIds2 = array_map('intval', array_column($query->getArrayResult(), 'id'));
+            $itemIds = $itemIds ? array_intersect($itemIds, $itemIds2) : $itemIds2;
+        }
+
+        if (is_array($itemIds)) {
+            if (!count($itemIds)) {
+                $this->logger->warn(
+                    'The query or the list of item sets output no items.' // @translate
+                );
+                return;
+            }
             $criteria->andWhere($expr->in('item', $itemIds));
         }
 

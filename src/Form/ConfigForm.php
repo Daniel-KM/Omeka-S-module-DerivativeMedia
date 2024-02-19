@@ -58,6 +58,17 @@ class ConfigForm extends Form
         $fieldset = $this->get('fieldset_derivative_media');
         $fieldset
             ->add([
+                'name' => 'query_items',
+                'type' => OmekaElement\Query::class,
+                'options' => [
+                    'label' => 'Query items', // @translate
+                    'query_resource_type' => 'items',
+                ],
+                'attributes' => [
+                    'id' => 'query_items',
+                ],
+            ])
+            ->add([
                 'name' => 'item_sets',
                 'type' => CommonElement\OptionalItemSetSelect::class,
                 'options' => [

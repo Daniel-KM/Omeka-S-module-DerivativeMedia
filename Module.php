@@ -407,6 +407,7 @@ class Module extends AbstractModule
         $params = $params->toArray();
 
         if (empty($params['process_derivative_items'])
+            && empty($params['process_metadata_items'])
             && empty($params['process_derivative_media'])
             && empty($params['process_metadata_media'])
         ) {
@@ -442,7 +443,10 @@ class Module extends AbstractModule
             $job = $dispatcher->dispatch(\DerivativeMedia\Job\CreateDerivatives::class, $args);
             $message = 'Creating derivative media by items ({link_url}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
         } elseif (!empty($params['process_derivative_media'])) {
+            $queryItems = [];
+            parse_str($params['query_items'] ?? '', $queryItems);
             $args = [
+                'query_items' => $queryItems,
                 'item_sets' => $params['item_sets'] ?? [],
                 'ingesters' => $params['ingesters'] ?? [],
                 'renderers' => $params['renderers'] ?? [],
@@ -452,7 +456,10 @@ class Module extends AbstractModule
             $job = $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMediaFile::class, $args);
             $message = 'Creating derivative media ({link_url}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
         } elseif (!empty($params['process_metadata_media'])) {
+            $queryItems = [];
+            parse_str($params['query_items'] ?? '', $queryItems);
             $args = [
+                'query_items' => $queryItems,
                 'item_sets' => $params['item_sets'] ?? [],
                 'ingesters' => $params['ingesters'] ?? [],
                 'renderers' => $params['renderers'] ?? [],
