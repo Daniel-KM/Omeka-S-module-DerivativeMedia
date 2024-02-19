@@ -416,21 +416,29 @@ class Module extends AbstractModule
             return true;
         }
 
-        $hasFfmpeg = $this->checkFfmpeg(false);
-        if (!$hasFfmpeg) {
-            $message = 'The task requires command "ffmpeg".'; // @translate
-            $controller->messenger()->addWarning($message);
-            return true;
-        }
-
-        $hasGhostscript = $this->checkGhostscript(false);
-        if (!$hasGhostscript) {
-            $message = 'The task requires command "gs" (ghostscript).'; // @translate
-            $controller->messenger()->addWarning($message);
-            return true;
-        }
-
         $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+
+        $derivativeEnabled = $settings->get('derivativemedia_enable', []);
+
+        if (in_array('audio', $derivativeEnabled) || in_array('video', $derivativeEnabled)) {
+            $hasFfmpeg = $this->checkFfmpeg(false);
+            if (!$hasFfmpeg) {
+                $message = 'The command "ffmpeg" should be available on the server to convert audio or video.'; // @translate
+                $controller->messenger()->addWarning($message);
+                return true;
+            }
+        }
+
+        if (in_array('pdf', $derivativeEnabled) || in_array('pdf_media', $derivativeEnabled)) {
+            $hasGhostscript = $this->checkGhostscript(false);
+            if (!$hasGhostscript) {
+                $message = 'The command "gs" (ghostscript) should be available on the server to convert pdf.'; // @translate
+                $controller->messenger()->addWarning($message);
+                return true;
+            }
+        }
+
         $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
         $urlPlugin = $services->get('ControllerPluginManager')->get('url');
 
