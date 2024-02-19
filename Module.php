@@ -708,17 +708,17 @@ HTML;
         // Quick check item level and list types to process.
         $services = $this->getServiceLocator();
 
-        /** @var \Omeka\Api\Adapter\ItemAdapter $adapter */
+        /**
+         * @var \Omeka\Api\Adapter\ItemAdapter $adapter
+         * @var \DerivativeMedia\View\Helper\DerivativeList $derivativeList
+         */
         $adapter = $services->get('Omeka\ApiAdapterManager')->get('items');
+        $derivativeList = $services->get('ViewHelperManager')->get('derivativeList');
 
         /** @var \Omeka\Api\Representation\ItemRepresentation $item */
         $item = $adapter->getRepresentation($item);
 
-        /** @var \DerivativeMedia\View\Helper\DerivativeList $derivativeList */
-        $derivativeList = $services->get('ViewHelperManager')->get('derivativeList');
-
         // hasDerivative() checks for "dynamic_live", so no need to check here.
-
         $derivatives = $derivativeList($item);
 
         switch ($derivativeUpdate) {
