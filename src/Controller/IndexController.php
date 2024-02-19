@@ -119,9 +119,9 @@ class IndexController extends \Omeka\Controller\IndexController
                 }
             } else {
                 $args = [
-                    'itemId' => $item->id(),
+                    'item_id' => $item->id(),
                     'type' => $type,
-                    'dataMedia' => $dataMedia,
+                    'data_media' => $dataMedia,
                 ];
                 /** @var \Omeka\Job\Dispatcher $dispatcher */
                 $dispatcher = $this->jobDispatcher();

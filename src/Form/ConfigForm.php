@@ -14,14 +14,48 @@ class ConfigForm extends Form
     {
         $this
             ->add([
-                'name' => 'fieldset_derivative',
+                'name' => 'fieldset_derivative_items',
                 'type' => Fieldset::class,
                 'options' => [
-                    'label' => 'Create derivatives', // @translate
+                    'label' => 'Create derivatives by items', // @translate
                 ],
             ]);
 
-        $fieldset = $this->get('fieldset_derivative');
+        $fieldset = $this->get('fieldset_derivative_items');
+        $fieldset
+            ->add([
+                'name' => 'query',
+                'type' => OmekaElement\Query::class,
+                'options' => [
+                    'label' => 'Query items', // @translate
+                    'query_resource_type' => 'items',
+                ],
+                'attributes' => [
+                    'id' => 'query',
+                ],
+            ])
+            ->add([
+                'name' => 'process_derivative_items',
+                'type' => Element\Submit::class,
+                'options' => [
+                    'label' => 'Create derivative files by items in background', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'process_derivative_items',
+                    'value' => 'Process', // @translate
+                ],
+            ]);
+
+        $this
+            ->add([
+                'name' => 'fieldset_derivative_media',
+                'type' => Fieldset::class,
+                'options' => [
+                    'label' => 'Create derivatives by media', // @translate
+                ],
+            ]);
+
+        $fieldset = $this->get('fieldset_derivative_media');
         $fieldset
             ->add([
                 'name' => 'item_sets',
@@ -91,25 +125,25 @@ class ConfigForm extends Form
                 ],
             ])
             ->add([
-                'name' => 'process_derivative',
+                'name' => 'process_derivative_media',
                 'type' => Element\Submit::class,
                 'options' => [
                     'label' => 'Create derivative files in background', // @translate
                 ],
                 'attributes' => [
-                    'id' => 'process_derivative',
+                    'id' => 'process_derivative_media',
                     'value' => 'Process', // @translate
                 ],
             ])
             ->add([
-                'name' => 'process_metadata',
+                'name' => 'process_metadata_media',
                 'type' => Element\Submit::class,
                 'options' => [
                     'label' => 'Store metadata for existing files in directories', // @translate
                     'info' => 'When files are created outside of Omeka and copied in the right directories (webm/, mp3/, etc.) with the right names (same as original and extension), Omeka should record some metadata to be able to render them.', // @translate
                 ],
                 'attributes' => [
-                    'id' => 'process_metadata',
+                    'id' => 'process_metadata_media',
                     'value' => 'Update metadata', // @translate
                 ],
             ]);

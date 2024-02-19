@@ -406,8 +406,9 @@ class Module extends AbstractModule
         // TODO Check why data are empty.
         $params = $params->toArray();
 
-        if (empty($params['process_derivative'])
-            && empty($params['process_metadata'])
+        if (empty($params['process_derivative_items'])
+            && empty($params['process_derivative_media'])
+            && empty($params['process_metadata_media'])
         ) {
             $message = 'No job launched.'; // @translate
             $controller->messenger()->addWarning($message);
@@ -428,30 +429,38 @@ class Module extends AbstractModule
             return true;
         }
 
-        $process = $params;
-
-        unset($params['csrf']);
-        unset($params['process_derivative']);
-        unset($params['process_metadata']);
-
-        $params['item_sets'] ??= [];
-        $params['ingesters'] ??= [];
-        $params['renderers'] ??= [];
-        $params['media_types'] ??= [];
-        $params['media_ids'] ??= '';
-
         $services = $this->getServiceLocator();
         $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
         $urlPlugin = $services->get('ControllerPluginManager')->get('url');
 
-        if (!empty($process['process_metadata'])) {
-            unset($params['query']);
-            $job = $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMediaMetadata::class, $params);
-            $message = 'Storing metadata for existing files ({link}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
-        } elseif (!empty($process['process_derivative'])) {
-            unset($params['query']);
-            $job = $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMediaFile::class, $params);
+        if (!empty($params['process_derivative_items'])) {
+            $query = [];
+            parse_str($params['query'] ?? '', $query);
+            $args = [
+                'query' => $query,
+            ];
+            $job = $dispatcher->dispatch(\DerivativeMedia\Job\CreateDerivatives::class, $args);
+            $message = 'Creating derivative media by items ({link_url}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
+        } elseif (!empty($params['process_derivative_media'])) {
+            $args = [
+                'item_sets' => $params['item_sets'] ?? [],
+                'ingesters' => $params['ingesters'] ?? [],
+                'renderers' => $params['renderers'] ?? [],
+                'media_types' => $params['media_types'] ?? [],
+                'media_ids' => $params['media_ids'] ?? '',
+            ];
+            $job = $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMediaFile::class, $args);
             $message = 'Creating derivative media ({link_url}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
+        } elseif (!empty($params['process_metadata_media'])) {
+            $args = [
+                'item_sets' => $params['item_sets'] ?? [],
+                'ingesters' => $params['ingesters'] ?? [],
+                'renderers' => $params['renderers'] ?? [],
+                'media_types' => $params['media_types'] ?? [],
+                'media_ids' => $params['media_ids'] ?? '',
+            ];
+            $job = $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMediaMetadata::class, $args);
+            $message = 'Storing metadata for existing files ({link}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
         }
 
         $message = new PsrMessage(
@@ -584,7 +593,7 @@ HTML;
             }
             if ($convert) {
                 $args = [
-                    'itemId' => $item->getId(),
+                    'item_id' => $item->getId(),
                 ];
                 $dispatcher = $services->get('Omeka\Job\Dispatcher');
                 $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeItem::class, $args);
@@ -726,7 +735,7 @@ HTML;
         }
 
         $args = [
-            'itemId' => $item->id(),
+            'item_id' => $item->id(),
             'type' => array_keys($todo),
         ];
         $dispatcher = $services->get('Omeka\Job\Dispatcher');
