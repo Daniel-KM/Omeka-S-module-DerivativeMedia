@@ -32,12 +32,8 @@ return [
     ],
     'form_elements' => [
         'invokables' => [
-            Form\Element\OptionalMultiCheckbox::class => Form\Element\OptionalMultiCheckbox::class,
-            Form\Element\OptionalRadio::class => Form\Element\OptionalRadio::class,
+            Form\ConfigForm::class => Form\ConfigForm::class,
             Form\SettingsFieldset::class => Form\SettingsFieldset::class,
-        ],
-        'factories' => [
-            Form\ConfigForm::class => Service\Form\ConfigFormFactory::class,
         ],
     ],
     'resource_page_block_layouts' => [

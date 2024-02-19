@@ -2,38 +2,35 @@
 
 namespace DerivativeMedia;
 
-if (!class_exists(\Generic\AbstractModule::class)) {
-    require file_exists(dirname(__DIR__) . '/Generic/AbstractModule.php')
-        ? dirname(__DIR__) . '/Generic/AbstractModule.php'
-        : __DIR__ . '/src/Generic/AbstractModule.php';
+if (!class_exists(\Common\TraitModule::class)) {
+    require_once dirname(__DIR__) . '/Common/TraitModule.php';
 }
 
+use Common\Stdlib\PsrMessage;
+use Common\TraitModule;
 use DerivativeMedia\Form\ConfigForm;
-use Generic\AbstractModule;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Mvc\Controller\AbstractController;
 use Laminas\Mvc\MvcEvent;
 use Laminas\View\Renderer\PhpRenderer;
-use Log\Stdlib\PsrMessage;
 use Omeka\Entity\Media;
+use Omeka\Module\AbstractModule;
 use Omeka\Module\Exception\ModuleCannotInstallException;
 
 /**
  * Derivative Media
  *
- * Create derivative audio/video media files for cross-browser compatibility.
+ * Create derivative audio/video/pdf media files for cross-browser compatibility.
  *
- * @copyright Daniel Berthereau, 2020-2023
+ * @copyright Daniel Berthereau, 2020-2024
  * @license http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.txt
  */
 class Module extends AbstractModule
 {
-    const NAMESPACE = __NAMESPACE__;
+    use TraitModule;
 
-    protected $dependencies = [
-        'Log',
-    ];
+    const NAMESPACE = __NAMESPACE__;
 
     /**
      * Info about the process managed by the module.
@@ -217,10 +214,9 @@ class Module extends AbstractModule
         ],
     ];
 
-    public function getConfig()
-    {
-        return include __DIR__ . '/config/module.config.php';
-    }
+    protected $dependencies = [
+        'Common',
+    ];
 
     public function onBootstrap(MvcEvent $event): void
     {
@@ -235,6 +231,18 @@ class Module extends AbstractModule
     protected function preInstall(): void
     {
         $services = $this->getServiceLocator();
+        $plugins = $services->get('ControllerPluginManager');
+        $translate = $plugins->get('translate');
+        $messenger = $plugins->get('messenger');
+
+        if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActiveVersion('Common', '3.4.53')) {
+            $message = new \Omeka\Stdlib\Message(
+                $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
+                'Common', '3.4.53'
+            );
+            throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
+        }
+
         $config = $services->get('Config');
         $basePath = $config['file_store']['local']['base_path'] ?: (OMEKA_PATH . '/files');
         if (!is_dir($basePath) || !is_readable($basePath) || !is_writeable($basePath)) {
@@ -246,8 +254,6 @@ class Module extends AbstractModule
         }
 
         if (!class_exists('ZipArchive')) {
-            $plugins = $services->get('ControllerPluginManager');
-            $messenger = $plugins->get('messenger');
             $message = new PsrMessage(
                 'The extension "php-zip" should be installed on the server to create Zip files.', // @translate
             );
@@ -260,12 +266,12 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $plugins = $services->get('ControllerPluginManager');
         $messenger = $plugins->get('messenger');
-        $url = $plugins->get('url');
+        $urlPlugin = $plugins->get('url');
         $message = new PsrMessage(
-            'Before compressing files with config tasks, the settings should be set in {anchor}main settings{anchor_end}.', // @translate
+            'Before compressing files with config tasks, the settings should be set in {link_url}main settings{link_end}.', // @translate
             [
-                'anchor' => sprintf('<a href="%s">', $url->fromRoute('admin/default', ['controller' => 'setting', 'action' => 'browse'], ['fragment' => 'derivative-media'])),
-                'anchor_end' => '</a>',
+                'link_url' => sprintf('<a href="%s">', $urlPlugin->fromRoute('admin/default', ['controller' => 'setting', 'action' => 'browse'], ['fragment' => 'derivative-media'])),
+                'link_end' => '</a>',
             ]
         );
         $message->setEscapeHtml(false);
@@ -391,20 +397,13 @@ class Module extends AbstractModule
 
     public function handleConfigForm(AbstractController $controller)
     {
-        $services = $this->getServiceLocator();
-        $form = $services->get('FormElementManager')->get(ConfigForm::class);
-
-        $params = $controller->getRequest()->getPost();
-
-        $form->init();
-        $form->setData($params);
-        if (!$form->isValid()) {
-            $controller->messenger()->addErrors($form->getMessages());
+        if (!$this->handleConfigFormAuto($controller)) {
             return false;
         }
 
+        $params = $controller->getRequest()->getPost();
+
         // TODO Check why data are empty.
-        // $params = $form->getData();
         $params = $params->toArray();
 
         if (empty($params['process_derivative'])
@@ -441,7 +440,9 @@ class Module extends AbstractModule
         $params['media_types'] ??= [];
         $params['media_ids'] ??= '';
 
+        $services = $this->getServiceLocator();
         $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
+        $urlPlugin = $services->get('ControllerPluginManager')->get('url');
 
         if (!empty($process['process_metadata'])) {
             unset($params['query']);
@@ -450,20 +451,20 @@ class Module extends AbstractModule
         } elseif (!empty($process['process_derivative'])) {
             unset($params['query']);
             $job = $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMediaFile::class, $params);
-            $message = 'Creating derivative media ({link}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
+            $message = 'Creating derivative media ({link_url}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
         }
 
         $message = new PsrMessage(
             $message,
             [
-                'link' => sprintf('<a href="%s">',
-                    htmlspecialchars($controller->url()->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))
+                'link_url' => sprintf('<a href="%s">',
+                    htmlspecialchars($urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))
                 ),
                 'job_id' => $job->getId(),
                 'link_end' => '</a>',
                 'link_log' => sprintf('<a href="%1$s">', $this->isModuleActive('Log')
-                    ? $controller->url()->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])
-                    : $controller->url()->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()])),
+                    ? $urlPlugin->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])
+                    : $urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()])),
             ]
         );
         $message->setEscapeHtml(false);

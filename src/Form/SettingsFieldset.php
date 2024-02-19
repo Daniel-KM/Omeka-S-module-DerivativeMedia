@@ -2,7 +2,7 @@
 
 namespace DerivativeMedia\Form;
 
-use DerivativeMedia\Form\Element as DerivativeMediaElement;
+use Common\Form\Element as CommonElement;
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
 use Omeka\Form\Element as OmekaElement;
@@ -25,7 +25,7 @@ class SettingsFieldset extends Fieldset
             ->setOption('element_groups', $this->elementGroups)
             ->add([
                 'name' => 'derivativemedia_enable',
-                'type' => DerivativeMediaElement\OptionalMultiCheckbox::class,
+                'type' => CommonElement\OptionalMultiCheckbox::class,
                 'options' => [
                     'element_group' => 'derivative_media',
                     'label' => 'Formats to convert', // @translate
@@ -51,7 +51,7 @@ class SettingsFieldset extends Fieldset
             ])
             ->add([
                 'name' => 'derivativemedia_update',
-                'type' => DerivativeMediaElement\OptionalRadio::class,
+                'type' => CommonElement\OptionalRadio::class,
                 'options' => [
                     'element_group' => 'derivative_media',
                     'label' => 'Create or update derivative files on individual save (not batch process)', // @translate

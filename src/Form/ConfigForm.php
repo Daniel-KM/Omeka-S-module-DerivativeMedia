@@ -2,7 +2,7 @@
 
 namespace DerivativeMedia\Form;
 
-use Doctrine\DBAL\Connection;
+use Common\Form\Element as CommonElement;
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
 use Laminas\Form\Form;
@@ -10,11 +10,6 @@ use Omeka\Form\Element as OmekaElement;
 
 class ConfigForm extends Form
 {
-    /**
-     * @var \Doctrine\DBAL\Connection
-     */
-    protected $connection;
-
     public function init(): void
     {
         $this
@@ -30,7 +25,7 @@ class ConfigForm extends Form
         $fieldset
             ->add([
                 'name' => 'item_sets',
-                'type' => OmekaElement\ItemSetSelect::class,
+                'type' => CommonElement\OptionalItemSetSelect::class,
                 'options' => [
                     'label' => 'Item sets', // @translate
                 ],
@@ -39,55 +34,49 @@ class ConfigForm extends Form
                     'class' => 'chosen-select',
                     'multiple' => true,
                     'required' => false,
-                    'data-placeholder' => 'Select one or more item sets…', // @translate
+                    'data-placeholder' => 'Select item sets…', // @translate
                 ],
             ])
             ->add([
                 'name' => 'ingesters',
-                'type' => Element\Select::class,
+                'type' => CommonElement\MediaIngesterSelect::class,
                 'options' => [
-                    'label' => 'Ingesters to process', // @translate
-                    'empty_option' => 'All ingesters', // @translate
-                    'value_options' => $this->listIngesters(),
+                    'label' => 'Ingesters', // @translate
+                    'empty_option' => '',
                 ],
                 'attributes' => [
                     'id' => 'ingesters',
                     'class' => 'chosen-select',
                     'multiple' => true,
-                    'placeholder' => 'Select ingesters to process', // @ translate
-                    'data-placeholder' => 'Select ingesters to process', // @ translate
+                    'data-placeholder' => 'Select media ingesters…', // @ translate
                 ],
             ])
             ->add([
                 'name' => 'renderers',
-                'type' => Element\Select::class,
+                'type' => CommonElement\MediaRendererSelect::class,
                 'options' => [
-                    'label' => 'Renderers to process', // @translate
-                    'empty_option' => 'All renderers', // @translate
-                    'value_options' => $this->listRenderers(),
+                    'label' => 'Renderers', // @translate
+                    'empty_option' => '',
                 ],
                 'attributes' => [
                     'id' => 'renderers',
                     'class' => 'chosen-select',
                     'multiple' => true,
-                    'placeholder' => 'Select renderers to process', // @ translate
-                    'data-placeholder' => 'Select renderers to process', // @ translate
+                    'data-placeholder' => 'Select media renderers…', // @ translate
                 ],
             ])
             ->add([
                 'name' => 'media_types',
-                'type' => Element\Select::class,
+                'type' => CommonElement\MediaTypeSelect::class,
                 'options' => [
-                    'label' => 'Media types to process', // @translate
-                    'empty_option' => 'All media types', // @translate
-                    'value_options' => $this->listMediaTypes(),
+                    'label' => 'Media types', // @translate
+                    'empty_option' => '',
                 ],
                 'attributes' => [
                     'id' => 'media_types',
                     'class' => 'chosen-select',
                     'multiple' => true,
-                    'placeholder' => 'Select media types to process', // @ translate
-                    'data-placeholder' => 'Select media types to process', // @ translate
+                    'data-placeholder' => 'Select media types…', // @ translate
                 ],
             ])
             ->add([
@@ -124,63 +113,5 @@ class ConfigForm extends Form
                     'value' => 'Update metadata', // @translate
                 ],
             ]);
-
-        $this->getInputFilter()
-            ->get('fieldset_derivative')
-            ->add([
-                'name' => 'item_sets',
-                'required' => false,
-            ])
-            ->add([
-                'name' => 'ingesters',
-                'required' => false,
-            ])
-            ->add([
-                'name' => 'renderers',
-                'required' => false,
-            ])
-            ->add([
-                'name' => 'media_types',
-                'required' => false,
-            ]);
-    }
-
-    /**
-     * @return array
-     */
-    protected function listIngesters()
-    {
-        $sql = 'SELECT DISTINCT(ingester) FROM media ORDER BY ingester ASC';
-        $result = $this->connection->executeQuery($sql)->fetchFirstColumn();
-        return ['' => 'All ingesters'] // @translate
-            + array_combine($result, $result);
-    }
-
-    /**
-     * @return array
-     */
-    protected function listRenderers()
-    {
-        $sql = 'SELECT DISTINCT(renderer) FROM media ORDER BY renderer ASC';
-        $result = $this->connection->executeQuery($sql)->fetchFirstColumn();
-        return ['' => 'All renderers'] // @translate
-            + array_combine($result, $result);
-    }
-
-    /**
-     * @return array
-     */
-    protected function listMediaTypes()
-    {
-        $sql = 'SELECT DISTINCT(media_type) FROM media WHERE media_type IS NOT NULL AND media_type != "" ORDER BY media_type ASC';
-        $result = $this->connection->executeQuery($sql)->fetchFirstColumn();
-        return ['' => 'All media types'] // @translate
-            + array_combine($result, $result);
-    }
-
-    public function setConnection(Connection $connection): self
-    {
-        $this->connection = $connection;
-        return $this;
     }
 }
