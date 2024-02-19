@@ -32,9 +32,8 @@ At item level, some more formats are supported:
 The conversion uses [ffmpeg] and [ghostscript], two command-line tools that are
 generally installed by default on most servers. The commands are customizable.
 
-The process on pdf is currently not supported, but in a future version it will
-make them streamable and linearized (can be rendered before full loading),
-generally smaller for the same quality.
+The process on pdf allows to make them streamable and linearized (can be
+rendered before full loading), generally smaller for the same quality.
 
 
 Installation
@@ -48,7 +47,7 @@ Some formats used by this module requires server packages:
 If you use them, they should be installed on the server and available in the
 path.
 
-First, install the required module [Log] and the optional module [Generic].
+First, install the required module [Common].
 
 You can use the release zip to install it, or use and init the source.
 
@@ -128,13 +127,17 @@ webm/{filename}.webm = -c copy -c:v libvpx-vp9 -crf 30 -b:v 0 -deadline realtime
 mov/{filename}.mov   = -c copy -c:v libx264 -movflags +faststart -filter:v crop='floor(in_w/2)*2:floor(in_h/2)*2' -crf 22 -level 3 -preset ultrafast -tune film -pix_fmt yuv420p -c:a aac -qscale:a 2 -f mov
 mp4/{filename}.mp4   = -c copy -c:v libx264 -movflags +faststart -filter:v crop='floor(in_w/2)*2:floor(in_h/2)*2' -crf 22 -level 3 -preset ultrafast -tune film -pix_fmt yuv420p -c:a libmp3lame -qscale:a 2
 
-# Pdf (not supported yet, via gs)
-# see https://github.com/mattdesl/gsx-pdf-optimize
-pdfo/{filename}.pdf  = -sDEVICE=pdfwrite -dPDFSETTINGS=/screen -dNOPAUSE -dQUIET -dBATCH -dCompatibilityLevel=1.5 -dSubsetFonts=true -dCompressFonts=true -dEmbedAllFonts=true -sProcessColorModel=DeviceRGB -sColorConversionStrategy=RGB -sColorConversionStrategyForImages=RGB -dConvertCMYKImagesToRGB=true -dDetectDuplicateImages=true -dColorImageDownsampleType=/Bicubic -dColorImageResolution=300 -dGrayImageDownsampleType=/Bicubic -dGrayImageResolution=300 -dMonoImageDownsampleType=/Bicubic -dMonoImageResolution=300 -dDownsampleColorImages=true -dDoThumbnails=true -dCreateJobTicket=false -dPreserveEPSInfo=false -dPreserveOPIComments=false -dPreserveOverprintSettings=false -dUCRandBGInfo=/Remove
+# Pdf (supported via gs)
+# The default setting "/screen" output the smallest pdf readable on a screen.
+pdfs/{filename}.pdf' => '-dCompatibilityLevel=1.7 -dPDFSETTINGS=/screen
+# The default setting "/ebook" output a medium size pdf readable on any device.
+pdfe/{filename}.pdf' => '-dCompatibilityLevel=1.7 -dPDFSETTINGS=/ebook
+# Here an example with the most frequent params (see https://github.com/mattdesl/gsx-pdf-optimize)
+pdfo/{filename}.pdf  = -sDEVICE=pdfwrite -dPDFSETTINGS=/screen -dNOPAUSE -dQUIET -dBATCH -dCompatibilityLevel=1.7 -dSubsetFonts=true -dCompressFonts=true -dEmbedAllFonts=true -sProcessColorModel=DeviceRGB -sColorConversionStrategy=RGB -sColorConversionStrategyForImages=RGB -dConvertCMYKImagesToRGB=true -dDetectDuplicateImages=true -dColorImageDownsampleType=/Bicubic -dColorImageResolution=300 -dGrayImageDownsampleType=/Bicubic -dGrayImageResolution=300 -dMonoImageDownsampleType=/Bicubic -dMonoImageResolution=300 -dDownsampleColorImages=true -dDoThumbnails=true -dCreateJobTicket=false -dPreserveEPSInfo=false -dPreserveOPIComments=false -dPreserveOverprintSettings=false -dUCRandBGInfo=/Remove
 ```
 
-It's important to check the version of ffmpeg that is installed on the server,
-because the options may be different or may have been changed.
+It's important to check the version of ffmpeg and gs that is installed on the
+server, because the options may be different or may have been changed.
 
 
 ### External preparation
@@ -224,6 +227,7 @@ TODO
 - [ ] Add a check for fast start (mov,mp4,m4a,3gp,3g2,mj2).
 - [ ] Finalize for pdf.
 - [ ] Add a check of number of job before running job CreateDerivatives.
+- [ ] Pdf to tsv for iiif search
 
 
 Warning
@@ -274,7 +278,7 @@ of the CeCILL license and that you accept its terms.
 Copyright
 ---------
 
-* Copyright Daniel Berthereau, 2020-2023
+* Copyright Daniel Berthereau, 2020-2024
 
 First version of this module was done for [Archives sonores de poésie] of [Sorbonne Université].
 
@@ -282,8 +286,7 @@ First version of this module was done for [Archives sonores de poésie] of [Sorb
 [Derivative Media]: https://gitlab.com/Daniel-KM/Omeka-S-module-DerivativeMedia
 [Omeka S]: https://omeka.org/s
 [Installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
-[Generic]: https://gitlab.com/Daniel-KM/Omeka-S-module-Generic
-[Log]: https://gitlab.com/Daniel-KM/Omeka-S-module-Log
+[Common]: https://gitlab.com/Daniel-KM/Omeka-S-module-Common
 [Bulk Check]: https://gitlab.com/Daniel-KM/Omeka-S-module-BulkCheck
 [IIIF]: https://iiif.io
 [Iiif Search]: https://github.com/Symac/Omeka-S-module-IiifSearch
