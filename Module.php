@@ -666,7 +666,7 @@ HTML;
             $data = $media->getData();
             if (empty($data['derivative']) && $this->checkConvertAudioVideo($media)) {
                 $args = [
-                    'mediaId' => $media->getId(),
+                    'media_id' => $media->getId(),
                 ];
                 $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMedia::class, $args);
             }
