@@ -61,7 +61,7 @@ uncompress it in the `modules` directory.
 If the module was installed from the source, rename the name of the folder of
 the module to `DerivativeMedia`.
 
-See general end user documentation for [Installing a module] and follow the
+See general end user documentation for [installing a module] and follow the
 config instructions.
 
 
@@ -285,7 +285,7 @@ First version of this module was done for [Archives sonores de poésie] of [Sorb
 
 [Derivative Media]: https://gitlab.com/Daniel-KM/Omeka-S-module-DerivativeMedia
 [Omeka S]: https://omeka.org/s
-[Installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
+[installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
 [Common]: https://gitlab.com/Daniel-KM/Omeka-S-module-Common
 [Bulk Check]: https://gitlab.com/Daniel-KM/Omeka-S-module-BulkCheck
 [IIIF]: https://iiif.io
