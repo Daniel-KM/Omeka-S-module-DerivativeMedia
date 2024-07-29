@@ -4,8 +4,10 @@
  * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource Item or media
  * @var array $derivatives
  * @var string $heading
- * @var string $divclass
+ * @var string $class
  * @var bool $warn
+ *
+ * And passed options to helper Derivatives.
  */
 
 if (!$derivatives) return;
@@ -54,7 +56,7 @@ $resourceId = $resource->id();
 $isMedia = $resource->getControllerName() === 'media';
 ?>
 
-<div class="derivative-medias <?= $divclass ?>">
+<div class="derivative-medias <?= empty($class) ? '' : ' ' . $escapeAttr($class) ?>">
     <?php if ($heading): ?>
     <h4><?= $escape($heading) ?></h4>
     <?php endif; ?>

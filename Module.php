@@ -511,9 +511,10 @@ class Module extends AbstractModule
             }
         }
 
+        /** @see \DerivativeMedia\View\Helper\Derivatives */
         $html = $view->derivatives($resource, [
             'heading' => $view->translate('Derivative files'), // @translate
-            'divclass' => 'meta-group',
+            'class' => 'meta-group',
             'warn' => true,
         ]);
 

@@ -17,7 +17,7 @@ class Derivatives extends AbstractHelper
      *
      *@param array $options Managed options:
      * - heading (string): the title in the output.
-     * - divclass (string): a class to add to the main div.
+     * - class (string): a class to add to the main div.
      * - warn (bool): add css/js to warn user before download.
      * - template (string): the template to use instead of the default one.
      * Other options are passed to the template.
@@ -26,11 +26,18 @@ class Derivatives extends AbstractHelper
     {
         $view = $this->getView();
 
+        if (isset($options['divclass'])) {
+            $options['class'] = isset($options['class']) ? trim($options['class'] . ' ' . $options['divclass']) : trim((string) $options['divclass']);
+            $view->logger()->warn(
+                'The option "divclass" has been renamed "class". Check your theme and use blocks settings.' // @translate
+            );
+        }
+
         $options += [
             'site' => null,
             'derivatives' => $view->derivativeList($resource),
             'heading' => '',
-            'divclass' => '',
+            'class' => '',
             'warn' => false,
             'template' => self::PARTIAL_NAME,
         ];
