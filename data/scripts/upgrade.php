@@ -105,3 +105,10 @@ if (version_compare($oldVersion, '3.4.10', '<')) {
     $message->setEscapeHtml(false);
     $messenger->addSuccess($message);
 }
+
+if (version_compare($oldVersion, '3.4.12', '<')) {
+    $message = new PsrMessage(
+        'Helpers "derivativeMedia" and "hasDerivative" were renamed "derivatives" and "derivativeList".' // @translate
+    );
+    $messenger->addWarning($message);
+}
