@@ -169,10 +169,9 @@ class IndexController extends \Omeka\Controller\IndexController
         $headers = $response->getHeaders()
             ->addHeaderLine(sprintf('Content-Type: %s', $mediaType))
             ->addHeaderLine(sprintf('Content-Disposition: %s; filename="%s"', $dispositionMode, $filename))
-            ->addHeaderLine(sprintf('Content-Length: %s', $filesize))
+            // ->addHeaderLine('Content-Description', 'File Transfer')
             ->addHeaderLine('Content-Transfer-Encoding: binary');
         if ($cache) {
-            // Use this to open files directly.
             // Cache for 30 days.
             $headers
                 ->addHeaderLine('Cache-Control: private, max-age=2592000, post-check=2592000, pre-check=2592000')
@@ -201,8 +200,7 @@ class IndexController extends \Omeka\Controller\IndexController
                 }
             }
             // Check valid range to avoid hack.
-            $hasRange = ($start < $filesize && $end < $filesize && $start < $end)
-                && ($start > 0 || $end < ($filesize - 1));
+            $hasRange = $start >= 0 && $start <= $end && $end < $filesize;
         }
 
         if ($hasRange) {
