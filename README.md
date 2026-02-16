@@ -287,7 +287,7 @@ of the CeCILL license and that you accept its terms.
 Copyright
 ---------
 
-* Copyright Daniel Berthereau, 2020-2025
+* Copyright Daniel Berthereau, 2020-2026
 
 First version of this module was done for [Archives sonores de poésie] of [Sorbonne Université].
 
