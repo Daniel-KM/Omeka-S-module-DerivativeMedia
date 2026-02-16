@@ -64,6 +64,15 @@ the module to `DerivativeMedia`.
 See general end user documentation for [installing a module] and follow the
 config instructions.
 
+* For test
+
+The module includes a comprehensive test suite with unit and functional tests.
+Run them from the root of Omeka:
+
+```sh
+vendor/bin/phpunit -c modules/DerivativeMedia/phpunit.xml --testdox
+```
+
 
 Usage
 -----
@@ -278,7 +287,7 @@ of the CeCILL license and that you accept its terms.
 Copyright
 ---------
 
-* Copyright Daniel Berthereau, 2020-2024
+* Copyright Daniel Berthereau, 2020-2025
 
 First version of this module was done for [Archives sonores de poésie] of [Sorbonne Université].
 
