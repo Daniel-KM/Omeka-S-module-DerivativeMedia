@@ -308,7 +308,7 @@ TXT;
      */
     protected function prepareDerivativeZip(string $type, string $filepath, array $dataMedia, ?ItemRepresentation $item): ?bool
     {
-        if (!class_exists('ZipArchive')) {
+        if (!class_exists('ZipArchive', false)) {
             $this->logger->err('The php extension "php-zip" must be installed.'); // @translate
             return false;
         }

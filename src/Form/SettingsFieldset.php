@@ -36,6 +36,7 @@ class SettingsFieldset extends Fieldset
                         'zip' => 'Zip item files', // @translate
                         'zipm' => 'Zip item image/audio/video files', // @translate
                         'zipo' => 'Zip item other files', // @translate
+                        // Pdf are done from single pdf files too.
                         'pdf' => 'Pdf from images files', // @translate
                         'txt' => 'Single text file from by-page txt files', // @translate
                         'text' => 'Single text file from property "extracted text"', // @translate

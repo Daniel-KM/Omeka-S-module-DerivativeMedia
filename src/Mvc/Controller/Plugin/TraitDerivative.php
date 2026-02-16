@@ -56,7 +56,7 @@ trait TraitDerivative
                 && ($mainType !== 'image' && $mediaType !== 'application/pdf')
             ) {
                 continue;
-            } elseif ($type === 'pdf2xml' && ($mediaType !== 'application/pdf')) {
+            } elseif ($type === 'pdf2xml' && $mediaType !== 'application/pdf') {
                 continue;
             } elseif ($type === 'txt'
                 // Manage empty text file without content.

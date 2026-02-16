@@ -2,7 +2,7 @@
 
 namespace DerivativeMedia;
 
-if (!class_exists(\Common\TraitModule::class)) {
+if (!class_exists('Common\TraitModule', false)) {
     require_once dirname(__DIR__) . '/Common/TraitModule.php';
 }
 
@@ -170,6 +170,7 @@ class Module extends AbstractModule
             'dir' => 'text',
             'size' => true,
         ],
+        // TODO Add tsv output from ExtractOcr.
         'zip' => [
             'mode' => 'dynamic_live',
             'level' => 'item',
@@ -253,7 +254,7 @@ class Module extends AbstractModule
             throw new ModuleCannotInstallException((string) $message);
         }
 
-        if (!class_exists('ZipArchive')) {
+        if (!class_exists('ZipArchive', false)) {
             $message = new PsrMessage(
                 'The extension "php-zip" should be installed on the server to create Zip files.', // @translate
             );
@@ -264,13 +265,12 @@ class Module extends AbstractModule
     protected function postInstall(): void
     {
         $services = $this->getServiceLocator();
-        $plugins = $services->get('ControllerPluginManager');
-        $messenger = $plugins->get('messenger');
-        $urlPlugin = $plugins->get('url');
+        $messenger = $services->get('ControllerPluginManager')->get('messenger');
+        $urlHelper = $services->get('ViewHelperManager')->get('url');
         $message = new PsrMessage(
             'Before compressing files with config tasks, the settings should be set in {link_url}main settings{link_end}.', // @translate
             [
-                'link_url' => sprintf('<a href="%s">', $urlPlugin->fromRoute('admin/default', ['controller' => 'setting', 'action' => 'browse'], ['fragment' => 'derivative-media'])),
+                'link_url' => sprintf('<a href="%s">', $urlHelper('admin/default', ['controller' => 'setting', 'action' => 'browse'], ['fragment' => 'derivative-media'])),
                 'link_end' => '</a>',
             ]
         );
@@ -376,11 +376,11 @@ class Module extends AbstractModule
     {
         $services = $this->getServiceLocator();
 
-        $urlPlugin = $services->get('ControllerPluginManager')->get('url');
+        $urlHelper = $services->get('ViewHelperManager')->get('url');
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
         $message = new \Omeka\Stdlib\Message(
             'This page allows to launch background job to prepare static derivative files according to parameters set in %1$smain settings%2$s.', // @translate
-            sprintf('<a href="%s">', htmlspecialchars($urlPlugin->fromRoute('admin/default', ['controller' => 'setting'])) . '#derivativemedia_enable'),
+            sprintf('<a href="%s">', htmlspecialchars($urlHelper('admin/default', ['controller' => 'setting'])) . '#derivativemedia_enable'),
             '</a>'
         );
         $message->setEscapeHtml(false);
@@ -486,9 +486,9 @@ class Module extends AbstractModule
                 ),
                 'job_id' => $job->getId(),
                 'link_end' => '</a>',
-                'link_log' => sprintf('<a href="%1$s">', $this->isModuleActive('Log')
-                    ? $urlPlugin->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])
-                    : $urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()])),
+                'link_log' => class_exists('Log\Module', false)
+                    ? sprintf('<a href="%1$s">', $urlPlugin->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]]))
+                    : sprintf('<a href="%1$s" target="_blank">', $urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()])),
             ]
         );
         $message->setEscapeHtml(false);
@@ -518,30 +518,30 @@ class Module extends AbstractModule
             return;
         }
 
-        echo <<<'HTML'
-<style>
-@media screen {
-    .browse .derivative-medias h4 {
-        display: inline-block;
-    }
-    .browse .derivative-medias ul {
-        display: inline-block;
-        padding-left: 6px;
-    }
-    .browse .sidebar .derivative-medias ul,
-    .show .derivative-medias ul {
-        padding-left: 0;
-    }
-    .derivative-medias ul li {
-        list-style: none;
-        display: inline-block;
-    }
-    .derivative-medias ul li:not(:last-child):after {
-        content: ' · ';
-    }
-}
-</style>
-HTML;
+        $css = <<<'CSS'
+            @media all {
+                .browse .derivative-medias h4 {
+                    display: inline-block;
+                }
+                .browse .derivative-medias ul {
+                    display: inline-block;
+                    padding-left: 6px;
+                }
+                .browse .sidebar .derivative-medias ul,
+                .show .derivative-medias ul {
+                    padding-left: 0;
+                }
+                .derivative-medias ul li {
+                    list-style: none;
+                    display: inline-block;
+                }
+                .derivative-medias ul li:not(:last-child):after {
+                    content: ' · ';
+                }
+            }
+            CSS;
+        $headStyle = $this->getServiceLocator()->get('ViewHelperManager')->get('headStyle');
+        $headStyle->appendStyle($css);
 
         echo $html;
     }
