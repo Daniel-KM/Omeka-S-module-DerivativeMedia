@@ -182,10 +182,49 @@ class CreateDerivative extends AbstractPlugin
 
     protected function prepareDerivativePdf(string $filepath, array $dataMedia, ?ItemRepresentation $item): ?bool
     {
-        $files = array_column($dataMedia, 'filepath');
+        // The data media may contain both images and pdfs. Choose the best
+        // strategy: prefer pdfs if available (quicker and may have a text
+        // layer), else use images.
+        $images = [];
+        $pdfs = [];
+        foreach ($dataMedia as $data) {
+            if ($data['maintype'] === 'image') {
+                $images[] = $data;
+            } elseif ($data['mediatype'] === 'application/pdf') {
+                $pdfs[] = $data;
+            }
+        }
 
-        // Avoid to modify quality to speed process.
-        $command = sprintf('convert %s -quality 100 %s', implode(' ', array_map('escapeshellarg', $files)), escapeshellarg($filepath));
+        $countImages = count($images);
+        $countPdf = count($pdfs);
+
+        // When there are as many pdfs as images (±1), prefer pdfs: faster
+        // and they may contain a text layer.
+        // When there is only one pdf but multiple images, the single pdf
+        // is probably the whole document, so use images to rebuild.
+        $usePdf = $countPdf > 1
+            || ($countPdf === 1 && $countImages <= 1);
+
+        if ($usePdf && $countPdf) {
+            $files = array_column($pdfs, 'filepath');
+            // Use ghostscript to merge pdfs and preserve text layers.
+            $command = sprintf(
+                'gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=%s %s',
+                escapeshellarg($filepath),
+                implode(' ', array_map('escapeshellarg', $files))
+            );
+        } elseif ($countImages) {
+            $files = array_column($images, 'filepath');
+            // Avoid to modify quality to speed process.
+            $command = sprintf(
+                'convert %s -quality 100 %s',
+                implode(' ', array_map('escapeshellarg', $files)),
+                escapeshellarg($filepath)
+            );
+        } else {
+            return false;
+        }
+
         $result = $this->cli->execute($command);
 
         return $result !== false;

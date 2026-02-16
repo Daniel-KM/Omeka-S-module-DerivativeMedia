@@ -11,12 +11,12 @@
  */
 
 if (!$derivatives) return;
+if (!array_filter(array_column($derivatives, 'feasible'))) return;
 
-$plugins = $this->getHelperPluginManager();
-$escape = $plugins->get('escapeHtml');
-$assetUrl = $plugins->get('assetUrl');
-$translate = $plugins->get('translate');
-$escapeAttr = $plugins->get('escapeHtmlAttr');
+$escape = $this->plugin('escapeHtml');
+$assetUrl = $this->plugin('assetUrl');
+$translate = $this->plugin('translate');
+$escapeAttr = $this->plugin('escapeHtmlAttr');
 
 $labels = [
     'zip' => 'Zip of all files', // @translate
@@ -31,9 +31,7 @@ $labels = [
     'pdf2xml' => 'Text from pdf as xml', // @translate
 ];
 
-$escapeAttrs = function($key, $value) use ($escapeAttr): string {
-    return $key . '="' . $escapeAttr($value) . '"';
-};
+$escapeAttrs = fn($key, $value): string => $key . '="' . $escapeAttr($value) . '"';
 
 $textsAttrs = '';
 if ($warn) {

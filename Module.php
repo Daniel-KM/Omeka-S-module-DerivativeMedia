@@ -502,13 +502,9 @@ class Module extends AbstractModule
         $view = $event->getTarget();
         /** @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource */
         $resource = $view->resource;
-        // Quick skip for media.
-        $isMedia = $resource instanceof \Omeka\Api\Representation\MediaRepresentation;
-        if ($isMedia) {
-            $data = $resource->mediaData();
-            if (empty($data) || empty($data['derivative'])) {
-                return;
-            }
+        $derivatives = $view->derivativeList($resource);
+        if (!$derivatives || !array_filter(array_column($derivatives, 'feasible'))) {
+            return;
         }
 
         /** @see \DerivativeMedia\View\Helper\Derivatives */

@@ -53,9 +53,7 @@ trait TraitDerivative
             } elseif ($type === 'iiif-3' && !in_array($mainType, ['image', 'audio', 'video'])) {
                 continue;
             } elseif ($type === 'pdf'
-                && ($mainType !== 'image')
-                // TODO Get image and pdf to manage the case there are pdf too.
-                // && ($mainType !== 'image' || $mediaType !== 'application/pdf')
+                && ($mainType !== 'image' && $mediaType !== 'application/pdf')
             ) {
                 continue;
             } elseif ($type === 'pdf2xml' && ($mediaType !== 'application/pdf')) {
