@@ -51,15 +51,15 @@ class DerivativeMediaFile extends AbstractJob
             $itemIds = array_map('intval', $itemIds);
         }
 
-        $itemSets = $this->getArg('item_sets', []);
+        $itemSets = array_values($this->getArg('item_sets', []));
         if ($itemSets) {
             // TODO Include dql as a subquery.
-            $dql = <<<DQL
-SELECT item.id
-FROM Omeka\Entity\Item item
-JOIN item.itemSets item_set
-WHERE item_set.id IN (:item_set_ids)
-DQL;
+            $dql = <<<'DQL'
+                SELECT item.id
+                FROM Omeka\Entity\Item item
+                JOIN item.itemSets item_set
+                WHERE item_set.id IN (:item_set_ids)
+                DQL;
             $query = $this->entityManager->createQuery($dql);
             $query->setParameter('item_set_ids', $itemSets, \Doctrine\DBAL\Connection::PARAM_INT_ARRAY);
             $itemIds2 = array_map('intval', array_column($query->getArrayResult(), 'id'));
