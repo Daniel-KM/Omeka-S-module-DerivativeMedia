@@ -2,8 +2,10 @@
 
 namespace DerivativeMedia;
 
-if (!class_exists('Common\TraitModule', false)) {
-    require_once dirname(__DIR__) . '/Common/TraitModule.php';
+if (!class_exists(\Common\TraitModule::class)) {
+    require_once file_exists(dirname(__DIR__) . '/Common/src/TraitModule.php')
+        ? dirname(__DIR__) . '/Common/src/TraitModule.php'
+        : dirname(__DIR__) . '/Common/TraitModule.php';
 }
 
 use Common\Stdlib\PsrMessage;
@@ -250,10 +252,10 @@ class Module extends AbstractModule
         }
 
         // Check the optional module Iiif Server for incompatibility.
-        if ($this->isModuleActive('IiifServer') && !$this->isModuleVersionAtLeast('IiifServer', '3.6.18')) {
+        if ($this->isModuleActive('IiifServer') && !$this->isModuleVersionAtLeast('IiifServer', '3.6.28')) {
             $message = new \Omeka\Stdlib\Message(
                 $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
-                'Iiif Server', '3.6.18'
+                'Iiif Server', '3.6.28'
             );
             throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
         }
@@ -766,7 +768,7 @@ class Module extends AbstractModule
 
         // If types are only iiif and IiifServer is installed, skip job, because
         // it is already managed by the module.
-        $hasIiifServer = $this->checkModuleActiveVersion('IiifServer', '3.6.18');
+        $hasIiifServer = $this->checkModuleActiveVersion('IiifServer', '3.6.28');
         $todoKeys = array_keys($todo);
         if ($hasIiifServer
             && ($todoKeys === ['iiif-2'] || $todoKeys === ['iiif-3'] || $todoKeys === ['iiif-2', 'iiif-3'])

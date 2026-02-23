@@ -76,7 +76,6 @@ if (version_compare($oldVersion, '3.4.8', '<')) {
 
 if (version_compare($oldVersion, '3.4.9', '<')) {
     $settings->set('derivativemedia_converters_pdf', $configLocal['derivativemedia']['settings']['derivativemedia_converters_pdf']);
-    $settings->set('derivativemedia_append_original_pdf', $configLocal['derivativemedia']['settings']['derivativemedia_append_original_pdf']);
 
     $message = new PsrMessage(
         'Helpers "derivativeMedia" and "hasDerivative" were renamed "derivatives" and "derivativeList".' // @translate
@@ -93,10 +92,10 @@ if (version_compare($oldVersion, '3.4.9', '<')) {
 
 if (version_compare($oldVersion, '3.4.10', '<')) {
     // Check the optional module Iiif Server for incompatibility.
-    if ($this->isModuleActive('IiifServer') && !$this->isModuleVersionAtLeast('IiifServer', '3.6.18')) {
+    if ($this->isModuleActive('IiifServer') && !$this->isModuleVersionAtLeast('IiifServer', '3.6.28')) {
         $message = new \Omeka\Stdlib\Message(
             $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
-            'Iiif Server', '3.6.18'
+            'Iiif Server', '3.6.28'
         );
         throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
     }
@@ -121,4 +120,25 @@ if (version_compare($oldVersion, '3.4.12', '<')) {
         'Helpers "derivativeMedia" and "hasDerivative" were renamed "derivatives" and "derivativeList".' // @translate
     );
     $messenger->addWarning($message);
+}
+
+if (version_compare($oldVersion, '3.4.14', '<')) {
+    $settings->set('derivativemedia_converters_image', $configLocal['derivativemedia']['settings']['derivativemedia_converters_image']);
+    $settings->set('derivativemedia_append_original_image', $configLocal['derivativemedia']['settings']['derivativemedia_append_original_image']);
+
+    $message = new PsrMessage(
+        'It is now possible to create image derivatives (webp, avif, etc.) via ImageMagick. Check {link_url}new settings{link_end}.', // @translate
+        ['link_url' => sprintf('<a href="%s">', $url('admin/default', ['controller' => 'setting'], ['fragment' => 'derivativemedia_enable'])), 'link_end' => '</a>']
+    );
+    $message->setEscapeHtml(false);
+    $messenger->addSuccess($message);
+
+    $settings->set('derivativemedia_ocr_language', $configLocal['derivativemedia']['settings']['derivativemedia_ocr_language']);
+
+    $message = new PsrMessage(
+        'The pdf builder now adds an ocr text layer via ocrmypdf when available. Check {link_url}new settings{link_end}.', // @translate
+        ['link_url' => sprintf('<a href="%s">', $url('admin/default', ['controller' => 'setting'], ['fragment' => 'derivativemedia_ocr_language'])), 'link_end' => '</a>']
+    );
+    $message->setEscapeHtml(false);
+    $messenger->addSuccess($message);
 }
