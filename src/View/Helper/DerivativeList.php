@@ -168,7 +168,7 @@ class DerivativeList extends AbstractHelper
             // TODO Output zip file directly as stream to avoid limit issue.
 
             if (Module::DERIVATIVES[$type]['mode'] === 'dynamic_live') {
-                $derivativeMode = !$size || $size >= $this->maxSizeLive
+                $derivativeMode = !$size || $size >= $this->maxSizeLive * 1048576
                     ? 'dynamic'
                     : 'live';
             } else {

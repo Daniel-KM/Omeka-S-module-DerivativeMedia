@@ -104,8 +104,8 @@ class IndexController extends \Omeka\Controller\IndexController
                 && (
                     Module::DERIVATIVES[$type]['mode'] === 'live'
                     || (Module::DERIVATIVES[$type]['mode'] === 'dynamic_live'
-                        && Module::DERIVATIVES[$type]['size']
-                        && Module::DERIVATIVES[$type]['size'] < (int) $this->settings()->get('derivativemedia_max_size_live', 30)
+                        && !empty(Module::DERIVATIVES[$type]['size'])
+                        && array_sum(array_column($dataMedia, 'size')) < (int) $this->settings()->get('derivativemedia_max_size_live', 30) * 1048576
                     )
                 )
             ) {
