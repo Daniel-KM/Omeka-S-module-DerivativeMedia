@@ -114,6 +114,7 @@ return [
             'derivativemedia_append_original_image' => false,
             'derivativemedia_append_original_audio' => false,
             'derivativemedia_append_original_video' => false,
+            'derivativemedia_ocr_language' => 'fra+eng',
         ],
     ],
 ];

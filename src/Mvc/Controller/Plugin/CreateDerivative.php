@@ -196,24 +196,56 @@ class CreateDerivative extends AbstractPlugin
         }
 
         $countImages = count($images);
-        $countPdf = count($pdfs);
+        $countPdfs = count($pdfs);
 
-        // When there are as many pdfs as images (±1), prefer pdfs: faster
-        // and they may contain a text layer.
-        // When there is only one pdf but multiple images, the single pdf
-        // is probably the whole document, so use images to rebuild.
-        $usePdf = $countPdf > 1
-            || ($countPdf === 1 && $countImages <= 1);
+        if (!$countImages && !$countPdfs) {
+            return false;
+        }
 
-        if ($usePdf && $countPdf) {
+        // Determine strategy.
+        // When there are multiple pdfs and multiple images, check if one
+        // pdf is a "global" multi-page document among single-page pdfs
+        // (scans). In that case, prefer images to rebuild a clean pdf.
+        $useImages = false;
+        if ($countPdfs > 1 && $countImages > 1) {
+            $pageCounts = $this->pdfPageCounts($pdfs);
+            $multiPage = array_filter($pageCounts, fn($c) => $c > 1);
+            if (count($multiPage) === 1
+                && (count($pageCounts) - count($multiPage)) >= 2
+            ) {
+                $useImages = true;
+            }
+        }
+
+        $command = null;
+
+        if ($useImages && $countImages) {
+            // Rebuild from images: the multi-page pdf is the global
+            // document, use individual images instead.
+            $files = array_column($images, 'filepath');
+            $command = sprintf(
+                'convert %s -quality 100 %s',
+                implode(' ', array_map('escapeshellarg', $files)),
+                escapeshellarg($filepath)
+            );
+        } elseif ($countPdfs === 1 && $countImages <= 1) {
+            // Single pdf: copy it directly.
+            $source = (reset($pdfs))['filepath'];
+            if (!copy($source, $filepath)) {
+                $this->logger->err('Unable to copy the source pdf.'); // @translate
+                return false;
+            }
+        } elseif ($countPdfs > 1) {
+            // Multiple pdfs: merge with ghostscript to preserve text
+            // layers.
             $files = array_column($pdfs, 'filepath');
-            // Use ghostscript to merge pdfs and preserve text layers.
             $command = sprintf(
                 'gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=%s %s',
                 escapeshellarg($filepath),
                 implode(' ', array_map('escapeshellarg', $files))
             );
         } elseif ($countImages) {
+            // Images only: convert to pdf.
             $files = array_column($images, 'filepath');
             // Avoid to modify quality to speed process.
             $command = sprintf(
@@ -225,9 +257,107 @@ class CreateDerivative extends AbstractPlugin
             return false;
         }
 
+        if ($command !== null) {
+            $result = $this->cli->execute($command);
+            if ($result === false) {
+                return false;
+            }
+        }
+
+        if (!file_exists($filepath) || !filesize($filepath)) {
+            return false;
+        }
+
+        // Add OCR text layer if available and needed.
+        $this->ocrPdfIfNeeded($filepath);
+
+        return true;
+    }
+
+    /**
+     * Add an OCR text layer to a pdf if ocrmypdf is available and the
+     * pdf has no (or insufficient) text.
+     */
+    protected function ocrPdfIfNeeded(string $filepath): void
+    {
+        // Check if ocrmypdf is available.
+        if (shell_exec('hash ocrmypdf 2>&- || echo 1')) {
+            return;
+        }
+
+        if ($this->pdfHasTextLayer($filepath)) {
+            return;
+        }
+
+        $language = $this->settings->get(
+            'derivativemedia_ocr_language',
+            'fra+eng'
+        );
+
+        $ocrFilepath = $filepath . '.ocr.pdf';
+        $command = sprintf(
+            'ocrmypdf -l %s --skip-text %s %s',
+            escapeshellarg($language),
+            escapeshellarg($filepath),
+            escapeshellarg($ocrFilepath)
+        );
         $result = $this->cli->execute($command);
 
-        return $result !== false;
+        if ($result !== false
+            && file_exists($ocrFilepath) && filesize($ocrFilepath)
+        ) {
+            rename($ocrFilepath, $filepath);
+        } else {
+            @unlink($ocrFilepath);
+        }
+    }
+
+    /**
+     * Check if a pdf has a text layer (threshold: 100 chars per page
+     * after trim).
+     */
+    protected function pdfHasTextLayer(string $filepath): bool
+    {
+        $pageCount = $this->pdfPageCount($filepath);
+        if (!$pageCount) {
+            return false;
+        }
+
+        $command = sprintf('pdftotext %s -', escapeshellarg($filepath));
+        $text = $this->cli->execute($command);
+        if ($text === false) {
+            return false;
+        }
+
+        return strlen(trim($text)) >= ($pageCount * 100);
+    }
+
+    protected function pdfPageCount(string $filepath): int
+    {
+        $command = sprintf(
+            'pdfinfo %s',
+            escapeshellarg($filepath)
+        );
+        $output = $this->cli->execute($command);
+        if ($output === false) {
+            return 0;
+        }
+        if (preg_match('/Pages:\s+(\d+)/', $output, $matches)) {
+            return (int) $matches[1];
+        }
+        return 0;
+    }
+
+    /**
+     * @return int[] Page count for each pdf.
+     */
+    protected function pdfPageCounts(array $pdfs): array
+    {
+        $counts = [];
+        foreach ($pdfs as $pdf) {
+            $counts[] = $this->pdfPageCount($pdf['filepath']);
+        }
+        return $counts;
     }
 
     protected function prepareDerivativePdf2Xml(string $filepath, array $dataMedia, ?ItemRepresentation $item): ?bool

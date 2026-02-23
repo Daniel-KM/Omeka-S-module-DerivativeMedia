@@ -178,6 +178,18 @@ class SettingsFieldset extends Fieldset
                     'rows' => 5,
                 ],
             ])
+            ->add([
+                'name' => 'derivativemedia_ocr_language',
+                'type' => Element\Text::class,
+                'options' => [
+                    'element_group' => 'derivative_media',
+                    'label' => 'OCR language for pdf (ocrmypdf)', // @translate
+                    'info' => 'Tesseract language codes, e.g. "fra+eng". Used when building a pdf from images or when the pdf has no text layer. Requires ocrmypdf.', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'derivativemedia_ocr_language',
+                ],
+            ])
         ;
     }
 }
