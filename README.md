@@ -19,11 +19,11 @@ At item level, some more formats are supported:
 - `iiif/2` and `iiif/3`: Allow to cache [IIIF] manifests (v2 and v3) for items
   with many medias or many visitors, so it can be used by module [Iiif Server]
   or any other external Iiif viewer.
-- `text`: If text files are attached to the item, they can be gathered in a single
-  one.
+- `text`: If text files are attached to item, they can be gathered in a single one.
 - `text`: If text is available in media values "extracttext:extracted_text", they
   can be gathered in a single one.
-- `pdf`: concatenate all images in a single pdf file (require ImageMagick).
+- `pdf`: build a single pdf from images and/or pdf files, with optional ocr text
+  layer via ocrmypdf.
 - `pdf2xml`: extract text layer from pdf and create an xml for iiif search.
 - `zip`: zip all files.
 - `zip media`: zip all media files (audio, video, images).
@@ -42,7 +42,9 @@ Installation
 Some formats used by this module requires server packages:
 - `ffmpeg` for audio and video
 - `ghostscript` with command `gs` for pdf
-- `pdftotext` from package poppler-utils for format pdf2xml
+- `pdftotext` and `pdfinfo` from package poppler-utils for format pdf2xml
+  and text layer detection
+- `ocrmypdf` (optional) for adding an OCR text layer to built pdfs
 
 If you use them, they should be installed on the server and available in the
 path.
@@ -237,6 +239,9 @@ TODO
 - [ ] Finalize for pdf.
 - [ ] Add a check of number of job before running job CreateDerivatives.
 - [ ] Pdf to tsv for iiif search
+- [ ] Support pdf_media: create derivative pdf from media-level pdfs (per-page ocr, merge).
+- [ ] Option to remove original (issue on gitlab).
+- [ ] Option to replace original? This is risky, it should be checked first, but how?
 
 
 Warning
