@@ -102,13 +102,6 @@ class CreateDerivative extends AbstractPlugin
             return false;
         }
 
-        if (file_exists($filepath)) {
-            if (!unlink($filepath)) {
-                $this->logger->err('Unable to remove existing file.'); // @translate
-                return false;
-            }
-        }
-
         // Use a temp file to avoid concurrent processes (two users request it).
         $tempFilepath = $this->tempFilepath($filepath);
 
@@ -116,6 +109,13 @@ class CreateDerivative extends AbstractPlugin
         if (file_exists($tempFilepath)) {
             $this->logger->warn('The derivative is currently beeing created.'); // @translate
             return null;
+        }
+
+        if (file_exists($filepath)) {
+            if (!unlink($filepath)) {
+                $this->logger->err('Unable to remove existing file.'); // @translate
+                return false;
+            }
         }
 
         if ($type === 'alto') {
