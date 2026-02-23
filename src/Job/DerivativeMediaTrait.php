@@ -48,6 +48,11 @@ trait DerivativeMediaTrait
     protected $hasGhostscript;
 
     /**
+     * @var bool
+     */
+    protected $hasImageMagick;
+
+    /**
      * @var array
      */
     protected $converters;
@@ -64,12 +69,14 @@ trait DerivativeMediaTrait
         $plugins = $services->get('ControllerPluginManager');
         $checkFfmpeg = $plugins->get('checkFfmpeg');
         $checkGhostscript = $plugins->get('checkGhostscript');
+        $checkImageMagick = $plugins->get('checkImageMagick');
         $this->hasFfmpeg = $checkFfmpeg();
         $this->hasGhostscript = $checkGhostscript();
+        $this->hasImageMagick = $checkImageMagick();
 
-        if (!$this->hasFfmpeg && !$this->hasGhostscript) {
+        if (!$this->hasFfmpeg && !$this->hasGhostscript && !$this->hasImageMagick) {
             $message = new \Omeka\Stdlib\Message(
-                'The command-line utility "ffmpeg" and/or "gs" (ghostscript) should be installed and should be available in the cli path to make derivatives.' // @translate
+                'The command-line utility "ffmpeg", "gs" (ghostscript), and/or "convert"/"magick" (ImageMagick) should be installed and should be available in the cli path to make derivatives.' // @translate
             );
             $this->logger->err($message);
             return;
@@ -79,6 +86,7 @@ trait DerivativeMediaTrait
             return !empty($v) && mb_strlen(trim($k)) && mb_substr(trim($k), 0, 1) !== '#';
         };
         $settings = $services->get('Omeka\Settings');
+        $this->converters['image'] = array_filter($settings->get('derivativemedia_converters_image', []), $removeCommented, ARRAY_FILTER_USE_BOTH);
         $this->converters['audio'] = array_filter($settings->get('derivativemedia_converters_audio', []), $removeCommented, ARRAY_FILTER_USE_BOTH);
         $this->converters['video'] = array_filter($settings->get('derivativemedia_converters_video', []), $removeCommented, ARRAY_FILTER_USE_BOTH);
         $this->converters['pdf'] = array_filter($settings->get('derivativemedia_converters_pdf', []), $removeCommented, ARRAY_FILTER_USE_BOTH);
@@ -148,10 +156,11 @@ trait DerivativeMediaTrait
     {
         static $errorFfmpeg = false;
         static $errorGhostscript = false;
+        static $errorImageMagick = false;
 
         $mediaType = (string) $media->getMediaType();
         $mainMediaType = strtok($mediaType, '/');
-        $commonType = in_array($mainMediaType, ['audio', 'video'])
+        $commonType = in_array($mainMediaType, ['image', 'audio', 'video'])
             ? $mainMediaType
             : ($mediaType === 'application/pdf' ? 'pdf' : null);
 
@@ -175,6 +184,17 @@ trait DerivativeMediaTrait
                 $errorGhostscript = true;
                 $message = new \Omeka\Stdlib\Message(
                     'The command-line utility "gs" (ghostscript) should be installed and should be available in the cli path to make derivatives.' // @translate
+                );
+                $this->logger->err($message);
+            }
+            return false;
+        }
+
+        if ($commonType === 'image' && !$this->hasImageMagick) {
+            if (!$errorImageMagick) {
+                $errorImageMagick = true;
+                $message = new \Omeka\Stdlib\Message(
+                    'The command-line utility "magick" or "convert" (ImageMagick) should be installed and should be available in the cli path to make image derivatives.' // @translate
                 );
                 $this->logger->err($message);
             }
@@ -297,9 +317,15 @@ trait DerivativeMediaTrait
             $tempFile->delete();
             $tempFile->setTempPath($tempPath);
 
-            $command = $commonType === 'pdf'
-                ? sprintf('gs -sDEVICE=pdfwrite -dNOPAUSE -dQUIET -dBATCH %1$s -o %2$s %3$s', $command, escapeshellarg($tempPath), escapeshellarg($sourcePath))
-                : sprintf('ffmpeg -i %1$s %2$s %3$s', escapeshellarg($sourcePath), $command, escapeshellarg($tempPath));
+            if ($commonType === 'pdf') {
+                $command = sprintf('gs -sDEVICE=pdfwrite -dNOPAUSE -dQUIET -dBATCH %1$s -o %2$s %3$s', $command, escapeshellarg($tempPath), escapeshellarg($sourcePath));
+            } elseif ($commonType === 'image') {
+                // Use magick (v7+) if available, else convert (v6).
+                $bin = !shell_exec('hash magick 2>&- || echo 1') ? 'magick' : 'convert';
+                $command = sprintf('%1$s %2$s %3$s %4$s', $bin, escapeshellarg($sourcePath), $command, escapeshellarg($tempPath));
+            } else {
+                $command = sprintf('ffmpeg -i %1$s %2$s %3$s', escapeshellarg($sourcePath), $command, escapeshellarg($tempPath));
+            }
 
             $output = $this->cli->execute($command);
 
@@ -331,11 +357,12 @@ trait DerivativeMediaTrait
             }
 
             $mediaType = $tempFile->getMediaType();
-            if ((in_array($commonType, ['audio', 'video']) && !in_array(strtok($mediaType, '/'), ['audio', 'video']))
+            if (($commonType === 'image' && strtok($mediaType, '/') !== 'image')
+                || (in_array($commonType, ['audio', 'video']) && !in_array(strtok($mediaType, '/'), ['audio', 'video']))
                 || ($commonType === 'pdf' && $mediaType !== 'application/pdf')
             ) {
                 $this->logger->err(
-                    'Media #{media_id}: derivative media is not audio, video, or pdf, but "{mediatype}" ({filename}).', // @translate
+                    'Media #{media_id}: derivative media is not an image, audio, video, or pdf, but "{mediatype}" ({filename}).', // @translate
                     ['media_id' => $media->getId(), 'mediatype' => $mediaType, 'filename' => $storageName]
                 );
                 $tempFile->delete();
@@ -521,14 +548,19 @@ trait DerivativeMediaTrait
         return $this;
     }
 
-    protected function isManaged(Media $media)
+    /**
+     * Copy:
+     * @see \DerivativeMedia\Job\DerivativeMediaTrait:::isManaged()
+     * @see \DerivativeMedia\Module::isManaged()
+     */
+    protected function isManaged(Media $media): bool
     {
         $mediaType = $media->getMediaType();
         return $mediaType
             && $media->hasOriginal()
             && $media->getRenderer() === 'file'
             && (
-                in_array(strtok($mediaType, '/'), ['audio', 'video'])
+                in_array(strtok($mediaType, '/'), ['image', 'audio', 'video'])
                 || $mediaType === 'application/pdf'
             );
     }

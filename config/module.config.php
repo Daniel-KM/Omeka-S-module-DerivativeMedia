@@ -50,6 +50,7 @@ return [
         'invokables' => [
             'checkFfmpeg' => Mvc\Controller\Plugin\CheckFfmpeg::class,
             'checkGhostscript' => Mvc\Controller\Plugin\CheckGhostscript::class,
+            'checkImageMagick' => Mvc\Controller\Plugin\CheckImageMagick::class,
         ],
         'factories' => [
             'createDerivative' => Service\ControllerPlugin\CreateDerivativeFactory::class,
@@ -90,6 +91,10 @@ return [
             'derivativemedia_enable' => [],
             'derivativemedia_update' => 'all_live',
             'derivativemedia_max_size_live' => 30,
+            'derivativemedia_converters_image' => [
+                '# Convert images to webp for smaller size and browser compatibility.' => '',
+                'webp/{filename}.webp' => '-quality 80',
+            ],
             'derivativemedia_converters_audio' => [
                 'mp3/{filename}.mp3' => '-c copy -c:a libmp3lame -qscale:a 2',
                 'ogg/{filename}.ogg' => '-c copy -vn -c:a libopus',
@@ -106,6 +111,7 @@ return [
                 '# The default setting "/ebook" output a medium size pdf readable on any device.' => '',
                 'pdfe/{filename}.pdf' => '-dCompatibilityLevel=1.7 -dPDFSETTINGS=/ebook',
             ],
+            'derivativemedia_append_original_image' => false,
             'derivativemedia_append_original_audio' => false,
             'derivativemedia_append_original_video' => false,
         ],

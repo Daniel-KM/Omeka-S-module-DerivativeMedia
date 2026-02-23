@@ -53,6 +53,11 @@ class Module extends AbstractModule
      */
     const DERIVATIVES = [
         // Media level.
+        'image' => [
+            'mode' => 'static',
+            'level' => 'media',
+            'multiple' => true,
+        ],
         'audio' => [
             'mode' => 'static',
             'level' => 'media',
@@ -607,7 +612,7 @@ class Module extends AbstractModule
                 if (!empty($data['derivative'])) {
                     continue;
                 }
-                if ($this->checkConvertAudioVideo($media)) {
+                if ($this->checkConvert($media)) {
                     $convert = true;
                     break;
                 }
@@ -670,7 +675,7 @@ class Module extends AbstractModule
         if ($processMedia) {
             // Don't reprocess derivative.
             $data = $media->getData();
-            if (empty($data['derivative']) && $this->checkConvertAudioVideo($media)) {
+            if (empty($data['derivative']) && $this->checkConvert($media)) {
                 $args = [
                     'media_id' => $media->getId(),
                 ];
@@ -773,10 +778,11 @@ class Module extends AbstractModule
         $dispatcher->dispatch(\DerivativeMedia\Job\CreateDerivatives::class, $args);
     }
 
-    protected function checkConvertAudioVideo(Media $media): bool
+    protected function checkConvert(Media $media): bool
     {
         static $hasLocalStore;
         static $convertersAudio;
+        static $convertersImage;
         static $convertersVideo;
         static $convertersPdf;
 
@@ -797,6 +803,9 @@ class Module extends AbstractModule
             };
             $settings = $services->get('Omeka\Settings');
             $enabled = $settings->get('derivativemedia_enable', []);
+            $convertersImage = in_array('image', $enabled)
+                ? array_filter($settings->get('derivativemedia_converters_image', []), $removeCommented, ARRAY_FILTER_USE_BOTH)
+                : [];
             $convertersAudio = in_array('audio', $enabled)
                 ? array_filter($settings->get('derivativemedia_converters_audio', []), $removeCommented, ARRAY_FILTER_USE_BOTH)
                 : [];
@@ -812,7 +821,7 @@ class Module extends AbstractModule
             return false;
         }
 
-        if (!$convertersAudio && !$convertersVideo) {
+        if (!$convertersImage && !$convertersAudio && !$convertersVideo && !$convertersPdf) {
             return false;
         }
 
@@ -822,7 +831,9 @@ class Module extends AbstractModule
 
         $mediaType = (string) $media->getMediaType();
         $mainMediaType = strtok($mediaType, '/');
-        if ($convertersAudio && $mainMediaType === 'audio') {
+        if ($convertersImage && $mainMediaType === 'image') {
+            return true;
+        } elseif ($convertersAudio && $mainMediaType === 'audio') {
             return true;
         } elseif ($convertersVideo && $mainMediaType === 'video') {
             return true;
@@ -833,14 +844,19 @@ class Module extends AbstractModule
         return false;
     }
 
-    protected function isManaged(Media $media)
+    /**
+     * Copy:
+     * @see \DerivativeMedia\Job\DerivativeMediaTrait:::isManaged()
+     * @see \DerivativeMedia\Module::isManaged()
+     */
+    protected function isManaged(Media $media): bool
     {
         $mediaType = $media->getMediaType();
         return $mediaType
             && $media->hasOriginal()
             && $media->getRenderer() === 'file'
             && (
-                in_array(strtok($mediaType, '/'), ['audio', 'video'])
+                in_array(strtok($mediaType, '/'), ['image', 'audio', 'video'])
                 || $mediaType === 'application/pdf'
             );
     }

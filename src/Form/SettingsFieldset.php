@@ -30,6 +30,7 @@ class SettingsFieldset extends Fieldset
                     'element_group' => 'derivative_media',
                     'label' => 'Formats to convert', // @translate
                     'value_options' => [
+                        'image' => 'Image', // @translate
                         'audio' => 'Audio', // @translate
                         'video' => 'Video', // @translate
                         'pdf_media' => 'Pdf', // @translate
@@ -82,6 +83,32 @@ class SettingsFieldset extends Fieldset
                 ],
             ])
 
+            ->add([
+                'name' => 'derivativemedia_converters_image',
+                'type' => OmekaElement\ArrayTextarea::class,
+                'options' => [
+                    'element_group' => 'derivative_media',
+                    'label' => 'Image converters', // @translate
+                    'info' => 'Each converter is one row with a filepath pattern, a "=", and the ImageMagick convert command (without file).', // @translate
+                    'documentation' => 'https://gitlab.com/Daniel-KM/Omeka-S-module-DerivativeMedia#usage',
+                    'as_key_value' => true,
+                ],
+                'attributes' => [
+                    'id' => 'derivativemedia_converters_image',
+                    'rows' => 5,
+                ],
+            ])
+            ->add([
+                'name' => 'derivativemedia_append_original_image',
+                'type' => Element\Checkbox::class,
+                'options' => [
+                    'element_group' => 'derivative_media',
+                    'label' => 'Append original image', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'derivativemedia_append_original_image',
+                ],
+            ])
             ->add([
                 'name' => 'derivativemedia_converters_audio',
                 'type' => OmekaElement\ArrayTextarea::class,
