@@ -91,6 +91,14 @@ class DerivativeMediaFile extends AbstractJob
             $criteria->andWhere($expr->in('mediaType', $mediaTypes));
         }
 
+        $itemIds = $this->getArg('item_ids');
+        if ($itemIds) {
+            $range = $this->exprRange('item', $itemIds);
+            if ($range) {
+                $criteria->andWhere($expr->orX(...$range));
+            }
+        }
+
         $mediaIds = $this->getArg('media_ids');
         if ($mediaIds) {
             $range = $this->exprRange('id', $mediaIds);

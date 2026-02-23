@@ -125,6 +125,17 @@ class ConfigForm extends Form
                 ],
             ])
             ->add([
+                'name' => 'item_ids',
+                'type' => Element\Text::class,
+                'options' => [
+                    'label' => 'Item ids', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'item_ids',
+                    'placeholder' => '1 7 37 79-', // @ translate
+                ],
+            ])
+            ->add([
                 'name' => 'media_ids',
                 'type' => Element\Text::class,
                 'options' => [

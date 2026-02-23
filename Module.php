@@ -473,6 +473,7 @@ class Module extends AbstractModule
                 'ingesters' => $params['ingesters'] ?? [],
                 'renderers' => $params['renderers'] ?? [],
                 'media_types' => $params['media_types'] ?? [],
+                'item_ids' => $params['item_ids'] ?? '',
                 'media_ids' => $params['media_ids'] ?? '',
             ];
             $job = $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMediaFile::class, $args);
@@ -486,6 +487,7 @@ class Module extends AbstractModule
                 'ingesters' => $params['ingesters'] ?? [],
                 'renderers' => $params['renderers'] ?? [],
                 'media_types' => $params['media_types'] ?? [],
+                'item_ids' => $params['item_ids'] ?? '',
                 'media_ids' => $params['media_ids'] ?? '',
             ];
             $job = $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMediaMetadata::class, $args);
