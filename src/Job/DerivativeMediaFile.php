@@ -210,7 +210,7 @@ class DerivativeMediaFile extends AbstractJob
 
         $expr = Criteria::create()->expr();
         foreach ($ranges as $range) {
-            if (strpos($range, '-')) {
+            if (strpos($range, '-') !== false) {
                 $from = strtok($range, '-');
                 $to = strtok('-');
                 if ($from && $to) {

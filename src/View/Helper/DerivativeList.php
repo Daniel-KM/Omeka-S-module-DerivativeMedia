@@ -237,7 +237,7 @@ class DerivativeList extends AbstractHelper
                 'ready' => true,
                 'mediatype' => $derivative['type'],
                 'extension' => pathinfo($derivative['filename'], PATHINFO_EXTENSION),
-                'size' => $derivative['size'] ?? filesize($this->basePath . '/' . $file),
+                'size' => $derivative['size'] ?? (file_exists($this->basePath . '/' . $file) ? filesize($this->basePath . '/' . $file) : null),
                 'file' => $file,
                 'url' => $this->baseUrlFiles . '/' . $file,
                 'url_path' => parse_url($this->baseUrlFiles . '/' . $file, PHP_URL_PATH),

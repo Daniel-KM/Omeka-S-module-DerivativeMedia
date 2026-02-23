@@ -421,7 +421,6 @@ class Module extends AbstractModule
         $params = $params->toArray();
 
         if (empty($params['process_derivative_items'])
-            && empty($params['process_metadata_items'])
             && empty($params['process_derivative_media'])
             && empty($params['process_metadata_media'])
         ) {
@@ -492,6 +491,9 @@ class Module extends AbstractModule
             ];
             $job = $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMediaMetadata::class, $args);
             $message = 'Storing metadata for existing files ({link}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
+        } else {
+            $controller->messenger()->addWarning('No job launched.'); // @translate
+            return true;
         }
 
         $message = new PsrMessage(
@@ -583,7 +585,7 @@ class Module extends AbstractModule
         $processUpdate = in_array($derivativeUpdate, ['existing_live', 'existing', 'all_live', 'all']);
         $processItemDerivative = (bool) array_diff($enabled, $mediaLevel);
         $processMediaAudioVideo = (bool) array_intersect(['audio', 'video'], $enabled);
-        $processMediaPdf = in_array('pdf_media', $mediaLevel);
+        $processMediaPdf = in_array('pdf_media', $enabled);
         $processMediaDerivative = $processMediaAudioVideo || $processMediaPdf;
 
         $processItem = $processItemDerivative && $processUpdate;
@@ -654,7 +656,7 @@ class Module extends AbstractModule
         $processUpdate = in_array($derivativeUpdate, ['existing_live', 'existing', 'all_live', 'all']);
         $processItemDerivative = (bool) array_diff($enabled, $mediaLevel);
         $processMediaAudioVideo = (bool) array_intersect(['audio', 'video'], $enabled);
-        $processMediaPdf = in_array('pdf_media', $mediaLevel);
+        $processMediaPdf = in_array('pdf_media', $enabled);
         $processMediaDerivative = $processMediaAudioVideo || $processMediaPdf;
 
         $processItem = $processItemDerivative && $processUpdate;

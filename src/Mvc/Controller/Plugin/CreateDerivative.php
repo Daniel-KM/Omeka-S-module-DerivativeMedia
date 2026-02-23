@@ -381,12 +381,12 @@ class CreateDerivative extends AbstractPlugin
         $output = '';
 
         $pageSeparator = <<<'TXT'
-==============
-Page %1$d/%2$d
-==============
+            ==============
+            Page %1$d/%2$d
+            ==============
 
 
-TXT;
+            TXT;
 
         $total = count($dataMedia);
         $index = 0;
@@ -396,8 +396,8 @@ TXT;
             $output .= $dataMedia['content'] . PHP_EOL;
         }
 
-        // Fix for windows: remove end of line then add them to fix all cases.
-        $output = str_replace(["\r\n", "\n\r","\n"], ["\n", "\n", "\r\n"], trim($output));
+        // Normalize line endings to standard: windows seems to support it now.
+        $output = strtr(trim($output), ["\r\n" => "\n", "\n\r" => "\n"]);
 
         $result = file_put_contents($filepath, $output);
 
@@ -409,12 +409,12 @@ TXT;
         $output = '';
 
         $pageSeparator = <<<'TXT'
-==============
-Page %1$d/%2$d
-==============
+            ==============
+            Page %1$d/%2$d
+            ==============
 
 
-TXT;
+            TXT;
 
         $total = count($dataMedia);
         $index = 0;
@@ -424,8 +424,8 @@ TXT;
             $output .= file_get_contents($dataMedia['filepath']) . PHP_EOL;
         }
 
-        // Fix for windows: remove end of line then add them to fix all cases.
-        $output = str_replace(["\r\n", "\n\r","\n"], ["\n", "\n", "\r\n"], trim($output));
+        // Normalize line endings to standard: windows seems to support it now.
+        $output = strtr(trim($output), ["\r\n" => "\n", "\n\r" => "\n"]);
 
         $result = file_put_contents($filepath, trim($output));
 
@@ -460,17 +460,6 @@ TXT;
         $index = 0;
         $filenames = [];
         foreach ($dataMedia as $file) {
-            $zip->addFile($file['filepath']);
-            // Light and quick compress text and xml.
-            if ($file['maintype'] === 'text'
-                || $file['mediatype'] === 'application/xml'
-                || substr($file['mediatype'], -4) === '+xml'
-            ) {
-                $zip->setCompressionIndex($index, ZipArchive::CM_DEFLATE, 1);
-            } else {
-                $zip->setCompressionIndex($index, ZipArchive::CM_STORE);
-            }
-
             // Use the source name, but check and rename for unique filename,
             // taking care of extension.
             $basepath = pathinfo($file['source'], PATHINFO_FILENAME);
@@ -481,7 +470,17 @@ TXT;
                 ++$i;
             } while (in_array($sourceBase, $filenames));
             $filenames[] = $sourceBase;
-            $zip->renameName($file['filepath'], $sourceBase);
+
+            $zip->addFile($file['filepath'], $sourceBase);
+            // Light and quick compress text and xml.
+            if ($file['maintype'] === 'text'
+                || $file['mediatype'] === 'application/xml'
+                || substr($file['mediatype'], -4) === '+xml'
+            ) {
+                $zip->setCompressionIndex($index, ZipArchive::CM_DEFLATE, 1);
+            } else {
+                $zip->setCompressionIndex($index, ZipArchive::CM_STORE);
+            }
             ++$index;
         }
 
