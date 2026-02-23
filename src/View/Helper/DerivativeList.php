@@ -78,6 +78,7 @@ class DerivativeList extends AbstractHelper
      * - size (null|integer): real size or estimation.
      * - file (string): relative filepath of the derivative.
      * - url (string): url of the derivative file.
+     * - url_path (string): relative url of the derivative file.
      * For media, derivatives data are stored in data(), so mode is always
      * static, so feasible and ready are true, and there is no progress. So the
      * type option is not used, but
@@ -184,6 +185,9 @@ class DerivativeList extends AbstractHelper
                 'size' => $size,
                 'file' => $file,
                 'url' => $feasible
+                    ? $this->url->__invoke('derivative', ['type' => $type, 'id' => $itemId], ['force_canonical' => true])
+                    : null,
+                'url_path' => $feasible
                     ? $this->url->__invoke('derivative', ['type' => $type, 'id' => $itemId])
                     : null,
             ];
@@ -236,6 +240,7 @@ class DerivativeList extends AbstractHelper
                 'size' => $derivative['size'] ?? filesize($this->basePath . '/' . $file),
                 'file' => $file,
                 'url' => $this->baseUrlFiles . '/' . $file,
+                'url_path' => parse_url($this->baseUrlFiles . '/' . $file, PHP_URL_PATH),
             ];
         }
 
