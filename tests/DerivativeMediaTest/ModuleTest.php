@@ -30,7 +30,7 @@ class ModuleTest extends AbstractHttpControllerTestCase
     public function testDerivativesConstantContainsExpectedTypes(): void
     {
         $expectedTypes = [
-            'audio', 'video', 'pdf_media',
+            'image', 'audio', 'video', 'pdf_media',
             'alto', 'iiif-2', 'iiif-3', 'pdf', 'pdf2xml',
             'txt', 'text', 'zip', 'zipm', 'zipo',
         ];
@@ -56,7 +56,7 @@ class ModuleTest extends AbstractHttpControllerTestCase
      */
     public function testMediaLevelTypesAreStatic(): void
     {
-        $mediaTypes = ['audio', 'video', 'pdf_media'];
+        $mediaTypes = ['image', 'audio', 'video', 'pdf_media'];
         foreach ($mediaTypes as $type) {
             $this->assertEquals('static', Module::DERIVATIVES[$type]['mode'], "Media type '$type' should be 'static'");
             $this->assertEquals('media', Module::DERIVATIVES[$type]['level'], "Type '$type' should be 'media' level");
@@ -136,6 +136,7 @@ class ModuleTest extends AbstractHttpControllerTestCase
 
         $this->assertTrue($plugins->has('checkFfmpeg'), 'checkFfmpeg plugin should be registered');
         $this->assertTrue($plugins->has('checkGhostscript'), 'checkGhostscript plugin should be registered');
+        $this->assertTrue($plugins->has('checkImageMagick'), 'checkImageMagick plugin should be registered');
         $this->assertTrue($plugins->has('createDerivative'), 'createDerivative plugin should be registered');
     }
 
@@ -190,8 +191,11 @@ class ModuleTest extends AbstractHttpControllerTestCase
         $this->assertArrayHasKey('derivativemedia_converters_audio', $moduleConfig);
         $this->assertArrayHasKey('derivativemedia_converters_video', $moduleConfig);
         $this->assertArrayHasKey('derivativemedia_converters_pdf', $moduleConfig);
+        $this->assertArrayHasKey('derivativemedia_converters_image', $moduleConfig);
+        $this->assertArrayHasKey('derivativemedia_append_original_image', $moduleConfig);
         $this->assertArrayHasKey('derivativemedia_append_original_audio', $moduleConfig);
         $this->assertArrayHasKey('derivativemedia_append_original_video', $moduleConfig);
+        $this->assertArrayHasKey('derivativemedia_ocr_language', $moduleConfig);
     }
 
     /**

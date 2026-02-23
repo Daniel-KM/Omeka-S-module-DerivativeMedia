@@ -144,12 +144,12 @@ class DerivativeMediaTraitTest extends AbstractHttpControllerTestCase
     }
 
     /**
-     * Test isManaged returns false for image media.
+     * Test isManaged returns true for image media.
      */
-    public function testIsManagedReturnsFalseForImage(): void
+    public function testIsManagedReturnsTrueForImage(): void
     {
         $media = $this->createMockMedia('image/jpeg', true, 'file');
-        $this->assertFalse($this->invokeIsManaged($media));
+        $this->assertTrue($this->invokeIsManaged($media));
     }
 
     /**

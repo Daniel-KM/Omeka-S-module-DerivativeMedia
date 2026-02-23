@@ -48,11 +48,14 @@ class SettingsFieldsetTest extends AbstractHttpControllerTestCase
             'derivativemedia_enable',
             'derivativemedia_update',
             'derivativemedia_max_size_live',
+            'derivativemedia_converters_image',
+            'derivativemedia_append_original_image',
             'derivativemedia_converters_audio',
             'derivativemedia_converters_video',
             'derivativemedia_converters_pdf',
             'derivativemedia_append_original_audio',
             'derivativemedia_append_original_video',
+            'derivativemedia_ocr_language',
         ];
 
         foreach ($expectedElements as $name) {
@@ -76,7 +79,7 @@ class SettingsFieldsetTest extends AbstractHttpControllerTestCase
         $options = $enableElement->getValueOptions();
 
         $expectedOptions = [
-            'audio', 'video', 'pdf_media', 'zip', 'zipm', 'zipo',
+            'image', 'audio', 'video', 'pdf_media', 'zip', 'zipm', 'zipo',
             'pdf', 'txt', 'text', 'alto', 'iiif-2', 'iiif-3', 'pdf2xml',
         ];
 
