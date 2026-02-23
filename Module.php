@@ -244,6 +244,15 @@ class Module extends AbstractModule
             throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
         }
 
+        // Check the optional module Iiif Server for incompatibility.
+        if ($this->isModuleActive('IiifServer') && !$this->isModuleVersionAtLeast('IiifServer', '3.6.18')) {
+            $message = new \Omeka\Stdlib\Message(
+                $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
+                'Iiif Server', '3.6.18'
+            );
+            throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
+        }
+
         $config = $services->get('Config');
         $basePath = $config['file_store']['local']['base_path'] ?: (OMEKA_PATH . '/files');
         if (!is_dir($basePath) || !is_readable($basePath) || !is_writeable($basePath)) {
@@ -743,6 +752,16 @@ class Module extends AbstractModule
         }
 
         if (!$todo) {
+            return;
+        }
+
+        // If types are only iiif and IiifServer is installed, skip job, because
+        // it is already managed by the module.
+        $hasIiifServer = $this->checkModuleActiveVersion('IiifServer', '3.6.18');
+        $todoKeys = array_keys($todo);
+        if ($hasIiifServer
+            && ($todoKeys === ['iiif-2'] || $todoKeys === ['iiif-3'] || $todoKeys === ['iiif-2', 'iiif-3'])
+        ) {
             return;
         }
 

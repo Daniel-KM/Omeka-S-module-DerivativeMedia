@@ -92,6 +92,15 @@ if (version_compare($oldVersion, '3.4.9', '<')) {
 }
 
 if (version_compare($oldVersion, '3.4.10', '<')) {
+    // Check the optional module Iiif Server for incompatibility.
+    if ($this->isModuleActive('IiifServer') && !$this->isModuleVersionAtLeast('IiifServer', '3.6.18')) {
+        $message = new \Omeka\Stdlib\Message(
+            $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
+            'Iiif Server', '3.6.18'
+        );
+        throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
+    }
+
     $message = new PsrMessage(
         'It is now possible to run the job to create derivative and metadata by items. See {link_url}config form{link_end}.', // @translate
         ['link_url' => sprintf('<a href="%s">', $url('admin/default', ['controller' => 'module'], ['query' => ['id' => 'DerivativeMedia']])), 'link_end' => '</a>']
