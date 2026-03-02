@@ -222,10 +222,6 @@ class Module extends AbstractModule
         ],
     ];
 
-    protected $dependencies = [
-        'Common',
-    ];
-
     public function onBootstrap(MvcEvent $event): void
     {
         parent::onBootstrap($event);
