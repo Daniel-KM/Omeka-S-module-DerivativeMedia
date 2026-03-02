@@ -1,5 +1,5 @@
 {
-    "name": "daniel-km/omeka-s-module-derivativemedia",
+    "name": "daniel-km/omeka-s-module-derivative-media",
     "type": "omeka-s-module",
     "description": "Module for Omeka S: Create and cache derivative files for items (zip, pdf, iiif, etc.) and optimize audio and video files for performance and cross-browser compatibility.",
     "keywords": [
