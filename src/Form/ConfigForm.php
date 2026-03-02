@@ -73,6 +73,7 @@ class ConfigForm extends Form
                 'type' => CommonElement\OptionalItemSetSelect::class,
                 'options' => [
                     'label' => 'Item sets', // @translate
+                    'disable_inarray_validator' => true,
                 ],
                 'attributes' => [
                     'id' => 'item_sets',
