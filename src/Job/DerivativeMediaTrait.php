@@ -62,11 +62,6 @@ trait DerivativeMediaTrait
         $services = $this->getServiceLocator();
         $this->logger = $services->get('Omeka\Logger');
 
-        // The reference id is the job id for now.
-        $referenceIdProcessor = new \Laminas\Log\Processor\ReferenceId();
-        $referenceIdProcessor->setReferenceId('derivative/media/job_' . $this->job->getId());
-        $this->logger->addProcessor($referenceIdProcessor);
-
         $plugins = $services->get('ControllerPluginManager');
         $checkFfmpeg = $plugins->get('checkFfmpeg');
         $checkGhostscript = $plugins->get('checkGhostscript');

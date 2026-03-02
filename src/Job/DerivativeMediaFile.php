@@ -24,6 +24,12 @@ class DerivativeMediaFile extends AbstractJob
      */
     public function perform(): void
     {
+        $services = $this->getServiceLocator();
+        $this->logger = $services->get('Omeka\Logger');
+        $referenceIdProcessor = new \Laminas\Log\Processor\ReferenceId();
+        $referenceIdProcessor->setReferenceId('derivative-media/derivative-media-file/job_' . $this->job->getId());
+        $this->logger->addProcessor($referenceIdProcessor);
+
         $result = $this->initialize();
         if (!$result) {
             return;
@@ -32,7 +38,6 @@ class DerivativeMediaFile extends AbstractJob
         /**
          * @var \Omeka\Api\Manager $api
          */
-        $services = $this->getServiceLocator();
         $api = $services->get('Omeka\ApiManager');
 
         // Prepare the list of medias.

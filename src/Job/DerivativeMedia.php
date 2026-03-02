@@ -11,6 +11,12 @@ class DerivativeMedia extends AbstractJob
 
     public function perform(): void
     {
+        $services = $this->getServiceLocator();
+        $this->logger = $services->get('Omeka\Logger');
+        $referenceIdProcessor = new \Laminas\Log\Processor\ReferenceId();
+        $referenceIdProcessor->setReferenceId('derivative-media/derivative-media/job_' . $this->job->getId());
+        $this->logger->addProcessor($referenceIdProcessor);
+
         $result = $this->initialize();
         if (!$result) {
             return;
