@@ -3,7 +3,7 @@
 namespace DerivativeMedia\Service\ControllerPlugin;
 
 use DerivativeMedia\Mvc\Controller\Plugin\CreateDerivative;
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
 class CreateDerivativeFactory implements FactoryInterface

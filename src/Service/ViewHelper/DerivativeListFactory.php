@@ -3,7 +3,7 @@
 namespace DerivativeMedia\Service\ViewHelper;
 
 use DerivativeMedia\View\Helper\DerivativeList;
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
 class DerivativeListFactory implements FactoryInterface
