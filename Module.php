@@ -177,7 +177,24 @@ class Module extends AbstractModule
             'dir' => 'text',
             'size' => true,
         ],
-        // TODO Add tsv output from ExtractOcr.
+        'tsv' => [
+            'mode' => 'live',
+            'level' => 'item',
+            'multiple' => false,
+            'mediatype' => 'text/tab-separated-values',
+            'extension' => 'full.tsv',
+            'dir' => 'iiif-search',
+            'size' => false,
+        ],
+        'tsv-by-word' => [
+            'mode' => 'live',
+            'level' => 'item',
+            'multiple' => false,
+            'mediatype' => 'text/tab-separated-values',
+            'extension' => 'by-word.tsv',
+            'dir' => 'iiif-search',
+            'size' => false,
+        ],
         'zip' => [
             'mode' => 'dynamic_live',
             'level' => 'item',

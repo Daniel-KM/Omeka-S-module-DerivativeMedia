@@ -45,6 +45,8 @@ class SettingsFieldset extends Fieldset
                         'iiif-2' => 'Iiif manifest (version 2, require Iiif Server)', // @translate
                         'iiif-3' => 'Iiif manifest (version 3, require Iiif Server)', // @translate
                         'pdf2xml' => 'Text as xml from a single pdf, mainly for Iiif Search', // @translate
+                        'tsv' => 'Tsv index, ordered words (full, require Iiif Search)', // @translate
+                        'tsv-by-word' => 'Tsv index, grouped by word (small/fast, require Iiif Search)', // @translate
                     ],
                 ],
                 'attributes' => [

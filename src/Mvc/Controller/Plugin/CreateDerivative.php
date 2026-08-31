@@ -128,6 +128,8 @@ class CreateDerivative extends AbstractPlugin
             $result = $this->prepareDerivativePdf($tempFilepath, $dataMedia, $item);
         } elseif ($type === 'pdf2xml') {
             $result = $this->prepareDerivativePdf2Xml($tempFilepath, $dataMedia, $item);
+        } elseif ($type === 'tsv' || $type === 'tsv-by-word') {
+            $result = $this->prepareDerivativeTsv($type, $tempFilepath, $dataMedia, $item);
         } elseif ($type === 'text') {
             $result = $this->prepareDerivativeTextExtracted($tempFilepath, $dataMedia, $item);
         } elseif ($type === 'txt') {
@@ -146,6 +148,31 @@ class CreateDerivative extends AbstractPlugin
         }
 
         return $result;
+    }
+
+    protected function prepareDerivativeTsv(string $type, string $filepath, array $dataMedia, ?ItemRepresentation $item): ?bool
+    {
+        $services = $item ? $item->getServiceLocator() : null;
+        if (!$services || !$item) {
+            return false;
+        }
+        $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
+        try {
+            $dispatcher->dispatch(\IiifSearch\Job\ExtractOcr::class, [
+                'mode' => 'all',
+                'item_ids' => (string) $item->id(),
+                'format' => $type === 'tsv-by-word'
+                    ? 'text/tab-separated-values;by-word'
+                    : 'text/tab-separated-values',
+                'manual' => true,
+            ]);
+        } catch (\Throwable $e) {
+            $this->logger->err('To create tsv derivative, the module IiifSearch is required.'); // @translate
+            return false;
+        }
+        // The job writes the file asynchronously; the rename below would fail.
+        // Return false so the caller does not move a non-existent temp file.
+        return false;
     }
 
     protected function prepareDerivativeAlto(string $filepath, array $dataMedia, ?ItemRepresentation $item): ?bool
