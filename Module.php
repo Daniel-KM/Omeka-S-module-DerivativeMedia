@@ -316,7 +316,7 @@ class Module extends AbstractModule
         $message = new PsrMessage(
             'Before compressing files with config tasks, the settings should be set in {link_url}main settings{link_end}.', // @translate
             [
-                'link_url' => sprintf('<a href="%s">', $urlHelper('admin/default', ['controller' => 'setting', 'action' => 'browse'], ['fragment' => 'derivative-media'])),
+                'link_url' => sprintf('<a href="%s">', htmlspecialchars($urlHelper('admin/default', ['controller' => 'setting', 'action' => 'browse'], ['fragment' => 'derivative-media']))),
                 'link_end' => '</a>',
             ]
         );
@@ -531,14 +531,13 @@ class Module extends AbstractModule
         $message = new PsrMessage(
             $message,
             [
-                'link_url' => sprintf('<a href="%s">',
-                    htmlspecialchars($urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))
+                'link_url' => sprintf('<a href="%s">', htmlspecialchars($urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))
                 ),
                 'job_id' => $job->getId(),
                 'link_end' => '</a>',
                 'link_log' => class_exists('Log\Module', false)
-                    ? sprintf('<a href="%1$s">', $urlPlugin->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]]))
-                    : sprintf('<a href="%1$s" target="_blank">', $urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()])),
+                    ? sprintf('<a href="%1$s">', htmlspecialchars($urlPlugin->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])))
+                    : sprintf('<a href="%1$s" target="_blank" rel="noopener noreferrer">', htmlspecialchars($urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))),
             ]
         );
         $message->setEscapeHtml(false);

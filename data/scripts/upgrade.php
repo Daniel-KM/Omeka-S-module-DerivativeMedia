@@ -61,7 +61,7 @@ if (version_compare($oldVersion, '3.4.5', '<')) {
     $messenger->addSuccess($message);
     $message = new PsrMessage(
         'Check {link_url}new settings{link_end}.', // @translate
-        ['link_url' => sprintf('<a href="%s">', $url('admin/default', ['controller' => 'setting'], ['fragment' => 'derivativemedia_enable'])), 'link_end' => '</a>']
+        ['link_url' => sprintf('<a href="%s">', htmlspecialchars($url('admin/default', ['controller' => 'setting'], ['fragment' => 'derivativemedia_enable']))), 'link_end' => '</a>']
     );
     $message->setEscapeHtml(false);
     $messenger->addSuccess($message);
@@ -84,7 +84,7 @@ if (version_compare($oldVersion, '3.4.9', '<')) {
 
     $message = new PsrMessage(
         'The module manages now pdf files. Check {link_url}new settings{link_end}.', // @translate
-        ['link_url' => sprintf('<a href="%s">', $url('admin/default', ['controller' => 'setting'], ['fragment' => 'derivativemedia_enable'])), 'link_end' => '</a>']
+        ['link_url' => sprintf('<a href="%s">', htmlspecialchars($url('admin/default', ['controller' => 'setting'], ['fragment' => 'derivativemedia_enable']))), 'link_end' => '</a>']
     );
     $message->setEscapeHtml(false);
     $messenger->addSuccess($message);
@@ -102,14 +102,14 @@ if (version_compare($oldVersion, '3.4.10', '<')) {
 
     $message = new PsrMessage(
         'It is now possible to run the job to create derivative and metadata by items. See {link_url}config form{link_end}.', // @translate
-        ['link_url' => sprintf('<a href="%s">', $url('admin/default', ['controller' => 'module'], ['query' => ['id' => 'DerivativeMedia']])), 'link_end' => '</a>']
+        ['link_url' => sprintf('<a href="%s">', htmlspecialchars($url('admin/default', ['controller' => 'module'], ['query' => ['id' => 'DerivativeMedia']]))), 'link_end' => '</a>']
     );
     $message->setEscapeHtml(false);
     $messenger->addSuccess($message);
 
     $message = new PsrMessage(
         'Settings were updated. You may check {link_url}them{link_end}.', // @translate
-        ['link_url' => sprintf('<a href="%s">', $url('admin/default', ['controller' => 'setting'], ['fragment' => 'derivativemedia_enable'])), 'link_end' => '</a>']
+        ['link_url' => sprintf('<a href="%s">', htmlspecialchars($url('admin/default', ['controller' => 'setting'], ['fragment' => 'derivativemedia_enable']))), 'link_end' => '</a>']
     );
     $message->setEscapeHtml(false);
     $messenger->addSuccess($message);
@@ -128,7 +128,7 @@ if (version_compare($oldVersion, '3.4.14', '<')) {
 
     $message = new PsrMessage(
         'It is now possible to create image derivatives (webp, avif, etc.) via ImageMagick. Check {link_url}new settings{link_end}.', // @translate
-        ['link_url' => sprintf('<a href="%s">', $url('admin/default', ['controller' => 'setting'], ['fragment' => 'derivativemedia_enable'])), 'link_end' => '</a>']
+        ['link_url' => sprintf('<a href="%s">', htmlspecialchars($url('admin/default', ['controller' => 'setting'], ['fragment' => 'derivativemedia_enable']))), 'link_end' => '</a>']
     );
     $message->setEscapeHtml(false);
     $messenger->addSuccess($message);
@@ -137,7 +137,7 @@ if (version_compare($oldVersion, '3.4.14', '<')) {
 
     $message = new PsrMessage(
         'The pdf builder now adds an ocr text layer via ocrmypdf when available. Check {link_url}new settings{link_end}.', // @translate
-        ['link_url' => sprintf('<a href="%s">', $url('admin/default', ['controller' => 'setting'], ['fragment' => 'derivativemedia_ocr_language'])), 'link_end' => '</a>']
+        ['link_url' => sprintf('<a href="%s">', htmlspecialchars($url('admin/default', ['controller' => 'setting'], ['fragment' => 'derivativemedia_ocr_language']))), 'link_end' => '</a>']
     );
     $message->setEscapeHtml(false);
     $messenger->addSuccess($message);
