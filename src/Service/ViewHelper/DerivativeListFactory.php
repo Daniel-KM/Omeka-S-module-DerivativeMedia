@@ -13,7 +13,7 @@ class DerivativeListFactory implements FactoryInterface
      *
      * @return DerivativeList
      */
-    public function __invoke(ContainerInterface $services, $requestedName, array $options = null)
+    public function __invoke(ContainerInterface $services, $requestedName, ?array $options = null)
     {
         $config = $services->get('Config');
         $settings = $services->get('Omeka\Settings');
