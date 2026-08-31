@@ -75,7 +75,7 @@ class CreateDerivatives extends AbstractJob
         foreach (array_values($ids) as $index => $itemId) {
             try {
                 $item = $api->read('items', $itemId)->getContent();
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 continue;
             }
             if ($this->shouldStop()) {
