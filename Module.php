@@ -620,11 +620,34 @@ class Module extends AbstractModule
                 }
             }
             if ($convert) {
-                $args = [
-                    'item_id' => $item->getId(),
-                ];
-                $dispatcher = $services->get('Omeka\Job\Dispatcher');
-                $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeItem::class, $args);
+                // Use deferred job to avoid to run one job by resource.
+                if ($services->has('Common\DeferredJobDispatch')) {
+                    $services->get('Common\DeferredJobDispatch')
+                        ->defer(
+                            \DerivativeMedia\Job\DerivativeItem::class,
+                            'derivativemedia_item',
+                            ['item_id' => $item->getId()],
+                            function (string $key, array $all) {
+                                $seen = [];
+                                $dispatches = [];
+                                foreach ($all as $p) {
+                                    $id = $p['item_id'];
+                                    if (isset($seen[$id])) {
+                                        continue;
+                                    }
+                                    $seen[$id] = true;
+                                    $dispatches[] = $p;
+                                }
+                                return $dispatches;
+                            }
+                        );
+                } else {
+                    $services->get(\Omeka\Job\Dispatcher::class)
+                        ->dispatch(
+                            \DerivativeMedia\Job\DerivativeItem::class,
+                            ['item_id' => $item->getId()]
+                        );
+                }
             }
         }
 
@@ -671,23 +694,39 @@ class Module extends AbstractModule
         /** @var \Omeka\Entity\Media $media */
         $media = $event->getParam('response')->getContent();
 
-        $dispatcher = $services->get('Omeka\Job\Dispatcher');
-
         // Check new media without audio/video derivative.
         if ($processMedia) {
-            // Don't reprocess derivative.
             $data = $media->getData();
             if (empty($data['derivative']) && $this->checkConvert($media)) {
-                $args = [
-                    'media_id' => $media->getId(),
-                ];
-                $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMedia::class, $args);
+                // Use deferred job to avoid to run one job by resource.
+                if ($services->has('Common\DeferredJobDispatch')) {
+                    $services->get('Common\DeferredJobDispatch')
+                        ->defer(
+                            \DerivativeMedia\Job\DerivativeMedia::class,
+                            'derivativemedia_media',
+                            ['media_id' => $media->getId()],
+                            function (string $key, array $all) {
+                                $seen = [];
+                                $dispatches = [];
+                                foreach ($all as $p) {
+                                    $id = $p['media_id'];
+                                    if (isset($seen[$id])) {
+                                        continue;
+                                    }
+                                    $seen[$id] = true;
+                                    $dispatches[] = $p;
+                                }
+                                return $dispatches;
+                            }
+                        );
+                } else {
+                    $services->get(\Omeka\Job\Dispatcher::class)
+                        ->dispatch(
+                            \DerivativeMedia\Job\DerivativeMedia::class,
+                            ['media_id' => $media->getId()]
+                        );
+                }
             }
-        }
-
-        // FIXME Find a way not to process item for each update of a media, but one time for all. The same for deletion.
-        if ($processItem) {
-            // $this->processDerivativeItem($media->getItem(), $derivativeUpdate);
         }
     }
 
