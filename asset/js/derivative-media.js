@@ -37,18 +37,18 @@ $(function () {
         const textOk = derivativeList.data('text-ok') ? derivativeList.data('text-ok') : 'Ok';
 
         const html=`
-<dialog id="derivative-on-demand" class="derivative-dialog">
+<dialog id="derivative-on-demand" class="derivative-dialog" aria-describedby="derivative-on-demand-text">
     <form id="derivative-form" method="dialog" action="#">
-        <p>${textWarn}</p>
+        <p id="derivative-on-demand-text">${textWarn}</p>
         <div class="derivative-actions" style="display: flex; justify-content: space-evenly;">
             <button type="button" id="derivative-no" class="derivative-no" value="no" formmethod="dialog">${textNo}</button>
             <button type="button" id="derivative-yes" class="derivative-yes" value="yes" formmethod="dialog">${textYes}</button>
         </div>
     </form>
 </dialog>
-<dialog id="derivative-queued" class="derivative-dialog">
+<dialog id="derivative-queued" class="derivative-dialog" aria-describedby="derivative-queued-text">
     <form id="derivative-form-queud" method="dialog" action="#">
-        <p>${textQueued}</p>
+        <p id="derivative-queued-text">${textQueued}</p>
         <div class="derivative-actions" style="display: flex; justify-content: space-evenly;">
             <button type="button" id="derivative-ok" class="derivative-ok" value="yes" formmethod="dialog">${textOk}</button>
         </div>
