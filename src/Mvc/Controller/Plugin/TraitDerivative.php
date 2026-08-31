@@ -23,7 +23,29 @@ trait TraitDerivative
         }
 
         $dataMedia = [];
+        // Walk Media attached to the item, then DigitalObjects referenced by
+        // the item via property values (deduplicated). DOs expose the same file
+        // API; downstream selectors filter by media type just like Media.
+        $sources = [];
         foreach ($item->media() as $media) {
+            $sources[] = $media;
+        }
+        $seen = [];
+        foreach ($item->values() as $property) {
+            foreach ($property['values'] as $value) {
+                $vr = $value->valueResource();
+                if (!$vr || $vr->resourceName() !== 'digital_objects') {
+                    continue;
+                }
+                $id = $vr->id();
+                if (isset($seen[$id])) {
+                    continue;
+                }
+                $seen[$id] = true;
+                $sources[] = $vr;
+            }
+        }
+        foreach ($sources as $media) {
             if (!$media->hasOriginal() || !$media->size()) {
                 continue;
             }

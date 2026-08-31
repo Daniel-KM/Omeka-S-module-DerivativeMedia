@@ -4,6 +4,7 @@ namespace DerivativeMedia\Job;
 
 use Laminas\Filter\RealPath;
 use Omeka\Entity\Media;
+use Omeka\Entity\Resource;
 
 trait DerivativeMediaTrait
 {
@@ -148,7 +149,7 @@ trait DerivativeMediaTrait
         return true;
     }
 
-    protected function derivateMedia(Media $media): bool
+    protected function derivateMedia(Resource $media): bool
     {
         static $errorFfmpeg = false;
         static $errorGhostscript = false;
@@ -393,7 +394,7 @@ trait DerivativeMediaTrait
         return true;
     }
 
-    protected function checkFilesAndStoreMetadata(Media $media): bool
+    protected function checkFilesAndStoreMetadata(Resource $media): bool
     {
         $mainMediaType = strtok((string) $media->getMediaType(), '/');
         if (empty($this->converters[$mainMediaType])) {
@@ -549,12 +550,15 @@ trait DerivativeMediaTrait
      * @see \DerivativeMedia\Job\DerivativeMediaTrait:::isManaged()
      * @see \DerivativeMedia\Module::isManaged()
      */
-    protected function isManaged(Media $media): bool
+    protected function isManaged(Resource $media): bool
     {
         $mediaType = $media->getMediaType();
+        // DigitalObjects are always rendered as "file"; only Media has a stored
+        // renderer column to check explicitly.
+        $rendererIsFile = !($media instanceof Media) || $media->getRenderer() === 'file';
         return $mediaType
             && $media->hasOriginal()
-            && $media->getRenderer() === 'file'
+            && $rendererIsFile
             && (
                 in_array(strtok($mediaType, '/'), ['image', 'audio', 'video'])
                 || $mediaType === 'application/pdf'

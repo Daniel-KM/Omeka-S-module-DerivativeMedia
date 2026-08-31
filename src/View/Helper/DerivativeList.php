@@ -106,7 +106,14 @@ class DerivativeList extends AbstractHelper
             return [];
         }
 
-        if ($resource instanceof MediaRepresentation) {
+        // DigitalObject is a file-bearing resource sharing the Media file API
+        // (mediaData, storageId, etc.). It is autonomous (no item FK) but is
+        // referenced by items via property values, so item-level enumeration
+        // walks both $item->media() and the values graph for DOs.
+        $isFileBearing = $resource instanceof MediaRepresentation
+            || $resource->resourceName() === 'digital_objects';
+
+        if ($isFileBearing) {
             return $this->listDerivativeMedia($resource, $options['type']);
         } elseif (!$resource instanceof ItemRepresentation) {
             return [];
@@ -119,6 +126,25 @@ class DerivativeList extends AbstractHelper
 
         foreach ($resource->media() as $media) {
             $result[$media->id()] = $this->listDerivativeMedia($media, $options['type']);
+        }
+
+        // Also collect digital objects referenced by the item via property
+        // values (deduplicated by id; a DO can be referenced by several
+        // properties).
+        $seen = [];
+        foreach ($resource->values() as $property) {
+            foreach ($property['values'] as $value) {
+                $vr = $value->valueResource();
+                if (!$vr || $vr->resourceName() !== 'digital_objects') {
+                    continue;
+                }
+                $id = $vr->id();
+                if (isset($seen[$id])) {
+                    continue;
+                }
+                $seen[$id] = true;
+                $result[$id] = $this->listDerivativeMedia($vr, $options['type']);
+            }
         }
 
         return $result;
@@ -201,7 +227,7 @@ class DerivativeList extends AbstractHelper
      *
      * Unlike item, media data are stored in its data, so output directly them.
      */
-    protected function listDerivativeMedia(MediaRepresentation $media, ?string $type = null): array
+    protected function listDerivativeMedia(AbstractResourceEntityRepresentation $media, ?string $type = null): array
     {
         $result = [];
 

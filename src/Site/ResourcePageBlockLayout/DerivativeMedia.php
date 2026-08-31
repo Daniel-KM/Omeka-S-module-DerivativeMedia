@@ -18,6 +18,7 @@ class DerivativeMedia implements ResourcePageBlockLayoutInterface
         return [
             'items',
             'media',
+            'digital_objects',
         ];
     }
 

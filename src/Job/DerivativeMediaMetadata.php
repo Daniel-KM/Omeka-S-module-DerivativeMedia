@@ -178,6 +178,48 @@ class DerivativeMediaMetadata extends DerivativeMediaFile
             $offset += self::SQL_LIMIT;
         }
 
+        // Second pass: digital objects. They are autonomous resources without
+        // an item FK and live in their own table; iterate them independently.
+        if (class_exists('DigitalObject\Module', false)) {
+            $doRepo = $this->entityManager->getRepository(\DigitalObject\Entity\DigitalObject::class);
+            $doCriteria = Criteria::create()
+                ->where($expr->gt('id', 0))
+                ->andWhere($expr->eq('hasOriginal', 1))
+                ->orderBy(['id' => 'ASC']);
+            $mediaTypes = $this->getArg('media_types', []);
+            if ($mediaTypes && !in_array('', $mediaTypes)) {
+                $doCriteria->andWhere($expr->in('mediaType', $mediaTypes));
+            }
+            $doOffset = 0;
+            while (true) {
+                $doCriteria
+                    ->setMaxResults(self::SQL_LIMIT)
+                    ->setFirstResult($doOffset);
+                $dos = $doRepo->matching($doCriteria);
+                if (!count($dos)) {
+                    break;
+                }
+                foreach ($dos as $do) {
+                    if ($this->shouldStop()) {
+                        break 2;
+                    }
+                    if ($this->isManaged($do)) {
+                        $this->logger->info(
+                            'Digital object #{do_id}: storing metadata of derivative files.', // @translate
+                            ['do_id' => $do->getId()]
+                        );
+                        $result = $this->checkFilesAndStoreMetadata($do);
+                        ++$totalProcessed;
+                        $result ? ++$totalSucceed : ++$totalFailed;
+                    }
+                    unset($do);
+                }
+                unset($dos);
+                $this->entityManager->clear();
+                $doOffset += self::SQL_LIMIT;
+            }
+        }
+
         $this->logger->info(
             'End of the process to store metadata of derivative files: {count}/{total} processed, {skipped} skipped, {succeed} succeed, {failed} failed.', // @translate
             ['count' => $totalProcessed, 'total' => $totalToProcess, 'skipped' => $totalToProcess - $totalProcessed, 'succeed' => $totalSucceed, 'failed' => $totalFailed]

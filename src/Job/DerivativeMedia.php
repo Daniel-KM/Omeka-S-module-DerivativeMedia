@@ -34,15 +34,21 @@ class DerivativeMedia extends AbstractJob
         }
 
         try {
-            /** @var \Omeka\Entity\Media $media */
+            /** @var \Omeka\Entity\Media|\DigitalObject\Entity\DigitalObject $media */
             $media = $api->read('media', ['id' => $mediaId], [], ['initialize' => false, 'finalize' => false])->getContent();
         } catch (NotFoundException $e) {
-            $this->job->setStatus(\Omeka\Entity\Job::STATUS_ERROR);
-            $this->logger->err(
-                'No media #{media_id}: no derivative media to create.', // @translate
-                ['media_id' => $mediaId]
-            );
-            return;
+            // Fallback to digital_objects: the job may be dispatched for a
+            // resource id that lives in the digital_object table.
+            try {
+                $media = $api->read('digital_objects', ['id' => $mediaId], [], ['initialize' => false, 'finalize' => false])->getContent();
+            } catch (\Throwable $e2) {
+                $this->job->setStatus(\Omeka\Entity\Job::STATUS_ERROR);
+                $this->logger->err(
+                    'No media or digital object #{media_id}: no derivative media to create.', // @translate
+                    ['media_id' => $mediaId]
+                );
+                return;
+            }
         }
 
         if (!$this->isManaged($media)) {
