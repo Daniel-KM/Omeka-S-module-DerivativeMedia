@@ -270,41 +270,44 @@ class Module extends AbstractModule
     {
         $services = $this->getServiceLocator();
         $plugins = $services->get('ControllerPluginManager');
-        $translate = $plugins->get('translate');
+        $translator = $services->get('MvcTranslator');
         $messenger = $plugins->get('messenger');
 
         if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActiveVersion('Common', '3.4.91')) {
             $message = new \Omeka\Stdlib\Message(
-                $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
+                $translator->translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
                 'Common', '3.4.91'
             );
             throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
         }
 
+        $errors = [];
+
         // Check the optional module Iiif Server for incompatibility.
-        if ($this->isModuleActive('IiifServer') && !$this->isModuleVersionAtLeast('IiifServer', '3.6.28')) {
-            $message = new \Omeka\Stdlib\Message(
-                $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
-                'Iiif Server', '3.6.28'
+        if ($this->isModuleActive('IiifServer') && !$this->isModuleVersionAtLeast('IiifServer', '3.6.34')) {
+            $errors[] = (string) new \Omeka\Stdlib\Message(
+                $translator->translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
+                'Iiif Server', '3.6.34'
             );
-            throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
         }
 
         $config = $services->get('Config');
         $basePath = $config['file_store']['local']['base_path'] ?: (OMEKA_PATH . '/files');
         if (!is_dir($basePath) || !is_readable($basePath) || !is_writeable($basePath)) {
-            $message = new PsrMessage(
+            $errors[] = (string) new PsrMessage(
                 'The directory "{path}" is not writeable.', // @translate
                 ['path' => $basePath]
             );
-            throw new ModuleCannotInstallException((string) $message);
+        }
+
+        if ($errors) {
+            throw new ModuleCannotInstallException(implode("\n", $errors));
         }
 
         if (!class_exists('ZipArchive', false)) {
-            $message = new PsrMessage(
-                'The extension "php-zip" should be installed on the server to create Zip files.', // @translate
-            );
-            $messenger->addWarning($message);
+            $messenger->addWarning(new PsrMessage(
+                'The extension "php-zip" should be installed on the server to create Zip files.' // @translate
+            ));
         }
     }
 

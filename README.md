@@ -313,7 +313,7 @@ First version of this module was done for [Archives sonores de poésie] of [Sorb
 [browser support table]: https://en.wikipedia.org/wiki/HTML5_video#Browser_support
 [this one]: https://forum.omeka.org/t/mov-videos-not-playing-on-item-page-only-audio/11775/12
 [ffmpeg help]: https://trac.ffmpeg.org/wiki/HowToCheckIfFaststartIsEnabledForPlayback
-[module issues]: https://gitlab.com/Daniel-KM/Omeka-S-module-DerivativeMedia/-/issues
+[module issues]: https://gitlab.com/Daniel-KM/Omeka-S-module-DerivativeMedia/-/work_items
 [CeCILL v2.1]: https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html
 [GNU/GPL]: https://www.gnu.org/licenses/gpl-3.0.html
 [FSF]: https://www.fsf.org
