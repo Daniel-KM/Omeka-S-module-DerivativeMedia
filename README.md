@@ -134,7 +134,7 @@ ogg/{filename}.ogg   = -c copy -vn -c:a libopus
 aac/{filename}.m4a   = -c copy -c:a aac -q:a 2 -movflags +faststart
 
 # Video. To avoid issue with Apple Safari, you may add mov before mp4.
-webm/{filename}.webm = -c copy -c:v libvpx-vp9 -crf 30 -b:v 0 -deadline realtime -pix_fmt yuv420p -c:a libopus
+webm/{filename}.webm = -c copy -c:v libvpx-vp9 -crf 30 -b:v 0 -deadline realtime -row-mt 1 -tile-columns 2 -threads 0 -pix_fmt yuv420p -c:a libopus
 mov/{filename}.mov   = -c copy -c:v libx264 -movflags +faststart -filter:v crop='floor(in_w/2)*2:floor(in_h/2)*2' -crf 22 -level 3 -preset ultrafast -tune film -pix_fmt yuv420p -c:a aac -qscale:a 2 -f mov
 mp4/{filename}.mp4   = -c copy -c:v libx264 -movflags +faststart -filter:v crop='floor(in_w/2)*2:floor(in_h/2)*2' -crf 22 -level 3 -preset ultrafast -tune film -pix_fmt yuv420p -c:a libmp3lame -qscale:a 2
 
@@ -149,6 +149,12 @@ pdfo/{filename}.pdf  = -sDEVICE=pdfwrite -dPDFSETTINGS=/screen -dNOPAUSE -dQUIET
 
 It's important to check the version of ffmpeg and gs that is installed on the
 server, because the options may be different or may have been changed.
+
+The encoder of webm (libvpx-vp9) uses a single core without the options
+`-row-mt 1` (multithreading by rows, ffmpeg 3.4 and libvpx 1.7 or later) and
+`-tile-columns 2`, even with `-threads 0`. The encoder of mp4 (libx264) uses all
+the cores by default. Because the medias are converted one by one in a single
+job, these options are important on a server with many cores.
 
 
 ### External preparation
