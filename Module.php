@@ -663,19 +663,9 @@ class Module extends AbstractModule
                             \DerivativeMedia\Job\DerivativeItem::class,
                             'derivativemedia_item',
                             ['item_id' => $item->getId()],
-                            function (string $key, array $all) {
-                                $seen = [];
-                                $dispatches = [];
-                                foreach ($all as $p) {
-                                    $id = $p['item_id'];
-                                    if (isset($seen[$id])) {
-                                        continue;
-                                    }
-                                    $seen[$id] = true;
-                                    $dispatches[] = $p;
-                                }
-                                return $dispatches;
-                            }
+                            fn (string $key, array $all): array => [
+                                'item_ids' => array_values(array_unique(array_column($all, 'item_id'))),
+                            ]
                         );
                 } else {
                     $services->get(\Omeka\Job\Dispatcher::class)
@@ -741,19 +731,9 @@ class Module extends AbstractModule
                             \DerivativeMedia\Job\DerivativeMedia::class,
                             'derivativemedia_media',
                             ['media_id' => $media->getId()],
-                            function (string $key, array $all) {
-                                $seen = [];
-                                $dispatches = [];
-                                foreach ($all as $p) {
-                                    $id = $p['media_id'];
-                                    if (isset($seen[$id])) {
-                                        continue;
-                                    }
-                                    $seen[$id] = true;
-                                    $dispatches[] = $p;
-                                }
-                                return $dispatches;
-                            }
+                            fn (string $key, array $all): array => [
+                                'media_ids' => array_values(array_unique(array_column($all, 'media_id'))),
+                            ]
                         );
                 } else {
                     $services->get(\Omeka\Job\Dispatcher::class)
@@ -851,8 +831,33 @@ class Module extends AbstractModule
             'item_id' => $item->id(),
             'type' => array_keys($todo),
         ];
-        $dispatcher = $services->get('Omeka\Job\Dispatcher');
-        $dispatcher->dispatch(\DerivativeMedia\Job\CreateDerivatives::class, $args);
+        if (!$services->has('Common\DeferredJobDispatch')) {
+            $services->get('Omeka\Job\Dispatcher')
+                ->dispatch(\DerivativeMedia\Job\CreateDerivatives::class, $args);
+            return;
+        }
+
+        // A single job by list of types for all the items saved in a request
+        // or a job (batch edit, import).
+        $services->get('Common\DeferredJobDispatch')->defer(
+            \DerivativeMedia\Job\CreateDerivatives::class,
+            'derivativemedia_create_derivatives',
+            $args,
+            function (string $key, array $all): array {
+                $itemIdsByTypes = [];
+                foreach ($all as $p) {
+                    $itemIdsByTypes[implode(' ', $p['type'])][$p['item_id']] = $p['item_id'];
+                }
+                $dispatches = [];
+                foreach ($itemIdsByTypes as $types => $itemIds) {
+                    $dispatches[] = [
+                        'query' => ['id' => array_values($itemIds)],
+                        'type' => explode(' ', $types),
+                    ];
+                }
+                return $dispatches;
+            }
+        );
     }
 
     protected function checkConvert(Media $media): bool

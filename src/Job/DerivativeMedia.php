@@ -24,8 +24,9 @@ class DerivativeMedia extends AbstractJob
 
         $api = $this->getServiceLocator()->get('Omeka\ApiManager');
 
-        $mediaId = $this->getArg('media_id');
-        if (!$mediaId) {
+        // A single media is kept for compatibility with previous versions.
+        $mediaIds = array_filter(array_map('intval', $this->getArg('media_ids') ?: [$this->getArg('media_id')]));
+        if (!$mediaIds) {
             $this->job->setStatus(\Omeka\Entity\Job::STATUS_ERROR);
             $this->logger->err(
                 'No media was set, so no derivative to create.' // @translate
@@ -33,32 +34,39 @@ class DerivativeMedia extends AbstractJob
             return;
         }
 
-        try {
-            /** @var \Omeka\Entity\Media|\DigitalObject\Entity\DigitalObject $media */
-            $media = $api->read('media', ['id' => $mediaId], [], ['initialize' => false, 'finalize' => false])->getContent();
-        } catch (NotFoundException $e) {
-            // Fallback to digital_objects: the job may be dispatched for a
-            // resource id that lives in the digital_object table.
-            try {
-                $media = $api->read('digital_objects', ['id' => $mediaId], [], ['initialize' => false, 'finalize' => false])->getContent();
-            } catch (\Throwable $e2) {
-                $this->job->setStatus(\Omeka\Entity\Job::STATUS_ERROR);
-                $this->logger->err(
-                    'No media or digital object #{media_id}: no derivative media to create.', // @translate
-                    ['media_id' => $mediaId]
+        foreach ($mediaIds as $mediaId) {
+            if ($this->shouldStop()) {
+                $this->logger->warn(
+                    'The job was stopped.' // @translate
                 );
                 return;
             }
-        }
+            try {
+                /** @var \Omeka\Entity\Media|\DigitalObject\Entity\DigitalObject $media */
+                $media = $api->read('media', ['id' => $mediaId], [], ['initialize' => false, 'finalize' => false])->getContent();
+            } catch (NotFoundException $e) {
+                // Fallback to digital_objects: the job may be dispatched for a
+                // resource id that lives in the digital_object table.
+                try {
+                    $media = $api->read('digital_objects', ['id' => $mediaId], [], ['initialize' => false, 'finalize' => false])->getContent();
+                } catch (\Throwable $e2) {
+                    $this->logger->err(
+                        'No media or digital object #{media_id}: no derivative media to create.', // @translate
+                        ['media_id' => $mediaId]
+                    );
+                    continue;
+                }
+            }
 
-        if (!$this->isManaged($media)) {
-            $this->logger->warn(
-                'Media #{media_id}: not an audio or video file.', // @translate
-                ['media_id' => $mediaId]
-            );
-            return;
-        }
+            if (!$this->isManaged($media)) {
+                $this->logger->warn(
+                    'Media #{media_id}: not an audio or video file.', // @translate
+                    ['media_id' => $mediaId]
+                );
+                continue;
+            }
 
-        $this->derivateMedia($media);
+            $this->derivateMedia($media);
+        }
     }
 }
