@@ -101,7 +101,7 @@ return [
             ],
             'derivativemedia_converters_video' => [
                 '# The webm converter is designed for modern browsers. Keep it first if used.' => '',
-                'webm/{filename}.webm' => '-c copy -c:v libvpx-vp9 -crf 30 -b:v 0 -deadline realtime -pix_fmt yuv420p -c:a libopus',
+                'webm/{filename}.webm' => '-c copy -c:v libvpx-vp9 -crf 30 -b:v 0 -deadline realtime -row-mt 1 -tile-columns 2 -threads 0 -pix_fmt yuv420p -c:a libopus',
                 '# This format keeps the original quality and is compatible with almost all browsers.' => '',
                 'mp4/{filename}.mp4' => "-c copy -c:v libx264 -movflags +faststart -filter:v crop='floor(in_w/2)*2:floor(in_h/2)*2' -crf 22 -level 3 -preset medium -tune film -pix_fmt yuv420p -c:a libmp3lame -qscale:a 2",
             ],
