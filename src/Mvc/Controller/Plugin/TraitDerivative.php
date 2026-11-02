@@ -129,7 +129,7 @@ trait TraitDerivative
      * it is compared to the signature of its sources stored with it: a change
      * of title or a technical update of a media does not rebuild a big file.
      * The iiif manifests depend on the metadata, so their date is compared.
-     * A derivative without signature, built by a previous version, is kept.
+     * A derivative without signature was built by a previous version.
      */
     protected function isUpToDate(ItemRepresentation $item, string $filepath, string $type, ?array $dataMedia = null): bool
     {
@@ -144,8 +144,16 @@ trait TraitDerivative
             }
             return filemtime($filepath) > $mtime;
         }
+        // A derivative without signature is outdated only when a media was
+        // created after it, so it misses this media.
         $signatureFilepath = $filepath . '.signature';
         if (!is_readable($signatureFilepath)) {
+            $fileTime = filemtime($filepath);
+            foreach ($item->media() as $media) {
+                if ($media->created()->getTimestamp() > $fileTime) {
+                    return false;
+                }
+            }
             return true;
         }
         $dataMedia = $dataMedia ?? $this->dataMedia($item, $type);
