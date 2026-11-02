@@ -226,6 +226,45 @@ class CreateDerivativePdfTest extends AbstractHttpControllerTestCase
     }
 
     // ------------------------------------------------------------------
+    // prepareDerivative — concurrent builds
+    // ------------------------------------------------------------------
+
+    public function testPrepareDerivativeSkipsWhenLocked(): void
+    {
+        $output = $this->tempDir . '/locked.pdf';
+        file_put_contents($output, 'previous');
+        $fileLock = new \Common\Stdlib\FileLock();
+        $this->assertTrue($fileLock->acquire($output));
+
+        $dataMedia = [$this->makeDataMedia(1, 'test1.jpg', 'image/jpeg', 'image')];
+        $result = $this->callMethod('prepareDerivative', ['pdf', $output, $dataMedia, null]);
+        $fileLock->release($output);
+
+        $this->assertNull($result);
+        $this->assertSame('previous', file_get_contents($output));
+        $this->assertSame([$output], glob($this->tempDir . '/locked*'));
+    }
+
+    public function testPrepareDerivativeReplacesAtomically(): void
+    {
+        $this->requireTool('convert');
+        $output = $this->tempDir . '/replaced.pdf';
+        file_put_contents($output, 'previous');
+
+        $dataMedia = [
+            $this->makeDataMedia(1, 'test1.jpg', 'image/jpeg', 'image'),
+            $this->makeDataMedia(2, 'test2.jpg', 'image/jpeg', 'image'),
+        ];
+        $result = $this->callMethod('prepareDerivative', ['pdf', $output, $dataMedia, null]);
+
+        $this->assertTrue($result);
+        $this->assertStringStartsWith('%PDF', (string) file_get_contents($output));
+        // No temp file is left, only the signature of sources.
+        $this->assertSame([$output, $output . '.signature'], glob($this->tempDir . '/replaced*'));
+        $this->assertFalse((new \Common\Stdlib\FileLock())->isLocked($output));
+    }
+
+    // ------------------------------------------------------------------
     // prepareDerivativePdf — strategy selection
     // ------------------------------------------------------------------
 
