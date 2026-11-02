@@ -42,8 +42,8 @@ Installation
 Some formats used by this module requires server packages:
 - `ffmpeg` for audio and video
 - `ghostscript` with command `gs` for pdf
-- `pdftotext` and `pdfinfo` from package poppler-utils for format pdf2xml
-  and text layer detection
+- `pdftotext` and `pdfinfo` from package poppler-utils for format pdf2xml,
+  text layer detection and check of the number of pages of the built pdfs
 - `ocrmypdf` (optional) for adding an OCR text layer to built pdfs
 
 If you use them, they should be installed on the server and available in the
@@ -220,6 +220,27 @@ To protect files created dynamically (alto, text, zip…), add a rule in the fil
 `.htaccess` at the root of Omeka to redirect files/alto, files/zip, etc. to
 /derivative/{type}/#id.
 
+### Update and check of derivatives
+
+A derivative of an item is built once, even when many visitors request it at
+the same time: the first request builds it in a temp file, the other ones wait
+or get the message that it is being created. The previous file is served until
+the new one is ready, then it is replaced. Before replacement, the pdf is
+checked (number of pages, when pdfinfo is available) and the zip is checked
+too, so an incomplete file is never stored.
+
+The derivatives that depend on the files of the medias (pdf, zip, text, alto)
+store the signature of their sources (list of files and their order) in a
+sidecar file "{file}.signature". A derivative is rebuilt only when its sources
+change (media added, removed, reordered or replaced), not when the metadata of
+the item change. A derivative built by a previous version has no signature: it
+is rebuilt when a media was created after it. The iiif manifests depend on the
+metadata, so they are rebuilt when the item or a media is modified.
+
+The task "Check" of the config form removes the invalid derivatives (empty
+files, pdf without pages, invalid zip) and the leftovers of interrupted builds,
+so they are rebuilt once on next request. It may be run once after upgrade.
+
 ### Theme with resource block and view helper
 
 Use the resource block "Derivative Media List" to display the list of available
@@ -243,7 +264,7 @@ TODO
 - [ ] Add a check for missing conversions (a table with a column by conversion).
 - [ ] Add a check for fast start (mov,mp4,m4a,3gp,3g2,mj2).
 - [ ] Finalize for pdf.
-- [ ] Add a check of number of job before running job CreateDerivatives.
+- [x] Add a check of number of job before running job CreateDerivatives.
 - [ ] Pdf to tsv for iiif search
 - [ ] Support pdf_media: create derivative pdf from media-level pdfs (per-page ocr, merge).
 - [ ] Option to remove original (issue on gitlab).

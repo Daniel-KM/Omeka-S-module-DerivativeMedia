@@ -18,7 +18,8 @@ use Common\Stdlib\PsrMessage;
  * @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger
  */
 $plugins = $services->get('ControllerPluginManager');
-$url = $services->get('ViewHelperManager')->get('url');
+$helpers = $services->get('ViewHelperManager');
+$url = $helpers->get('url');
 $api = $plugins->get('api');
 $settings = $services->get('Omeka\Settings');
 $translate = $plugins->get('translate');
@@ -32,6 +33,16 @@ if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActi
     $message = new \Omeka\Stdlib\Message(
         $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
         'Common', '3.4.95'
+    );
+    $messenger->addError($message);
+    throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $translate('Missing requirement. Unable to upgrade.')); // @translate
+}
+
+// Check the optional module Iiif Server for incompatibility, like install.
+if ($this->isModuleActive('IiifServer') && !$this->isModuleVersionAtLeast('IiifServer', '3.6.35')) {
+    $message = new \Omeka\Stdlib\Message(
+        $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
+        'Iiif Server', '3.6.35'
     );
     $messenger->addError($message);
     throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $translate('Missing requirement. Unable to upgrade.')); // @translate
@@ -141,4 +152,33 @@ if (version_compare($oldVersion, '3.4.14', '<')) {
     );
     $message->setEscapeHtml(false);
     $messenger->addSuccess($message);
+}
+
+if (version_compare($oldVersion, '3.4.17', '<')) {
+    $message = new PsrMessage(
+        'A derivative is now built once, even when it is requested concurrently, and it is rebuilt only when the files of the medias change. A new task allows to remove the invalid derivatives and the leftovers of interrupted builds: it may be run once from the {link_url}config form{link_end}.', // @translate
+        ['link_url' => sprintf('<a href="%s">', htmlspecialchars($url('admin/default', ['controller' => 'module', 'action' => 'configure'], ['query' => ['id' => 'DerivativeMedia']]))), 'link_end' => '</a>']
+    );
+    $message->setEscapeHtml(false);
+    $messenger->addSuccess($message);
+
+    // The default webm converter uses all the cores of the server. A command
+    // modified by the admin is kept.
+    $oldWebm = '-c copy -c:v libvpx-vp9 -crf 30 -b:v 0 -deadline realtime -pix_fmt yuv420p -c:a libopus';
+    $newWebm = $configLocal['derivativemedia']['settings']['derivativemedia_converters_video']['webm/{filename}.webm'];
+    $converters = $settings->get('derivativemedia_converters_video');
+    $isUpdated = is_array($converters)
+        && ($converters['webm/{filename}.webm'] ?? null) === $oldWebm;
+    if ($isUpdated) {
+        $converters['webm/{filename}.webm'] = $newWebm;
+        $settings->set('derivativemedia_converters_video', $converters);
+    }
+    $message = new PsrMessage(
+        $isUpdated
+            ? 'The webm converter uses now all the cores of the server with the options "-row-mt 1 -tile-columns 2 -threads 0". The default command was updated in the {link_url}video converters{link_end}.' // @translate
+            : 'The webm converter uses now all the cores of the server with the options "-row-mt 1 -tile-columns 2 -threads 0". You may add them to the {link_url}video converters{link_end}.', // @translate
+        ['link_url' => sprintf('<a href="%s">', htmlspecialchars($url('admin/default', ['controller' => 'setting'], ['fragment' => 'derivativemedia_converters_video']))), 'link_end' => '</a>']
+    );
+    $message->setEscapeHtml(false);
+    $messenger->addNotice($message);
 }

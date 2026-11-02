@@ -284,10 +284,10 @@ class Module extends AbstractModule
         $errors = [];
 
         // Check the optional module Iiif Server for incompatibility.
-        if ($this->isModuleActive('IiifServer') && !$this->isModuleVersionAtLeast('IiifServer', '3.6.34')) {
+        if ($this->isModuleActive('IiifServer') && !$this->isModuleVersionAtLeast('IiifServer', '3.6.35')) {
             $errors[] = (string) new \Omeka\Stdlib\Message(
                 $translator->translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
-                'Iiif Server', '3.6.34'
+                'Iiif Server', '3.6.35'
             );
         }
 
