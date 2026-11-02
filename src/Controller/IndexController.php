@@ -69,7 +69,8 @@ class IndexController extends \Omeka\Controller\IndexController
         $filepath = $this->itemFilepath($item, $type);
 
         $ready = !$force
-            && file_exists($filepath) && is_readable($filepath) && filesize($filepath);
+            && file_exists($filepath) && is_readable($filepath) && filesize($filepath)
+            && $this->isUpToDate($item, $filepath);
 
         // In case a user reclicks the link.
         if ($prepare && $ready) {

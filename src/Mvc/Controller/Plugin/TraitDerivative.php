@@ -122,6 +122,25 @@ trait TraitDerivative
         return $dataMedia;
     }
 
+    /**
+     * Check if a derivative file is more recent than the item and its medias.
+     *
+     * A media added or updated separately from its item (api, import) does not
+     * rebuild the derivatives, so an outdated file is rebuilt on request.
+     */
+    protected function isUpToDate(ItemRepresentation $item, string $filepath): bool
+    {
+        $timestamp = function ($resource): int {
+            $date = $resource->modified() ?: $resource->created();
+            return $date ? $date->getTimestamp() : 0;
+        };
+        $mtime = $timestamp($item);
+        foreach ($item->media() as $media) {
+            $mtime = max($mtime, $timestamp($media));
+        }
+        return filemtime($filepath) > $mtime;
+    }
+
     protected function itemFilepath(ItemRepresentation $item, string $type): ?string
     {
         if (!isset(Module::DERIVATIVES[$type])) {
