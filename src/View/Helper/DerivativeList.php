@@ -2,6 +2,7 @@
 
 namespace DerivativeMedia\View\Helper;
 
+use Common\Stdlib\FileLock;
 use DerivativeMedia\Module;
 use DerivativeMedia\Mvc\Controller\Plugin\TraitDerivative;
 use Laminas\View\Helper\AbstractHelper;
@@ -173,13 +174,10 @@ class DerivativeList extends AbstractHelper
             $filePath = $this->itemFilepath($item, $type);
             $file = mb_substr($filePath, mb_strlen($this->basePath) + 1);
 
-            $tempFilepath = $this->tempFilepath($filePath);
-
             $size = null;
 
             $ready = file_exists($filePath) && is_readable($filePath) && ($size = filesize($filePath));
-            $isInProgress = !$ready
-                && file_exists($tempFilepath) && is_readable($tempFilepath) && filesize($tempFilepath);
+            $isInProgress = !$ready && (new FileLock())->isLocked($filePath);
 
             // Check if a derivative may be created.
             $feasible = $ready || $isInProgress;

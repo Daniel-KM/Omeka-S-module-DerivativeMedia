@@ -2,6 +2,7 @@
 
 namespace DerivativeMedia\Controller;
 
+use Common\Stdlib\FileLock;
 use DerivativeMedia\Module;
 use DerivativeMedia\Mvc\Controller\Plugin\TraitDerivative;
 use Laminas\Http\Response;
@@ -71,7 +72,7 @@ class IndexController extends \Omeka\Controller\IndexController
 
         $ready = !$force
             && file_exists($filepath) && is_readable($filepath) && filesize($filepath)
-            && $this->isUpToDate($item, $filepath);
+            && $this->isUpToDate($item, $filepath, $type);
 
         // In case a user reclicks the link.
         if ($prepare && $ready) {
@@ -111,7 +112,16 @@ class IndexController extends \Omeka\Controller\IndexController
                     )
                 )
             ) {
-                $ready = $this->createDerivative($type, $filepath, $item, $dataMedia);
+                $ready = $this->createDerivative($type, $filepath, $item, $dataMedia, $force);
+                if ($ready === null) {
+                    $this->getResponse()->setStatusCode(Response::STATUS_CODE_500);
+                    return new JsonModel([
+                        'status' => 'fail',
+                        'data' => [
+                            'id' => $this->translate('This derivative is being created. Come back later.'), // @translate
+                        ],
+                    ]);
+                }
                 if (!$ready) {
                     $this->getResponse()->setStatusCode(Response::STATUS_CODE_500);
                     return new JsonModel([
@@ -122,7 +132,9 @@ class IndexController extends \Omeka\Controller\IndexController
             } else {
                 // Each click would start a new job for the same file: a big
                 // item could then saturate the server.
-                if (!$this->isDerivativePending($item, $type)) {
+                if (!(new FileLock())->isLocked($filepath)
+                    && !$this->isDerivativePending($item, $type)
+                ) {
                     $args = [
                         'item_id' => $item->id(),
                         'type' => $type,

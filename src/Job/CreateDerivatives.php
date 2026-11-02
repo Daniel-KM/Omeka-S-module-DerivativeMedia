@@ -87,7 +87,7 @@ class CreateDerivatives extends AbstractJob
             $results = [];
             foreach ($types as $type) {
                 $filepath = $this->itemFilepath($item, $type);
-                $result = $createDerivative($type, $filepath, $item, $dataMedia);
+                $result = $createDerivative($type, $filepath, $item, $dataMedia, (bool) $this->getArg('force'));
                 if ($result) {
                     $results[] = $type;
                 }

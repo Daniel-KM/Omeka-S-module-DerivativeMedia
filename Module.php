@@ -493,8 +493,10 @@ class Module extends AbstractModule
         if (!empty($params['process_derivative_items'])) {
             $query = [];
             parse_str($params['query'] ?? '', $query);
+            // A rebuild asked by an admin is done even for up-to-date files.
             $args = [
                 'query' => $query,
+                'force' => true,
             ];
             $job = $dispatcher->dispatch(\DerivativeMedia\Job\CreateDerivatives::class, $args);
             $message = 'Creating derivative media by items ({link_url}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate

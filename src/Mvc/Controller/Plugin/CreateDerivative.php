@@ -4,6 +4,7 @@ namespace DerivativeMedia\Mvc\Controller\Plugin;
 
 use IiifSearch\View\Helper\XmlAltoSingle;
 use IiifServer\View\Helper\IiifManifest;
+use Common\Stdlib\FileLock;
 use Laminas\Log\Logger;
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 use Laminas\View\Helper\Url;
@@ -76,12 +77,13 @@ class CreateDerivative extends AbstractPlugin
      * done directly on files.
      *
      * @var array $dataMedia Media data contains required values.
+     * @var bool $force Rebuild the file even if it is up to date.
      * @return bool|null Success or error. Null if no media or currently being
      * created.
      *
      * @todo Check filepath.
      */
-    public function __invoke(string $type, string $filepath, ?ItemRepresentation $item = null, ?array $dataMedia = null): ?bool
+    public function __invoke(string $type, string $filepath, ?ItemRepresentation $item = null, ?array $dataMedia = null, bool $force = false): ?bool
     {
         if (!$item && !$dataMedia) {
             return false;
@@ -92,31 +94,40 @@ class CreateDerivative extends AbstractPlugin
             return null;
         }
 
-        return $this->prepareDerivative($type, $filepath, $dataMedia, $item);
+        return $this->prepareDerivative($type, $filepath, $dataMedia, $item, $force);
     }
 
-    protected function prepareDerivative(string $type, string $filepath, array $dataMedia, ?ItemRepresentation $item): ?bool
+    protected function prepareDerivative(string $type, string $filepath, array $dataMedia, ?ItemRepresentation $item, bool $force = false): ?bool
     {
         if (!$this->ensureDirectory(dirname($filepath))) {
             $this->logger->err('Unable to create directory.'); // @translate
             return false;
         }
 
-        // Use a temp file to avoid concurrent processes (two users request it).
-        $tempFilepath = $this->tempFilepath($filepath);
-
-        // Check if another process is creating the file.
-        if (file_exists($tempFilepath)) {
+        // Concurrent requests or jobs may ask the same derivative: only one
+        // builds it in its own temp file, and the previous file is served
+        // until the new one replaces it.
+        $fileLock = new FileLock();
+        if (!$fileLock->acquire($filepath)) {
             $this->logger->warn('The derivative is currently beeing created.'); // @translate
             return null;
         }
 
-        if (file_exists($filepath)) {
-            if (!unlink($filepath)) {
-                $this->logger->err('Unable to remove existing file.'); // @translate
-                return false;
-            }
+        // Another process may have built the file while this one was waiting
+        // (several jobs dispatched for the same derivative). A file without
+        // signature is rebuilt.
+        if (!$force
+            && $item
+            && is_file($filepath)
+            && filesize($filepath)
+            && ($type === 'iiif-2' || $type === 'iiif-3' || is_readable($filepath . '.signature'))
+            && $this->isUpToDate($item, $filepath, $type, $dataMedia)
+        ) {
+            $fileLock->release($filepath);
+            return true;
         }
+
+        $tempFilepath = $fileLock->tempFilepath($filepath);
 
         if ($type === 'alto') {
             $result = $this->prepareDerivativeAlto($tempFilepath, $dataMedia, $item);
@@ -140,14 +151,47 @@ class CreateDerivative extends AbstractPlugin
             $result = null;
         }
 
-        if ($result) {
-            rename($tempFilepath, $filepath);
-            @chmod($filepath, 0664);
-        } elseif (file_exists($tempFilepath)) {
-            @unlink($tempFilepath);
+        if ($result && !$this->isValidDerivative($type, $tempFilepath)) {
+            $this->logger->err(
+                'The derivative "{type}" is invalid or incomplete, so it is not stored.', // @translate
+                ['type' => $type]
+            );
+            $result = false;
         }
 
+        if ($result) {
+            $result = $fileLock->commit($tempFilepath, $filepath);
+            if ($result && $type !== 'iiif-2' && $type !== 'iiif-3') {
+                $fileLock->write($filepath . '.signature', $this->sourcesSignature($dataMedia));
+            }
+        } else {
+            @unlink($tempFilepath);
+        }
+        $fileLock->release($filepath);
+
         return $result;
+    }
+
+    /**
+     * Check a built derivative before it replaces the previous one.
+     */
+    protected function isValidDerivative(string $type, string $filepath): bool
+    {
+        if (!is_file($filepath) || !filesize($filepath)) {
+            return false;
+        }
+        if (in_array($type, ['zip', 'zipm', 'zipo'])) {
+            $zip = new ZipArchive();
+            $result = $zip->open($filepath, ZipArchive::CHECKCONS) === true;
+            if ($result) {
+                $zip->close();
+            }
+            return $result;
+        }
+        if ($type === 'iiif-2' || $type === 'iiif-3') {
+            return is_array(json_decode((string) file_get_contents($filepath), true));
+        }
+        return true;
     }
 
     protected function prepareDerivativeTsv(string $type, string $filepath, array $dataMedia, ?ItemRepresentation $item): ?bool
@@ -245,11 +289,14 @@ class CreateDerivative extends AbstractPlugin
         }
 
         $command = null;
+        // Minimum number of pages, to check the build.
+        $expectedPages = 0;
 
         if ($useImages && $countImages) {
             // Rebuild from images: the multi-page pdf is the global
             // document, use individual images instead.
             $files = array_column($images, 'filepath');
+            $expectedPages = count($files);
             $command = sprintf(
                 'convert %s -quality 100 %s',
                 implode(' ', array_map('escapeshellarg', $files)),
@@ -266,6 +313,7 @@ class CreateDerivative extends AbstractPlugin
             // Multiple pdfs: merge with ghostscript to preserve text
             // layers.
             $files = array_column($pdfs, 'filepath');
+            $expectedPages = array_sum($this->pdfPageCounts($pdfs));
             $command = sprintf(
                 'gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=%s %s',
                 escapeshellarg($filepath),
@@ -274,6 +322,7 @@ class CreateDerivative extends AbstractPlugin
         } elseif ($countImages) {
             // Images only: convert to pdf.
             $files = array_column($images, 'filepath');
+            $expectedPages = count($files);
             // Avoid to modify quality to speed process.
             $command = sprintf(
                 'convert %s -quality 100 %s',
@@ -292,6 +341,16 @@ class CreateDerivative extends AbstractPlugin
         }
 
         if (!file_exists($filepath) || !filesize($filepath)) {
+            return false;
+        }
+
+        // The count is skipped when the tool pdfinfo is not available.
+        $pages = $expectedPages ? $this->pdfPageCount($filepath) : 0;
+        if ($pages && $pages < $expectedPages) {
+            $this->logger->err(
+                'The pdf has {count} pages, but {total} are expected.', // @translate
+                ['count' => $pages, 'total' => $expectedPages]
+            );
             return false;
         }
 

@@ -123,22 +123,50 @@ trait TraitDerivative
     }
 
     /**
-     * Check if a derivative file is more recent than the item and its medias.
+     * Check if a derivative file is built from the current sources.
      *
-     * A media added or updated separately from its item (api, import) does not
-     * rebuild the derivatives, so an outdated file is rebuilt on request.
+     * A derivative depends on the files of the medias, not on the metadata, so
+     * it is compared to the signature of its sources stored with it: a change
+     * of title or a technical update of a media does not rebuild a big file.
+     * The iiif manifests depend on the metadata, so their date is compared.
+     * A derivative without signature, built by a previous version, is kept.
      */
-    protected function isUpToDate(ItemRepresentation $item, string $filepath): bool
+    protected function isUpToDate(ItemRepresentation $item, string $filepath, string $type, ?array $dataMedia = null): bool
     {
-        $timestamp = function ($resource): int {
-            $date = $resource->modified() ?: $resource->created();
-            return $date ? $date->getTimestamp() : 0;
-        };
-        $mtime = $timestamp($item);
-        foreach ($item->media() as $media) {
-            $mtime = max($mtime, $timestamp($media));
+        if ($type === 'iiif-2' || $type === 'iiif-3') {
+            $timestamp = function ($resource): int {
+                $date = $resource->modified() ?: $resource->created();
+                return $date ? $date->getTimestamp() : 0;
+            };
+            $mtime = $timestamp($item);
+            foreach ($item->media() as $media) {
+                $mtime = max($mtime, $timestamp($media));
+            }
+            return filemtime($filepath) > $mtime;
         }
-        return filemtime($filepath) > $mtime;
+        $signatureFilepath = $filepath . '.signature';
+        if (!is_readable($signatureFilepath)) {
+            return true;
+        }
+        $dataMedia = $dataMedia ?? $this->dataMedia($item, $type);
+        return trim((string) file_get_contents($signatureFilepath)) === $this->sourcesSignature($dataMedia);
+    }
+
+    /**
+     * Get the signature of the sources of a derivative, in the item order.
+     */
+    protected function sourcesSignature(array $dataMedia): string
+    {
+        $sources = [];
+        foreach ($dataMedia as $data) {
+            $sources[] = [
+                $data['id'],
+                $data['filename'],
+                $data['size'],
+                isset($data['content']) ? md5($data['content']) : null,
+            ];
+        }
+        return md5((string) json_encode($sources));
     }
 
     protected function itemFilepath(ItemRepresentation $item, string $type): ?string
@@ -155,16 +183,5 @@ trait TraitDerivative
             . '/' . Module::DERIVATIVES[$type]['dir']
             . '/' . $item->id()
             . '.' . Module::DERIVATIVES[$type]['extension'];
-    }
-
-    protected function tempFilepath(string $filepath): string
-    {
-        // Keep the original extension to manage tools like convert.
-        // Normally, all files have an extension.
-
-        $extension = pathinfo($filepath, PATHINFO_EXTENSION) ?? '';
-        return strlen($extension)
-            ? mb_substr($filepath, 0, - strlen($extension) - 1) . '.tmp' . '.' . $extension
-            : $filepath . '.tmp';
     }
 }
