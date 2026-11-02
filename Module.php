@@ -458,6 +458,7 @@ class Module extends AbstractModule
         if (empty($params['process_derivative_items'])
             && empty($params['process_derivative_media'])
             && empty($params['process_metadata_media'])
+            && empty($params['process_check_derivatives'])
         ) {
             $message = 'No job launched.'; // @translate
             $controller->messenger()->addWarning($message);
@@ -528,6 +529,9 @@ class Module extends AbstractModule
             ];
             $job = $dispatcher->dispatch(\DerivativeMedia\Job\DerivativeMediaMetadata::class, $args);
             $message = 'Storing metadata for existing files ({link}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
+        } elseif (!empty($params['process_check_derivatives'])) {
+            $job = $dispatcher->dispatch(\DerivativeMedia\Job\CheckDerivatives::class);
+            $message = 'Checking derivatives ({link_url}job #{job_id}{link_end}, {link_log}logs{link_end})'; // @translate
         } else {
             $controller->messenger()->addWarning('No job launched.'); // @translate
             return true;

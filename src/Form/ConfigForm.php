@@ -169,6 +169,18 @@ class ConfigForm extends Form
                     'id' => 'process_metadata_media',
                     'value' => 'Update metadata', // @translate
                 ],
+            ])
+            ->add([
+                'name' => 'process_check_derivatives',
+                'type' => Element\Submit::class,
+                'options' => [
+                    'label' => 'Remove invalid item derivatives and leftovers of interrupted builds', // @translate
+                    'info' => 'The invalid derivatives are rebuilt once on next request.', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'process_check_derivatives',
+                    'value' => 'Check', // @translate
+                ],
             ]);
     }
 }
