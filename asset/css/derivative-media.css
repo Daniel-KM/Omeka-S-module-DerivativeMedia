@@ -1,20 +1,28 @@
 @media all {
-    .browse .derivative-medias h4 {
-        display: inline-block;
-    }
-    .browse .derivative-medias ul {
-        display: inline-block;
-        padding-left: 6px;
+    .browse {
+        & .derivative-medias {
+            & h4 {
+                display: inline-block;
+            }
+            & ul {
+                display: inline-block;
+                padding-left: 6px;
+            }
+        }
     }
     .browse .sidebar .derivative-medias ul,
     .show .derivative-medias ul {
         padding-left: 0;
     }
-    .derivative-medias ul li {
-        list-style: none;
-        display: inline-block;
-    }
-    .derivative-medias ul li:not(:last-child):after {
-        content: ' · ';
+    .derivative-medias {
+        & ul {
+            & li {
+                list-style: none;
+                display: inline-block;
+                &:not(:last-child):after {
+                    content: ' · ';
+                }
+            }
+        }
     }
 }
