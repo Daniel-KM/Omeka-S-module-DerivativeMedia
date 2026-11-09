@@ -51,6 +51,10 @@ path.
 
 First, install the required module [Common].
 
+With big bases or on shared hosts, it is recommended to install the optional
+module [Job Queue] to avoid to overload the server when creating derivative
+files.
+
 You can use the release zip to install it, or use and init the source.
 
 * From the zip
@@ -345,6 +349,7 @@ First version of this module was done for [Archives sonores de poésie] of [Sorb
 [GNU/GPL]: https://www.gnu.org/licenses/gpl-3.0.html
 [FSF]: https://www.fsf.org
 [OSI]: http://opensource.org
+[Job Queue]: https://gitlab.com/Daniel-KM/Omeka-S-module-JobQueue
 [GitLab]: https://gitlab.com/Daniel-KM
 [Archives sonores de poésie]: https://asp.huma-num.fr
 [Sorbonne Université]: https://lettres.sorbonne-universite.fr
