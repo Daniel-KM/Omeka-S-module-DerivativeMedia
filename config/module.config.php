@@ -117,4 +117,23 @@ return [
             'derivativemedia_ocr_language' => 'fra+eng',
         ],
     ],
+    // Rules of the background jobs for the module Job Queue, used only when it
+    // is installed: merge the jobs dispatched again before they start and limit
+    // the number of heavy jobs running at the same time.
+    'jobqueue' => [
+        'jobs' => [
+            'DerivativeMedia\Job\CreateDerivatives' => [
+                'group' => 'heavy',
+                'merge' => ['query.id'],
+            ],
+            'DerivativeMedia\Job\DerivativeItem' => [
+                'group' => 'heavy',
+                'merge' => ['item_ids'],
+            ],
+            'DerivativeMedia\Job\DerivativeMedia' => [
+                'group' => 'heavy',
+                'merge' => ['media_ids'],
+            ],
+        ],
+    ],
 ];
